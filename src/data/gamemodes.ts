@@ -10,11 +10,11 @@ export interface Gamemode {
 }
 
 export const gamemodes: Gamemode[] = [
-  { key: 'mace',    label: 'Mace',    icon: '/icons/mace.png',    fallback: '🔨' },
-  { key: 'sword',   label: 'Sword',   icon: '/icons/sword.png',   fallback: '⚔' },
-  { key: 'axe',     label: 'Axe',     icon: '/icons/axe.png',     fallback: '🪓' },
-  { key: 'crystal', label: 'Crystal', icon: '/icons/crystal.png', fallback: '💎' },
-  { key: 'uhc',     label: 'UHC',     icon: '/icons/uhc.png',     fallback: '🏆' },
-  { key: 'nethpot', label: 'Nethpot', icon: '/icons/nethpot.png', fallback: '🧪' },
-  { key: 'diapot',  label: 'Diapot',  icon: '/icons/diapot.png',  fallback: '⚗' },
+  { key: 'mace',    label: 'Mace',    icon: '/icons/Mace.png',    fallback: '🔨' },
+  { key: 'sword',   label: 'Sword',   icon: '/icons/Sword.png',   fallback: '⚔' },
+  { key: 'axe',     label: 'Axe',     icon: '/icons/Axe.png',     fallback: '🪓' },
+  { key: 'crystal', label: 'Crystal', icon: '/icons/Crystal.png', fallback: '💎' },
+  { key: 'uhc',     label: 'UHC',     icon: '/icons/UHC.png',     fallback: '🏆' },
+  { key: 'nethpot', label: 'Nethpot', icon: '/icons/Nethpot.png', fallback: '🧪' },
+  { key: 'diapot',  label: 'Diapot',  icon: '/icons/Diapot.png',  fallback: '⚗' },
 ]
