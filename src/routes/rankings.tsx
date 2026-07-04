@@ -205,7 +205,7 @@ function RankingsPage() {
                     : 'bg-white/3 text-gray-500 border border-white/8 hover:text-white hover:border-white/20'
                 }`}
               >
-                <span>{gm.icon}</span>
+                <span>{gm.fallback}</span>
                 {gm.label}
               </button>
             ))}

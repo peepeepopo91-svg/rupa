@@ -59,6 +59,26 @@ export function getPlayerHTCount(ranks: PlayerRanks): number {
     .length
 }
 
+export function getAveragePoints(ranks: PlayerRanks): number {
+  const ranked = Object.values(ranks).filter(Boolean) as string[]
+  if (ranked.length === 0) return 0
+  return getPlayerTotalPoints(ranks) / ranked.length
+}
+
+/** Best tier a player holds, i.e. lowest index in TIER_ORDER (HT1 is best). */
+export function getHighestTier(ranks: PlayerRanks): string | null {
+  const ranked = Object.values(ranks).filter(Boolean) as string[]
+  if (ranked.length === 0) return null
+  return ranked.reduce((best, t) => (tierSortValue(t) < tierSortValue(best) ? t : best))
+}
+
+/** Weakest tier a player holds, i.e. highest index in TIER_ORDER (LT5 is worst). */
+export function getLowestTier(ranks: PlayerRanks): string | null {
+  const ranked = Object.values(ranks).filter(Boolean) as string[]
+  if (ranked.length === 0) return null
+  return ranked.reduce((worst, t) => (tierSortValue(t) > tierSortValue(worst) ? t : worst))
+}
+
 export function getAverageTier(ranks: PlayerRanks): string | null {
   const ranked = Object.values(ranks).filter(Boolean) as string[]
   if (ranked.length === 0) return null

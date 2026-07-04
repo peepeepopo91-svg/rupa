@@ -8,9 +8,22 @@ export interface PlayerRanks {
   diapot?: string | null
 }
 
+export const REGIONS = [
+  "North America",
+  "South America",
+  "Europe",
+  "Asia",
+  "Oceania",
+  "Africa",
+  "Middle East",
+] as const
+
+export type Region = typeof REGIONS[number]
+
 export interface Player {
   name: string
   head: string
+  region: Region
   ranks: PlayerRanks
 }
 
@@ -18,6 +31,7 @@ const players: Player[] = [
   {
     name: "Blue_Gaming08",
     head: "https://mc-heads.net/avatar/Blue_Gaming08",
+    region: "North America",
     ranks: {
       sword: "HT5",
       axe: "HT5",
@@ -31,6 +45,7 @@ const players: Player[] = [
   {
     name: "Cyan_Gaming07",
     head: "https://mc-heads.net/avatar/Cyan_Gaming07",
+    region: "Europe",
     ranks: {
       sword: "LT5",
       uhc: "LT5",

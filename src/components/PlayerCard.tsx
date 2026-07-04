@@ -1,19 +1,11 @@
 import { useState } from 'react'
-import type { Player, PlayerRanks } from '../data/players'
+import type { Player } from '../data/players'
 import { tierColors, TIER_ORDER } from '../data/tiers'
+import { gamemodes } from '../data/gamemodes'
+import { PlayerProfileModal } from './PlayerProfileModal'
 
 export { tierColors }
-
-export const gamemodes: { key: keyof PlayerRanks; label: string; icon: string }[] = [
-  { key: 'mace',    label: 'Mace',    icon: '🔨' },
-  { key: 'sword',   label: 'Sword',   icon: '⚔' },
-  { key: 'axe',     label: 'Axe',     icon: '🪓' },
-  { key: 'crystal', label: 'Crystal', icon: '💎' },
-  { key: 'uhc',     label: 'UHC',     icon: '🏆' },
-  { key: 'nethpot', label: 'Nethpot', icon: '🧪' },
-  { key: 'diapot',  label: 'Diapot',  icon: '⚗' },
-]
-
+export { gamemodes }
 export { TIER_ORDER }
 
 function TierBadge({ tier }: { tier: string }) {
@@ -28,6 +20,7 @@ function TierBadge({ tier }: { tier: string }) {
 
 function GamemodeIcon({ gm, tier }: { gm: typeof gamemodes[0]; tier?: string | null }) {
   const [hovered, setHovered] = useState(false)
+  const [iconError, setIconError] = useState(false)
   const colors = tier ? tierColors[tier] : null
 
   return (
@@ -43,7 +36,18 @@ function GamemodeIcon({ gm, tier }: { gm: typeof gamemodes[0]; tier?: string | n
             : 'bg-white/3 border-white/10 opacity-30'
           }`}
       >
-        {gm.icon}
+        {!iconError ? (
+          <img
+            src={gm.icon}
+            alt={gm.label}
+            width={18}
+            height={18}
+            className="w-[18px] h-[18px] object-contain"
+            onError={() => setIconError(true)}
+          />
+        ) : (
+          gm.fallback
+        )}
       </div>
 
       {hovered && tier && (
@@ -68,10 +72,22 @@ interface PlayerCardProps {
 
 export function PlayerCard({ player, totalPoints, overallRank, overallTier }: PlayerCardProps) {
   const [imgError, setImgError] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
   const overallColors = overallTier ? tierColors[overallTier] : null
 
   return (
-    <div className="player-card glass rounded-2xl border border-white/5 hover:border-[#00BFFF]/30 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#00BFFF]/5 group">
+    <div
+      onClick={() => setShowProfile(true)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          setShowProfile(true)
+        }
+      }}
+      className="player-card glass rounded-2xl border border-white/5 hover:border-[#00BFFF]/30 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#00BFFF]/5 group cursor-pointer"
+    >
       {/* Header: avatar + name + score badge */}
       <div className="flex items-start gap-3 mb-3">
         <div className="relative flex-shrink-0">
@@ -137,6 +153,16 @@ export function PlayerCard({ player, totalPoints, overallRank, overallTier }: Pl
           />
         ))}
       </div>
+
+      {showProfile && (
+        <PlayerProfileModal
+          player={player}
+          totalPoints={totalPoints}
+          overallRank={overallRank}
+          overallTier={overallTier}
+          onClose={() => setShowProfile(false)}
+        />
+      )}
     </div>
   )
 }
