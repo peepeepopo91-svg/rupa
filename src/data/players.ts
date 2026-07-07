@@ -73,5 +73,3 @@ const players: Player[] = [
 ]
 
 export default players
-
-export default players
