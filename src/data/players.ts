@@ -61,10 +61,10 @@ const players: Player[] = [
     head: "https://mc-heads.net/avatar/D3n1s1",
     region: "Europe",
     ranks: {
-      sword: "NONE",
-      uhc: "NONE",
+      sword: "HT5",
+      uhc: "LT5",
       crystal: "HT5",
-      mace: "NONE",
+      mace: "LT3",
       axe: "NONE",
       nethpot: "NONE",
       diapot: "NONE",
