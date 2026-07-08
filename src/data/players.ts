@@ -67,7 +67,7 @@ const players: Player[] = [
       mace: "LT3",
       axe: "LT4",
       nethpot: "NONE",
-      diapot: "NONE",
+      diapot: "HT4",
     },
   },
   {
