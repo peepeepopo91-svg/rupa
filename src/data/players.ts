@@ -91,7 +91,7 @@ const players: Player[] = [
     ranks: {
       sword: "HT5",
       uhc: "HT5",
-      crystal: "NONE",
+      crystal: "LT5",
       mace: "NONE",
       axe: "LT4",
       nethpot: "NONE",
