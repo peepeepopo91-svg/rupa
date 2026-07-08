@@ -70,6 +70,20 @@ const players: Player[] = [
       diapot: "NONE",
     },
   },
+  {
+    name: "cobwebmsater",
+    head: "https://mc-heads.net/avatar/cobwebmsater",
+    region: "Europe",
+    ranks: {
+      sword: "NONE",
+      uhc: "HT4",
+      crystal: "NONE",
+      mace: "NONE",
+      axe: "NONE",
+      nethpot: "NONE",
+      diapot: "NONE",
+    },
+  },
 ]
 
 export default players
