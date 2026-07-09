@@ -126,6 +126,20 @@ const players: Player[] = [
       diapot: "NONE",
     },
   },
+  {
+    name: "laz_rexx",
+    head: "https://mc-heads.net/avatar/laz_rexx",
+    region: "North America",
+    ranks: {
+      sword: "NONE",
+      uhc: "NONE",
+      crystal: "HT5",
+      mace: "NONE",
+      axe: "NONE",
+      nethpot: "NONE",
+      diapot: "NONE",
+    },
+  },
 ]
 
 export default players
