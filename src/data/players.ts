@@ -182,6 +182,48 @@ const players: Player[] = [
       diapot: "NONE",
     },
   },
+  {
+    name: "Zyr3n",
+    head: "https://mc-heads.net/avatar/Zyr3n",
+    region: "Europe",
+    ranks: {
+      sword: "HT4",
+      uhc: "NONE",
+      crystal: "NONE",
+      mace: "LT4",
+      axe: "LT4",
+      nethpot: "NONE",
+      diapot: "NONE",
+    },
+  },
+  {
+    name: "Tegress",
+    head: "https://mc-heads.net/avatar/Tegress",
+    region: "North America",
+    ranks: {
+      sword: "NONE",
+      uhc: "NONE",
+      crystal: "NONE",
+      mace: "HT2",
+      axe: "NONE",
+      nethpot: "NONE",
+      diapot: "NONE",
+    },
+  },
+  {
+    name: "Letahrt",
+    head: "https://mc-heads.net/avatar/Letahrt",
+    region: "North America",
+    ranks: {
+      sword: "NONE",
+      uhc: "NONE",
+      crystal: "NONE",
+      mace: "LT2",
+      axe: "NONE",
+      nethpot: "NONE",
+      diapot: "NONE",
+    },
+  },
 ]
 
 export default players
