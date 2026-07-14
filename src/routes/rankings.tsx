@@ -14,7 +14,7 @@ export const Route = createFileRoute('/rankings')({
 
 type SortMode = 'points-desc' | 'points-asc' | 'name-asc' | 'name-desc'
 
-const PLAYERS_PER_PAGE = 25
+const PLAYERS_PER_PAGE = 24
 
 function RankingsPage() {
   const [search, setSearch] = useState('')
