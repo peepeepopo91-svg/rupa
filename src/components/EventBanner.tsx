@@ -1,10 +1,12 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Badge } from './Badge'
 import { CountdownTimer } from './CountdownTimer'
 import { CTAButton } from './CTAButton'
+import { EVENT } from '../data/event'
 
 export function EventBanner() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isExpired, setIsExpired] = useState(false)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -84,6 +86,21 @@ export function EventBanner() {
     }
   }, [])
 
+  // Parse title to extract "Blue Network" styling if present
+  const renderTitle = () => {
+    const defaultPrefix = "Blue Network"
+    if (EVENT.title.startsWith(defaultPrefix)) {
+      const remaining = EVENT.title.substring(defaultPrefix.length)
+      return (
+        <>
+          <span className="text-[#00BFFF] drop-shadow-[0_0_8px_rgba(0,191,255,0.4)]">{defaultPrefix}</span>
+          {remaining}
+        </>
+      )
+    }
+    return EVENT.title
+  }
+
   return (
     <div className="relative w-full overflow-hidden bg-gradient-to-r from-[#070b12] via-[#09152a] to-[#070b12] border-b border-[#00BFFF]/15 px-4 py-4 md:py-3.5 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8 shadow-[0_4px_30px_rgba(0,191,255,0.05)] select-none animate-[fadeIn_0.8s_ease-out] z-50">
       {/* Dynamic particles background */}
@@ -97,14 +114,14 @@ export function EventBanner() {
       <div className="flex flex-col items-center md:items-start text-center md:text-left gap-2 md:gap-1 relative z-10 md:pl-4">
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
           <h2 className="font-['Space_Grotesk'] font-black text-sm sm:text-base md:text-lg text-white tracking-widest uppercase select-none">
-            <span className="text-[#00BFFF] drop-shadow-[0_0_8px_rgba(0,191,255,0.4)]">Blue Network</span> PvP World Cup
+            {renderTitle()}
           </h2>
           <div className="hidden sm:block">
             <Badge />
           </div>
         </div>
         <p className="text-xs sm:text-sm font-medium text-gray-400 font-['Inter']">
-          Registrations are now open!
+          {isExpired ? "Registrations are now closed." : EVENT.subtitle}
         </p>
         <div className="sm:hidden mt-1">
           <Badge />
@@ -113,12 +130,12 @@ export function EventBanner() {
 
       {/* Center: Live countdown */}
       <div className="relative z-10 w-full md:w-auto">
-        <CountdownTimer />
+        <CountdownTimer onExpire={setIsExpired} />
       </div>
 
       {/* Right side: Action CTA */}
       <div className="relative z-10 md:pr-4 flex justify-center items-center">
-        <CTAButton />
+        <CTAButton isDisabled={isExpired} />
       </div>
     </div>
   )
