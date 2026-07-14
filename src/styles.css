@@ -132,3 +132,48 @@ code {
 .modal-backdrop-out { animation: modalBackdropOut 0.18s ease-in both; }
 .modal-panel-in { animation: modalPanelIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .modal-panel-out { animation: modalPanelOut 0.18s ease-in both; }
+
+/* Event banner */
+@keyframes bannerGradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.banner-gradient {
+  background: linear-gradient(120deg, #0B0F17 0%, #0d1b34 25%, #0a1428 50%, #0d1b34 75%, #0B0F17 100%);
+  background-size: 200% 200%;
+  animation: bannerGradientShift 16s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(0, 153, 255, 0.45); }
+  50% { box-shadow: 0 0 26px rgba(0, 153, 255, 0.8); }
+}
+
+.badge-pulse {
+  animation: badgePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes digitIn {
+  from { opacity: 0; transform: translateY(-60%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.countdown-digit {
+  display: inline-block;
+  animation: digitIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cta-shine::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, 0.35) 40%, transparent 60%);
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+}
+
+.cta-shine:hover::before {
+  transform: translateX(120%);
+}

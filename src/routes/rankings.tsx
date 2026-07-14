@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Navbar } from '../components/Navbar'
+import { EventBanner } from '../components/EventBanner'
 import { Footer } from '../components/Footer'
 import { PlayerCard, gamemodes, tierColors, TIER_ORDER } from '../components/PlayerCard'
 import type { PlayerRanks } from '../data/players'
@@ -71,10 +72,11 @@ function RankingsPage() {
 
   return (
     <div className="min-h-screen bg-[#0B0F17]">
+      <EventBanner />
       <Navbar />
 
       {/* Page header */}
-      <section className="relative pt-28 pb-12 px-4 overflow-hidden">
+      <section className="relative pt-12 pb-12 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#00BFFF]/5 to-transparent pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-64 bg-[#0066FF]/10 blur-[100px] pointer-events-none" />
         <div className="max-w-6xl mx-auto text-center relative">
