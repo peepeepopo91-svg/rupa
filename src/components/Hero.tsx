@@ -119,7 +119,7 @@ function CopyIPButton() {
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-36 md:pt-32">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0B0F17] via-[#0d1526] to-[#0B0F17]" />
 

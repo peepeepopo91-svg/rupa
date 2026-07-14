@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
+import { EventBanner } from './EventBanner'
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
@@ -18,36 +19,40 @@ export function Navbar() {
   ]
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-[#0B0F17]/95 backdrop-blur-md border-b border-[#00BFFF]/10 shadow-lg shadow-black/50'
-          : 'bg-transparent'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <span className="text-2xl select-none">⚔</span>
-            <span className="font-['Space_Grotesk'] font-bold text-xl tracking-tight">
-              <span className="text-[#00BFFF]">Blue</span>
-              <span className="text-white"> Tiers</span>
-            </span>
-          </Link>
+    <header className="fixed top-0 left-0 right-0 z-50 flex flex-col w-full">
+      {/* Premium Event Banner at the very top */}
+      <EventBanner />
 
-          {/* Center nav */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  location.pathname === link.to
-                    ? 'text-[#00BFFF] bg-[#00BFFF]/10'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
+      <nav
+        className={`w-full transition-all duration-300 ${
+          scrolled
+            ? 'bg-[#0B0F17]/95 backdrop-blur-md border-b border-[#00BFFF]/10 shadow-lg shadow-black/50'
+            : 'bg-[#0B0F17]/40 backdrop-blur-sm'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 group">
+              <span className="text-2xl select-none">⚔</span>
+              <span className="font-['Space_Grotesk'] font-bold text-xl tracking-tight">
+                <span className="text-[#00BFFF]">Blue</span>
+                <span className="text-white"> Tiers</span>
+              </span>
+            </Link>
+
+            {/* Center nav */}
+            <div className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    location.pathname === link.to
+                      ? 'text-[#00BFFF] bg-[#00BFFF]/10'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
                 {link.label}
               </Link>
             ))}
@@ -113,5 +118,6 @@ export function Navbar() {
         )}
       </div>
     </nav>
+  </header>
   )
 }
