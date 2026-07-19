@@ -8,6 +8,13 @@ import type { LeaderboardEntry } from '../../server/miningServer'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function formatCompact(n: number): string {
+  if (n >= 1_000_000_000) return `${+(n / 1_000_000_000).toPrecision(3)}B`
+  if (n >= 1_000_000)     return `${+(n / 1_000_000).toPrecision(3)}M`
+  if (n >= 1_000)         return `${+(n / 1_000).toPrecision(3)}K`
+  return String(Math.floor(n))
+}
+
 const MEDAL: Record<number, { emoji: string; color: string; bg: string; border: string }> = {
   1: { emoji: '🥇', color: 'text-yellow-400',  bg: 'bg-yellow-500/8',  border: 'border-yellow-500/20' },
   2: { emoji: '🥈', color: 'text-gray-300',    bg: 'bg-gray-500/8',   border: 'border-gray-500/20'   },
@@ -269,7 +276,7 @@ export function MiningLeaderboard({ currentUsername }: MiningLeaderboardProps) {
                       {/* BlueCoin balance */}
                       <div className="text-right">
                         <span className={`text-sm font-bold tabular-nums ${isMe ? 'text-[#00BFFF]' : 'text-white'}`}>
-                          {entry.balance.toLocaleString()}
+                          {formatCompact(entry.balance)}
                         </span>
                         <span className="text-gray-600 text-[10px] ml-1">BC</span>
                       </div>
@@ -277,7 +284,7 @@ export function MiningLeaderboard({ currentUsername }: MiningLeaderboardProps) {
                       {/* Gems */}
                       <div className="text-right hidden sm:block">
                         <span className="text-sm font-semibold tabular-nums text-purple-300">
-                          {Math.floor(entry.gems).toLocaleString()}
+                          {formatCompact(Math.floor(entry.gems))}
                         </span>
                         <span className="text-gray-600 text-[10px] ml-1">💎</span>
                       </div>
