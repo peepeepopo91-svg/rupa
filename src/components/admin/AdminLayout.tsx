@@ -55,9 +55,9 @@ const SECTION_TITLES: Record<AdminSection, { title: string; subtitle: string }> 
   'credentials':  { title: 'Credentials Manager',        subtitle: 'Manage admin username and dual-password authentication' },
 }
 
-function SectionContent({ section, admin }: { section: AdminSection; admin: string }) {
+function SectionContent({ section, admin, setSection }: { section: AdminSection; admin: string; setSection: (s: AdminSection) => void }) {
   switch (section) {
-    case 'dashboard':   return <Dashboard admin={admin} />
+    case 'dashboard':   return <Dashboard admin={admin} setSection={setSection} />
     case 'tier-list':   return <TierListManager admin={admin} />
     case 'gamemodes':   return <GamemodeManager admin={admin} />
     case 'mining-mgmt': return <MiningManager admin={admin} />
@@ -190,7 +190,7 @@ export function AdminLayout({ session, section, setSection, onLogout }: Props) {
 
         {/* Section content */}
         <main className="flex-1 p-6 overflow-y-auto">
-          <SectionContent section={section} admin={session.username} />
+          <SectionContent section={section} admin={session.username} setSection={setSection} />
         </main>
       </div>
     </div>
