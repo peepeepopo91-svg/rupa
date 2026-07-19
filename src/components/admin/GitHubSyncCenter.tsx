@@ -1742,7 +1742,7 @@ export function GitHubSyncCenter({ admin: _admin }: { admin: string }) {
           {/* Title + meta */}
           <div className="flex-1 min-w-0">
             <h3 className="font-['Space_Grotesk'] font-bold text-white text-lg leading-tight tracking-tight">
-              GitHub Sync Center
+              Sync Dashboard
             </h3>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/4 border border-white/8 text-[10px] font-mono text-gray-400">

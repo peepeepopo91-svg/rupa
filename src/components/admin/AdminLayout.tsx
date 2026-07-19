@@ -43,7 +43,7 @@ const SECTION_TITLES: Record<AdminSection, { title: string; subtitle: string }> 
   'content':     { title: 'Content Manager',    subtitle: 'Edit homepage, footer, and site text' },
   'events':      { title: 'Event Manager',      subtitle: 'Configure event banners and countdowns' },
   'logs':        { title: 'Activity Logs',      subtitle: 'Full audit trail of all admin actions' },
-  'github-sync': { title: 'Sync Dashboard',  subtitle: 'Professional synchronization dashboard — push, validate, rollback' },
+  'github-sync': { title: 'GitHub Sync Center',  subtitle: 'Professional synchronization dashboard — push, validate, rollback' },
 }
 
 function SectionContent({ section, admin }: { section: AdminSection; admin: string }) {
