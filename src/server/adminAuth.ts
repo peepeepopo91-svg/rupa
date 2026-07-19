@@ -26,21 +26,22 @@ const SESSION_TTL_MS =  8 * 60 * 60 * 1000  // 8 hours
 interface RateLimitEntry { count: number; lockedUntil: number }
 const rateLimitStore = new Map<string, RateLimitEntry>()
 
-function checkRateLimit(ip: string): { blocked: boolean; remainingMs: number } {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function checkRateLimit(ip: string, _maxAttempts = MAX_ATTEMPTS, _lockoutMs = LOCKOUT_MS): { blocked: boolean; remainingMs: number; attempts: number } {
   const now   = Date.now()
   const entry = rateLimitStore.get(ip)
-  if (!entry) return { blocked: false, remainingMs: 0 }
-  if (entry.lockedUntil > now) return { blocked: true, remainingMs: entry.lockedUntil - now }
+  if (!entry) return { blocked: false, remainingMs: 0, attempts: 0 }
+  if (entry.lockedUntil > now) return { blocked: true, remainingMs: entry.lockedUntil - now, attempts: entry.count }
   if (entry.lockedUntil > 0) rateLimitStore.delete(ip)   // expired lock — reset
-  return { blocked: false, remainingMs: 0 }
+  return { blocked: false, remainingMs: 0, attempts: entry.count }
 }
 
-function recordFailure(ip: string): number {
+function recordFailure(ip: string, maxAttempts = MAX_ATTEMPTS, lockoutMs = LOCKOUT_MS): number {
   const entry = rateLimitStore.get(ip) ?? { count: 0, lockedUntil: 0 }
   const count = entry.count + 1
   rateLimitStore.set(ip, {
     count,
-    lockedUntil: count >= MAX_ATTEMPTS ? Date.now() + LOCKOUT_MS : 0,
+    lockedUntil: count >= maxAttempts ? Date.now() + lockoutMs : 0,
   })
   return count
 }
@@ -86,21 +87,40 @@ function signSession(username: string, loginAt: number): string {
 }
 
 // ─── Credentials File ─────────────────────────────────────────────────────────
+
+const DEFAULT_SETTINGS = { maxAttempts: 5, lockoutMinutes: 15, sessionHours: 8 }
+
 const AdminSchema = z.object({
   admin: z.object({
-    username:            z.string(),
-    password1:           z.string(),
-    password2:           z.string(),
+    username:             z.string(),
+    password1:            z.string(),
+    password2:            z.string(),
     // Any session token whose loginAt < sessionInvalidBefore is rejected.
     // Bumped on every credential update to force re-authentication.
     sessionInvalidBefore: z.number().optional().default(0),
   }),
+  // Runtime-configurable security settings (optional — defaults apply if absent)
+  settings: z.object({
+    maxAttempts:    z.number().int().min(1).max(50).optional().default(DEFAULT_SETTINGS.maxAttempts),
+    lockoutMinutes: z.number().int().min(1).max(1440).optional().default(DEFAULT_SETTINGS.lockoutMinutes),
+    sessionHours:   z.number().int().min(1).max(168).optional().default(DEFAULT_SETTINGS.sessionHours),
+  }).optional().default(DEFAULT_SETTINGS),
 })
 
-function loadAdminCredentials() {
+type AdminConfig = z.infer<typeof AdminSchema>
+
+function loadAdminCredentials(): AdminConfig {
   const filePath = resolve(process.cwd(), 'admin.yml')
   const raw      = readFileSync(filePath, 'utf8')
   return AdminSchema.parse(yamlLoad(raw))
+}
+
+function getSettings(cfg: AdminConfig) {
+  return {
+    maxAttempts:    cfg.settings?.maxAttempts    ?? DEFAULT_SETTINGS.maxAttempts,
+    lockoutMinutes: cfg.settings?.lockoutMinutes ?? DEFAULT_SETTINGS.lockoutMinutes,
+    sessionHours:   cfg.settings?.sessionHours   ?? DEFAULT_SETTINGS.sessionHours,
+  }
 }
 
 function writeAdminCredentials(data: {
@@ -108,9 +128,11 @@ function writeAdminCredentials(data: {
   password1: string
   password2: string
   sessionInvalidBefore: number
+  settings?: { maxAttempts: number; lockoutMinutes: number; sessionHours: number }
 }) {
+  const { settings, ...admin } = data
   const filePath = resolve(process.cwd(), 'admin.yml')
-  writeFileSync(filePath, yamlDump({ admin: data }), 'utf8')
+  writeFileSync(filePath, yamlDump({ admin, ...(settings ? { settings } : {}) }), 'utf8')
 }
 
 async function upgradePasswords(username: string, p1Plain: string, p2Plain: string) {
@@ -169,11 +191,13 @@ export const validateAdminCredentials = createServerFn({ method: 'POST' })
     ])
 
     if (!usernameOk || !p1Ok || !p2Ok) {
-      const failCount = recordFailure(ip)
-      const remaining = MAX_ATTEMPTS - failCount
+      const s = getSettings(cfg)
+      const lockoutMs = s.lockoutMinutes * 60_000
+      const failCount = recordFailure(ip, s.maxAttempts, lockoutMs)
+      const remaining = s.maxAttempts - failCount
       const hint = remaining > 0
         ? ` (${remaining} attempt${remaining === 1 ? '' : 's'} remaining)`
-        : ' — account locked for 15 minutes'
+        : ` — account locked for ${s.lockoutMinutes} minute${s.lockoutMinutes === 1 ? '' : 's'}`
       return { valid: false as const, error: `Invalid credentials${hint}` }
     }
 
@@ -306,6 +330,102 @@ export const getAdminInfo = createServerFn({ method: 'POST' })
     }
   })
 
+// ─── Rate Limit Status (admin-gated) ─────────────────────────────────────────
+
+export const getAdminRateLimitStatus = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ token: z.string(), username: z.string(), loginAt: z.number() }))
+  .handler(async ({ data }) => {
+    // Light token check (no DB, HMAC only)
+    if (Date.now() - data.loginAt > SESSION_TTL_MS) return { ok: false as const }
+    try {
+      const exp = signSession(data.username, data.loginAt)
+      const a = Buffer.from(data.token, 'hex')
+      const b = Buffer.from(exp, 'hex')
+      if (a.length !== b.length || !timingSafeEqual(a, b)) return { ok: false as const }
+    } catch { return { ok: false as const } }
+
+    const ip   = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
+    let cfg: AdminConfig
+    try { cfg = loadAdminCredentials() } catch { return { ok: false as const } }
+    const s    = getSettings(cfg)
+    const rl   = checkRateLimit(ip, s.maxAttempts, s.lockoutMinutes * 60_000)
+
+    return {
+      ok:           true as const,
+      ip,
+      attempts:     rl.attempts,
+      maxAttempts:  s.maxAttempts,
+      blocked:      rl.blocked,
+      remainingMs:  rl.remainingMs,
+      lockedUntilTs: rl.blocked ? Date.now() + rl.remainingMs : 0,
+    }
+  })
+
+// ─── Get Security Settings ────────────────────────────────────────────────────
+
+export const getSecuritySettings = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ token: z.string(), username: z.string(), loginAt: z.number() }))
+  .handler(async ({ data }) => {
+    if (Date.now() - data.loginAt > SESSION_TTL_MS) return { ok: false as const }
+    try {
+      const exp = signSession(data.username, data.loginAt)
+      const a = Buffer.from(data.token, 'hex')
+      const b = Buffer.from(exp, 'hex')
+      if (a.length !== b.length || !timingSafeEqual(a, b)) return { ok: false as const }
+    } catch { return { ok: false as const } }
+
+    let cfg: AdminConfig
+    try { cfg = loadAdminCredentials() } catch { return { ok: false as const } }
+    const s = getSettings(cfg)
+    return { ok: true as const, settings: s }
+  })
+
+// ─── Update Security Settings (password-gated) ───────────────────────────────
+
+export const updateSecuritySettings = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    currentPassword1: z.string(),
+    currentPassword2: z.string(),
+    settings: z.object({
+      maxAttempts:    z.number().int().min(1).max(50),
+      lockoutMinutes: z.number().int().min(1).max(1440),
+      sessionHours:   z.number().int().min(1).max(168),
+    }),
+  }))
+  .handler(async ({ data }) => {
+    const ip = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
+    const rl  = checkRateLimit(ip)
+    if (rl.blocked) {
+      const mins = Math.ceil(rl.remainingMs / 60000)
+      return { ok: false as const, error: `Rate limited. Try again in ${mins}m.` }
+    }
+
+    let cfg: AdminConfig
+    try { cfg = loadAdminCredentials() } catch { return { ok: false as const, error: 'Cannot read admin.yml' } }
+
+    const [p1Ok, p2Ok] = await Promise.all([
+      verifyPassword(cfg.admin.password1, data.currentPassword1),
+      verifyPassword(cfg.admin.password2, data.currentPassword2),
+    ])
+    if (!p1Ok || !p2Ok) {
+      recordFailure(ip)
+      return { ok: false as const, error: 'Current passwords are incorrect' }
+    }
+    clearFailures(ip)
+
+    try {
+      writeAdminCredentials({
+        username: cfg.admin.username,
+        password1: cfg.admin.password1,
+        password2: cfg.admin.password2,
+        sessionInvalidBefore: cfg.admin.sessionInvalidBefore ?? 0,
+        settings: data.settings,
+      })
+    } catch { return { ok: false as const, error: 'Failed to write admin.yml' } }
+
+    return { ok: true as const, settings: data.settings }
+  })
+
 // ─── Token Verification (called on every admin page load) ─────────────────────
 export const checkAdminToken = createServerFn({ method: 'POST' })
   .inputValidator(z.object({
@@ -314,12 +434,7 @@ export const checkAdminToken = createServerFn({ method: 'POST' })
     token:    z.string(),
   }))
   .handler(async ({ data }) => {
-    // ── 1. Check TTL expiry ───────────────────────────────────────────────────
-    if (Date.now() - data.loginAt > SESSION_TTL_MS) {
-      return { valid: false as const, reason: 'Session expired — please log in again' }
-    }
-
-    // ── 2. Verify HMAC signature ──────────────────────────────────────────────
+    // ── 1. Verify HMAC signature first (no I/O) ───────────────────────────────
     let expected: string
     try {
       expected = signSession(data.username, data.loginAt)
@@ -337,18 +452,21 @@ export const checkAdminToken = createServerFn({ method: 'POST' })
       return { valid: false as const, reason: 'Malformed session token' }
     }
 
-    // ── 3. Enforce credential-rotation revocation ─────────────────────────────
-    // Any credential change bumps sessionInvalidBefore in admin.yml.
-    // Sessions issued before that timestamp are rejected even if the HMAC is valid.
-    try {
-      const cfg = loadAdminCredentials()
-      const sib = cfg.admin.sessionInvalidBefore ?? 0
-      if (sib > 0 && data.loginAt < sib) {
-        return { valid: false as const, reason: 'Credentials were rotated — please log in again' }
-      }
-    } catch {
-      // If admin.yml is unreadable, fail closed
+    // ── 2. Load config — runtime TTL + revocation check ───────────────────────
+    let cfg: AdminConfig
+    try { cfg = loadAdminCredentials() } catch {
       return { valid: false as const, reason: 'Cannot verify session against current credentials' }
+    }
+
+    const sessionTTL_ms = (getSettings(cfg).sessionHours) * 60 * 60 * 1000
+    if (Date.now() - data.loginAt > sessionTTL_ms) {
+      return { valid: false as const, reason: 'Session expired — please log in again' }
+    }
+
+    // ── 3. Enforce credential-rotation revocation ─────────────────────────────
+    const sib = cfg.admin.sessionInvalidBefore ?? 0
+    if (sib > 0 && data.loginAt < sib) {
+      return { valid: false as const, reason: 'Credentials were rotated — please log in again' }
     }
 
     return { valid: true as const }
