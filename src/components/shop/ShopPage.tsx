@@ -105,45 +105,37 @@ export function ShopPage() {
     <div className="min-h-screen">
 
       {/* ── Hero Header ─────────────────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-12 px-4 overflow-hidden">
-        {/* Background effects */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#00BFFF]/4 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-0 left-1/4 w-[500px] h-72 bg-purple-600/8 blur-[120px] pointer-events-none" />
-        <div className="absolute top-0 right-1/4 w-[400px] h-64 bg-[#00BFFF]/8 blur-[100px] pointer-events-none" />
+      <section className="relative pt-64 pb-12 px-4 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0066FF]/5 to-transparent pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-64 bg-[#00BFFF]/12 blur-[120px] pointer-events-none" />
 
-        <div className="max-w-6xl mx-auto relative">
-          <div className="text-center mb-10">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-purple-500/20 bg-purple-500/8 text-purple-400 text-xs font-semibold mb-5 tracking-wide uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-              Gem Store
-            </div>
-
-            <h1 className="font-['Space_Grotesk'] font-black text-4xl sm:text-5xl lg:text-6xl text-white mb-4 leading-tight">
-              Blue Tiers <span className="text-gradient">Shop</span>
-            </h1>
-            <p className="text-gray-500 text-sm sm:text-base max-w-lg mx-auto">
-              Spend your Gems on exclusive ranks, crate keys, and Amethyst tools.
-              Mine BlueCoin → Exchange for Gems → Conquer the shop.
-            </p>
-
-            {/* Gem balance */}
-            {user ? (
-              <div className="mt-6 inline-flex items-center gap-3 px-5 py-3 rounded-2xl glass border border-white/8">
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-400">✨</span>
-                  <span className="text-white font-black text-lg">{Math.floor(userGems).toLocaleString()}</span>
-                  <span className="text-gray-500 text-sm">Gems</span>
-                </div>
-                <div className="w-px h-5 bg-white/10" />
-                <span className="text-gray-500 text-xs">Ready to spend</span>
-              </div>
-            ) : (
-              <div className="mt-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-500/20 bg-amber-500/8 text-amber-400 text-sm">
-                ⚠️ <span>Log in to the <a href="/mining" className="underline underline-offset-2 hover:text-amber-300">Mining panel</a> to see your Gems</span>
-              </div>
-            )}
+        <div className="max-w-6xl mx-auto text-center relative">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#00BFFF]/20 bg-[#00BFFF]/5 text-[#00BFFF] text-xs font-semibold mb-6 tracking-wide uppercase">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00BFFF] animate-pulse" />
+            Gem Store
           </div>
+          <h1 className="font-['Space_Grotesk'] font-black text-4xl sm:text-5xl text-white mb-4">
+            Blue Tiers <span className="text-gradient">Shop</span>
+          </h1>
+          <p className="text-gray-500 max-w-md mx-auto text-sm">
+            Spend your Gems on exclusive ranks, crate keys, and Amethyst tools.
+            Mine BlueCoin → Exchange for Gems → Conquer the shop.
+          </p>
+
+          {/* Gem balance */}
+          {user ? (
+            <div className="mt-6 inline-flex items-center gap-3 px-5 py-3 rounded-2xl glass border border-white/8">
+              <span className="text-purple-400">✨</span>
+              <span className="text-white font-black text-lg">{Math.floor(userGems).toLocaleString()}</span>
+              <span className="text-gray-500 text-sm">Gems</span>
+              <div className="w-px h-5 bg-white/10" />
+              <span className="text-gray-500 text-xs">Ready to spend</span>
+            </div>
+          ) : (
+            <div className="mt-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-500/20 bg-amber-500/8 text-amber-400 text-sm">
+              ⚠️ <span>Log in to the <a href="/mining" className="underline underline-offset-2 hover:text-amber-300">Mining panel</a> to see your Gems</span>
+            </div>
+          )}
         </div>
       </section>
 
