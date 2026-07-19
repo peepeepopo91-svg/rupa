@@ -62,29 +62,48 @@ function BlockProgress({ community, economy }: { community: CommunityBlock | nul
   if (!community) return null
   const intervalMs = economy.BLOCK_INTERVAL_MS ?? MINING_CONSTANTS.BLOCK_INTERVAL_MS
   const elapsed = now - community.startedAt
-  const pct = Math.min(100, (elapsed / intervalMs) * 100)
-  const remaining = Math.max(0, intervalMs - elapsed)
-  const rS = Math.floor(remaining / 1000)
-  const rM = Math.floor(rS / 60)
-  const rH = Math.floor(rM / 60)
-  const timeStr = rH > 0 ? `${rH}h ${rM % 60}m` : `${rM}m ${rS % 60}s`
+  const remaining = intervalMs - elapsed
+  const isOverdue = remaining <= 0
+  const pct = isOverdue ? 100 : Math.min(100, (elapsed / intervalMs) * 100)
+
+  // Format remaining or overdue duration
+  const durMs = Math.abs(remaining)
+  const dS = Math.floor(durMs / 1000)
+  const dM = Math.floor(dS / 60)
+  const dH = Math.floor(dM / 60)
+  const timeStr = dH > 0 ? `${dH}h ${dM % 60}m` : `${dM}m ${dS % 60}s`
 
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-xs">
         <span className="text-gray-500">Block #{community.blockNumber} in progress</span>
-        <span className="text-[#00BFFF] font-mono font-bold">{timeStr} left</span>
+        {isOverdue ? (
+          <span className="text-amber-400 font-mono font-bold animate-pulse">
+            Overdue by {timeStr} — awaiting solver
+          </span>
+        ) : (
+          <span className="text-[#00BFFF] font-mono font-bold">{timeStr} left</span>
+        )}
       </div>
       <div className="relative w-full h-2.5 rounded-full bg-white/5 overflow-hidden">
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#00BFFF]/60 to-[#00BFFF] transition-all"
+          className={`absolute inset-y-0 left-0 rounded-full transition-all ${isOverdue
+            ? 'bg-gradient-to-r from-amber-500/70 to-amber-400'
+            : 'bg-gradient-to-r from-[#00BFFF]/60 to-[#00BFFF]'
+          }`}
           style={{ width: `${pct}%` }}
         />
         <div className="absolute inset-0 rounded-full"
-          style={{ background: 'linear-gradient(90deg,transparent 60%,rgba(0,191,255,0.15))' }} />
+          style={{ background: isOverdue
+            ? 'linear-gradient(90deg,transparent 60%,rgba(251,191,36,0.15))'
+            : 'linear-gradient(90deg,transparent 60%,rgba(0,191,255,0.15))' }} />
       </div>
       <div className="flex justify-between text-[10px] text-gray-700">
-        <span>{pct.toFixed(1)}% complete</span>
+        {isOverdue ? (
+          <span className="text-amber-600">Block solved when next miner activity occurs</span>
+        ) : (
+          <span>{pct.toFixed(1)}% of {Math.round(intervalMs / 60000)}m interval elapsed</span>
+        )}
         <span>{community.totalSolved.toLocaleString()} blocks solved total</span>
       </div>
     </div>
