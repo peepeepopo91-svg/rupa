@@ -3,6 +3,9 @@
 // The ONLY way the admin panel commits data to GitHub.
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { AdminPaginator } from './AdminPaginator'
+
+const SYNC_HISTORY_PAGE_SIZE = 10
 import { useSyncState, getDirty } from '../../store/syncStore'
 import { getPlayers, getGamemodes } from '../../store/playersStore'
 import { getSiteContent, getEventConfig } from '../../store/contentStore'
@@ -1209,33 +1212,48 @@ function RollbackPanel({ commits }: { commits: CommitEntry[] }) {
 // ─── Sync History Panel ───────────────────────────────────────────────────────
 
 function SyncHistoryPanel({ history }: { history: SyncHistoryEntry[] }) {
+  const [page, setPage] = useState(1)
+  const totalPages  = Math.max(1, Math.ceil(history.length / SYNC_HISTORY_PAGE_SIZE))
+  const safePage    = Math.min(page, totalPages)
+  const pagedHistory = history.slice((safePage - 1) * SYNC_HISTORY_PAGE_SIZE, safePage * SYNC_HISTORY_PAGE_SIZE)
+
   if (history.length === 0) {
     return <p className="text-gray-600 text-sm py-4 text-center">No sync history yet. Push to GitHub to create your first entry.</p>
   }
   return (
-    <div className="rounded-xl border border-white/8 overflow-hidden">
-      <div className="hidden sm:grid grid-cols-[110px_80px_1fr_140px_70px_80px] gap-2 px-4 py-2 border-b border-white/5 text-[9px] text-gray-600 uppercase tracking-widest">
-        <span>Date</span>
-        <span>Commit</span>
-        <span>Message</span>
-        <span>Files</span>
-        <span>Status</span>
-        <span>Duration</span>
+    <div className="space-y-3">
+      <div className="rounded-xl border border-white/8 overflow-hidden">
+        <div className="hidden sm:grid grid-cols-[110px_80px_1fr_140px_70px_80px] gap-2 px-4 py-2 border-b border-white/5 text-[9px] text-gray-600 uppercase tracking-widest">
+          <span>Date</span>
+          <span>Commit</span>
+          <span>Message</span>
+          <span>Files</span>
+          <span>Status</span>
+          <span>Duration</span>
+        </div>
+        <div className="divide-y divide-white/5">
+          {pagedHistory.map(h => (
+            <div key={h.id} className="grid sm:grid-cols-[110px_80px_1fr_140px_70px_80px] gap-2 px-4 py-3 items-center">
+              <span className="text-[10px] text-gray-500">{fmtDate(h.date)}</span>
+              <span className="font-mono text-[#00BFFF] text-[10px]">{h.commitHash.slice(0, 7)}</span>
+              <span className="text-gray-300 text-[11px] truncate">{h.commitMessage}</span>
+              <span className="text-gray-600 text-[10px] truncate">{h.filesChanged.join(', ')}</span>
+              <span className={`text-[10px] font-bold ${h.status === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                {h.status === 'success' ? '✓ OK' : '✗ Fail'}
+              </span>
+              <span className="text-gray-600 text-[10px]">{(h.durationMs / 1000).toFixed(1)}s</span>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="divide-y divide-white/5">
-        {history.map(h => (
-          <div key={h.id} className="grid sm:grid-cols-[110px_80px_1fr_140px_70px_80px] gap-2 px-4 py-3 items-center">
-            <span className="text-[10px] text-gray-500">{fmtDate(h.date)}</span>
-            <span className="font-mono text-[#00BFFF] text-[10px]">{h.commitHash.slice(0, 7)}</span>
-            <span className="text-gray-300 text-[11px] truncate">{h.commitMessage}</span>
-            <span className="text-gray-600 text-[10px] truncate">{h.filesChanged.join(', ')}</span>
-            <span className={`text-[10px] font-bold ${h.status === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-              {h.status === 'success' ? '✓ OK' : '✗ Fail'}
-            </span>
-            <span className="text-gray-600 text-[10px]">{(h.durationMs / 1000).toFixed(1)}s</span>
-          </div>
-        ))}
-      </div>
+
+      <AdminPaginator
+        page={safePage}
+        totalPages={totalPages}
+        totalItems={history.length}
+        pageSize={SYNC_HISTORY_PAGE_SIZE}
+        onPageChange={setPage}
+      />
     </div>
   )
 }
