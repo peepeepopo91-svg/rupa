@@ -4,6 +4,7 @@ import { getAdminSession, setAdminSession } from '../store/adminStore'
 import type { AdminSession } from '../store/adminStore'
 import { AdminLogin }  from '../components/admin/AdminLogin'
 import { AdminLayout } from '../components/admin/AdminLayout'
+import { checkAdminToken } from '../server/adminAuth'
 import { loadAllData } from '../server/dataFiles'
 import { savePlayers, saveGamemodes } from '../store/playersStore'
 import { saveSiteContent, saveEventConfig } from '../store/contentStore'
@@ -37,22 +38,41 @@ function AdminPage() {
   const [section, setSection] = useState<AdminSection>('dashboard')
   const [dataReady, setDataReady] = useState(false)
 
-  // On mount: check session and hydrate stores from GitHub JSON files
+  // On mount: verify session token server-side, then hydrate stores
   useEffect(() => {
-    setSession(getAdminSession())
+    const stored = getAdminSession()
 
-    // Load canonical data from disk (written by GitHub saves)
-    loadAllData()
+    // Kick off data hydration immediately (runs in parallel with token check)
+    const dataPromise = loadAllData()
       .then(d => {
-        // Hydrate stores silently (no dirty marking)
-        if (d.players)   savePlayers(d.players as Player[],         { silent: true })
-        if (d.gamemodes) saveGamemodes(d.gamemodes as Gamemode[],   { silent: true })
-        if (d.content)   saveSiteContent(d.content as SiteContent,  { silent: true })
-        if (d.event)     saveEventConfig(d.event as EventConfig,    { silent: true })
+        if (d.players)   savePlayers(d.players as Player[],                   { silent: true })
+        if (d.gamemodes) saveGamemodes(d.gamemodes as Gamemode[],             { silent: true })
+        if (d.content)   saveSiteContent(d.content as SiteContent,           { silent: true })
+        if (d.event)     saveEventConfig(d.event as EventConfig,             { silent: true })
         if (d.economy)   saveEconomyOverrides(d.economy as EconomyOverrides, { silent: true })
       })
       .catch(() => { /* falls back to localStorage defaults */ })
-      .finally(() => setDataReady(true))
+
+    if (!stored) {
+      dataPromise.finally(() => setDataReady(true))
+      return
+    }
+
+    // Verify the HMAC token server-side — prevents localStorage tampering
+    checkAdminToken({ data: { username: stored.username, loginAt: stored.loginAt, token: stored.token } })
+      .then(result => {
+        if (result.valid) {
+          setSession(stored)
+        } else {
+          // Expired or tampered token — force re-login
+          setAdminSession(null)
+        }
+      })
+      .catch(() => {
+        // Network error — grant access optimistically so admins aren't locked out offline
+        setSession(stored)
+      })
+      .finally(() => dataPromise.finally(() => setDataReady(true)))
   }, [])
 
   function handleLogin(s: AdminSession) {

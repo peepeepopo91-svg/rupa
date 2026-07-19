@@ -5,7 +5,8 @@ const ADMIN_LOGS_KEY    = 'bn_admin_logs'
 
 export interface AdminSession {
   username: string
-  loginAt: number
+  loginAt:  number
+  token:    string   // HMAC-SHA256 signature — verified server-side on every page load
 }
 
 export interface AdminLog {

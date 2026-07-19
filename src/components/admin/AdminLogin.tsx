@@ -28,7 +28,7 @@ export function AdminLogin({ onLogin }: Props) {
       if (!result?.valid) {
         setError((result as any)?.error ?? 'Invalid credentials')
       } else {
-        onLogin({ username: result.username, loginAt: Date.now() })
+        onLogin({ username: result.username, loginAt: result.loginAt, token: result.token })
       }
     } catch {
       setError('Authentication service unavailable')
@@ -129,10 +129,6 @@ export function AdminLogin({ onLogin }: Props) {
               'Access Admin Panel'
             )}
           </button>
-
-          <p className="text-center text-[10px] text-gray-700 mt-2">
-            All three fields required · Credentials stored in admin.yml
-          </p>
         </form>
       </div>
     </div>

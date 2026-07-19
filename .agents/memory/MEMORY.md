@@ -1,3 +1,4 @@
+- [Admin Auth Security Architecture](admin-auth-security.md) — scrypt hashing, per-IP rate limiting, HMAC-signed sessions, server-side token verification on every load
 - [TanStack Start server function API](tanstack-start-server-fn.md) — this version uses `.inputValidator()` not `.validator()` in the createServerFn chain
 - [Shop System Architecture](shop-system.md) — server fns, SSE via window event forwarding, data files, admin section integration
 - [Mining server-authoritative time](mining-server-auth.md) — offline earnings use server Date.now() only; client stores clockOffset = serverNow − Date.now() on login
