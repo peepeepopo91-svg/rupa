@@ -1,34 +1,64 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useMining } from '../../context/MiningContext'
 import { EXCHANGE_CONSTANTS } from '../../data/mining'
 import type { ExchangeDirection } from '../../data/mining'
-import { getRateHistory } from '../../store/miningStore'
 
-// ─── Sparkline ────────────────────────────────────────────────────────────────
+// ─── Rate wave math (mirrors miningStore.getExchangeRate) ────────────────────
 
-function Sparkline({ rates }: { rates: number[] }) {
-  const min = Math.min(...rates)
-  const max = Math.max(...rates)
-  const range = max - min || 1
-  const W = 200, H = 40
-  const pts = rates.map((r, i) => `${(i / (rates.length - 1)) * W},${H - ((r - min) / range) * (H - 4) - 2}`)
+function buildWavePoints(now: number, points = 96): number[] {
+  const { BASE_RATE, MIN_RATE, MAX_RATE, FLUCTUATION_PERIOD_MS } = EXCHANGE_CONSTANTS
+  const step = FLUCTUATION_PERIOD_MS / points
+  const phase = now % FLUCTUATION_PERIOD_MS
+  return Array.from({ length: points }, (_, i) => {
+    const t = ((phase + i * step) % FLUCTUATION_PERIOD_MS) / FLUCTUATION_PERIOD_MS
+    const wave = Math.sin(2 * Math.PI * t) * 0.65 + Math.sin(2 * Math.PI * t * 2.7 + 1.2) * 0.35
+    const amplitude = (MAX_RATE - MIN_RATE) / 2
+    return Math.round(BASE_RATE + wave * amplitude)
+  })
+}
+
+// ─── Live Rate Chart ──────────────────────────────────────────────────────────
+
+function LiveRateChart({ points, current }: { points: number[]; current: number }) {
+  const { MIN_RATE, MAX_RATE, BASE_RATE } = EXCHANGE_CONSTANTS
+  const W = 600; const H = 130; const PAD = 10
+  const range = MAX_RATE - MIN_RATE || 1
+  const scaleY = (v: number) => PAD + (1 - (v - MIN_RATE) / range) * (H - PAD * 2)
+  const scaleX = (i: number) => PAD + (i / (points.length - 1)) * (W - PAD * 2)
+  const d = points.map((v, i) => `${i === 0 ? 'M' : 'L'}${scaleX(i).toFixed(1)},${scaleY(v).toFixed(1)}`).join(' ')
+  const area = d + ` L${scaleX(points.length - 1).toFixed(1)},${H} L${PAD},${H} Z`
+  const baseY = scaleY(BASE_RATE)
+  const curY  = scaleY(current)
 
   return (
-    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="w-full">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-32" preserveAspectRatio="none">
       <defs>
-        <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#00BFFF" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#00BFFF" stopOpacity="0" />
+        <linearGradient id="exchRateGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#00BFFF" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#00BFFF" stopOpacity="0.02" />
         </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
       </defs>
-      <polyline
-        points={pts.join(' ')}
-        fill="none"
-        stroke="#00BFFF"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
+      {/* area fill */}
+      <path d={area} fill="url(#exchRateGrad)" />
+      {/* max line */}
+      <line x1={PAD} y1={scaleY(MAX_RATE)} x2={W - PAD} y2={scaleY(MAX_RATE)}
+        stroke="#22c55e" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 5" />
+      {/* base dashed line */}
+      <line x1={PAD} y1={baseY} x2={W - PAD} y2={baseY}
+        stroke="#ffffff" strokeOpacity="0.1" strokeWidth="1" strokeDasharray="4 4" />
+      {/* min line */}
+      <line x1={PAD} y1={scaleY(MIN_RATE)} x2={W - PAD} y2={scaleY(MIN_RATE)}
+        stroke="#ef4444" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 5" />
+      {/* main wave */}
+      <path d={d} fill="none" stroke="#00BFFF" strokeWidth="2.5"
+        strokeLinecap="round" strokeLinejoin="round" filter="url(#glow)" />
+      {/* current position dot (left edge = now) */}
+      <circle cx={PAD} cy={curY} r="6" fill="#00BFFF" />
+      <circle cx={PAD} cy={curY} r="11" fill="#00BFFF" fillOpacity="0.18" />
     </svg>
   )
 }
@@ -76,12 +106,23 @@ export function ExchangePanel() {
   const [lastTx, setLastTx]         = useState<{ gained: number; fee: number; direction: ExchangeDirection; at: number } | null>(null)
   const [txError, setTxError]       = useState('')
   const [loading, setLoading]       = useState(false)
+  const [now, setNow] = useState(0) // 0 on SSR, real time after mount
 
-  // Rate history (Gems/BC — no inversion needed)
-  const rateHistory = useMemo(() => getRateHistory(Date.now()), [currentRate])
-  const prevRate    = rateHistory.length > 1 ? rateHistory[rateHistory.length - 2] : currentRate
-  const trendUp     = currentRate >= prevRate
-  const deviation   = currentRate - EXCHANGE_CONSTANTS.BASE_RATE
+  // Tick every second — only runs client-side, avoiding SSR mismatch
+  useEffect(() => {
+    setNow(Date.now())
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  // Full 4-hour wave — 96 points, recomputed every second
+  const wavePoints = useMemo(
+    () => now > 0 ? buildWavePoints(now) : Array(96).fill(EXCHANGE_CONSTANTS.BASE_RATE),
+    [now],
+  )
+  const prevRate  = wavePoints.length > 1 ? wavePoints[1] : currentRate
+  const trendUp   = currentRate >= prevRate
+  const deviation = currentRate - EXCHANGE_CONSTANTS.BASE_RATE
 
   // Parse input
   const amount = parseFloat(inputValue) || 0
@@ -135,74 +176,75 @@ export function ExchangePanel() {
     <div className="max-w-4xl mx-auto px-4 pb-16 space-y-6">
 
       {/* ── Rate card ─────────────────────────────────────────────────────── */}
-      <div className="glass rounded-2xl border border-white/8 overflow-hidden">
-        <div className="flex flex-col md:flex-row">
+      <div className="glass rounded-2xl border border-[#00BFFF]/15 overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, rgba(0,191,255,0.04) 0%, transparent 60%)' }}>
 
-          {/* Live rate */}
-          <div className="p-6 md:w-72 flex flex-col border-b md:border-b-0 md:border-r border-white/5">
-            <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-3">Live Exchange Rate</p>
-
-            <div className="flex items-end gap-2 mb-1">
-              <span className="font-['Space_Grotesk'] font-black text-5xl text-white leading-none">
+        {/* Top row: big number + stats */}
+        <div className="flex flex-wrap items-start justify-between gap-4 px-6 pt-6 pb-4">
+          {/* Left: live rate */}
+          <div>
+            <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-2">Live Exchange Rate</p>
+            <div className="flex items-end gap-3">
+              <span className="font-['Space_Grotesk'] font-black text-6xl text-[#00BFFF] leading-none tabular-nums">
                 {currentRate}
               </span>
-              <div className="flex flex-col mb-1">
-                <span className={`text-sm font-bold ${trendUp ? 'text-green-400' : 'text-red-400'}`}>
-                  {trendUp ? '▲' : '▼'}
-                </span>
-                <span className={`text-[10px] font-semibold ${deviation >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {deviation >= 0 ? '+' : ''}{deviation}
-                </span>
+              <div className="mb-2 space-y-0.5">
+                <p className="text-gray-500 text-xs">💎 Gems per 1 BC</p>
               </div>
             </div>
-            <p className="text-gray-500 text-xs mb-4">💎 Gems per BC</p>
-
-            {/* Rate range bar */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[10px] text-gray-600">
-                <span>Min {EXCHANGE_CONSTANTS.MIN_RATE}</span>
-                <span>Base {EXCHANGE_CONSTANTS.BASE_RATE}</span>
-                <span>Max {EXCHANGE_CONSTANTS.MAX_RATE}</span>
-              </div>
-              <div className="h-1 rounded-full bg-white/5 overflow-hidden relative">
-                <div
-                  className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${Math.max(2, ((currentRate - EXCHANGE_CONSTANTS.MIN_RATE) / (EXCHANGE_CONSTANTS.MAX_RATE - EXCHANGE_CONSTANTS.MIN_RATE)) * 100)}%`,
-                    background: 'linear-gradient(90deg, #0066FF, #00BFFF)',
-                  }}
-                />
-              </div>
-            </div>
-
-            <p className="text-[9px] text-gray-700 mt-3 uppercase tracking-wide">
-              Rate stabilizes algorithmically over a 4-hour cycle
-            </p>
           </div>
 
-          {/* Sparkline */}
-          <div className="flex-1 p-6">
-            <p className="text-[10px] text-gray-600 uppercase tracking-wide mb-3">Rate History (4h window)</p>
-            <Sparkline rates={rateHistory} />
-            <div className="flex justify-between mt-2">
-              <span className="text-[9px] text-gray-700">4h ago</span>
-              <span className="text-[9px] text-gray-700">now</span>
+          {/* Right: status + stats pills */}
+          <div className="flex flex-col items-end gap-2">
+            <div className={`px-3 py-1.5 rounded-full text-xs font-bold border ${
+              currentRate > EXCHANGE_CONSTANTS.BASE_RATE
+                ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                : currentRate < EXCHANGE_CONSTANTS.BASE_RATE
+                ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                : 'bg-white/5 border-white/10 text-gray-400'
+            }`}>
+              {currentRate > EXCHANGE_CONSTANTS.BASE_RATE ? '▲ Above base' : currentRate < EXCHANGE_CONSTANTS.BASE_RATE ? '▼ Below base' : '◆ At base'}
             </div>
-
-            {/* Fee & limits summary */}
-            <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-white/5">
-              {[
-                { label: 'Fee',           value: `${(EXCHANGE_CONSTANTS.FEE_PCT * 100).toFixed(0)}%` },
-                { label: 'Daily Limit',   value: `${txLimit} trades` },
-                { label: 'Remaining',     value: `${txRemaining} / ${txLimit}` },
-              ].map(s => (
-                <div key={s.label} className="text-center">
-                  <p className="text-white font-bold text-sm">{s.value}</p>
-                  <p className="text-[9px] text-gray-600 uppercase tracking-wide mt-0.5">{s.label}</p>
-                </div>
-              ))}
+            <div className="flex gap-2 text-xs flex-wrap justify-end">
+              <span className="px-2.5 py-1 rounded-lg bg-red-500/8 border border-red-500/15 text-red-400">
+                ↓ Min {EXCHANGE_CONSTANTS.MIN_RATE}
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-400">
+                ◆ Base {EXCHANGE_CONSTANTS.BASE_RATE}
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-green-500/8 border border-green-500/15 text-green-400">
+                ↑ Max {EXCHANGE_CONSTANTS.MAX_RATE}
+              </span>
             </div>
           </div>
+        </div>
+
+        {/* Chart */}
+        <div className="px-4 pb-2">
+          <LiveRateChart points={wavePoints} current={currentRate} />
+        </div>
+
+        {/* Chart labels */}
+        <div className="flex justify-between px-6 pb-3 text-[10px] text-gray-700">
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00BFFF]" /> Now
+          </span>
+          <span>← Full 4-hour wave cycle →</span>
+          <span>+4h</span>
+        </div>
+
+        {/* Bottom stats bar */}
+        <div className="grid grid-cols-3 gap-px border-t border-white/6">
+          {[
+            { label: 'Fee',          value: `${(EXCHANGE_CONSTANTS.FEE_PCT * 100).toFixed(0)}%`,  color: 'text-pink-400'  },
+            { label: 'Daily Limit',  value: `${txLimit} trades`,                                   color: 'text-purple-400' },
+            { label: 'Remaining',    value: `${txRemaining} / ${txLimit}`,                         color: txRemaining > 0 ? 'text-[#00BFFF]' : 'text-red-400' },
+          ].map(s => (
+            <div key={s.label} className="py-3 px-4 text-center bg-white/1 hover:bg-white/3 transition-colors">
+              <p className={`font-['Space_Grotesk'] font-black text-base ${s.color}`}>{s.value}</p>
+              <p className="text-[9px] text-gray-600 uppercase tracking-wide mt-0.5">{s.label}</p>
+            </div>
+          ))}
         </div>
       </div>
 
