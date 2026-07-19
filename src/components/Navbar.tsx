@@ -18,6 +18,7 @@ export function Navbar() {
     { to: '/rankings', label: 'Rankings' },
     { to: '/mining',   label: 'Mining',   badge: '⛏️' },
     { to: '/exchange', label: 'Exchange', badge: '◈' },
+    { to: '/shop',     label: 'Shop',     badge: '🛒' },
   ]
 
   const isActive = (to: string) => location.pathname === to

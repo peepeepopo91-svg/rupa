@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ShopRouteImport } from './routes/shop'
 import { Route as RankingsRouteImport } from './routes/rankings'
 import { Route as MiningRouteImport } from './routes/mining'
 import { Route as ExchangeRouteImport } from './routes/exchange'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RankingsRoute = RankingsRouteImport.update({
   id: '/rankings',
   path: '/rankings',
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/exchange': typeof ExchangeRoute
   '/mining': typeof MiningRoute
   '/rankings': typeof RankingsRoute
+  '/shop': typeof ShopRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/exchange': typeof ExchangeRoute
   '/mining': typeof MiningRoute
   '/rankings': typeof RankingsRoute
+  '/shop': typeof ShopRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,21 @@ export interface FileRoutesById {
   '/exchange': typeof ExchangeRoute
   '/mining': typeof MiningRoute
   '/rankings': typeof RankingsRoute
+  '/shop': typeof ShopRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/exchange' | '/mining' | '/rankings'
+  fullPaths: '/' | '/admin' | '/exchange' | '/mining' | '/rankings' | '/shop'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/exchange' | '/mining' | '/rankings'
-  id: '__root__' | '/' | '/admin' | '/exchange' | '/mining' | '/rankings'
+  to: '/' | '/admin' | '/exchange' | '/mining' | '/rankings' | '/shop'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/exchange'
+    | '/mining'
+    | '/rankings'
+    | '/shop'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,10 +93,18 @@ export interface RootRouteChildren {
   ExchangeRoute: typeof ExchangeRoute
   MiningRoute: typeof MiningRoute
   RankingsRoute: typeof RankingsRoute
+  ShopRoute: typeof ShopRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rankings': {
       id: '/rankings'
       path: '/rankings'
@@ -125,6 +149,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExchangeRoute: ExchangeRoute,
   MiningRoute: MiningRoute,
   RankingsRoute: RankingsRoute,
+  ShopRoute: ShopRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

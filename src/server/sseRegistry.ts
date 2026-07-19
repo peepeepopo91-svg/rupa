@@ -39,6 +39,19 @@ export function broadcastMiningUpdate(): void {
   }
 }
 
+/** Push a `shop_updated` event to every connected SSE client. */
+export function broadcastShopUpdate(): void {
+  const msg     = 'event: shop_updated\ndata: 1\n\n'
+  const clients = getClients()
+  for (const write of clients) {
+    try {
+      write(msg)
+    } catch {
+      clients.delete(write)
+    }
+  }
+}
+
 export function getSSEClientCount(): number {
   return getClients().size
 }

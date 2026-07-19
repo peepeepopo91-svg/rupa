@@ -27,6 +27,7 @@ export type AdminSection =
   | 'users'
   | 'content'
   | 'events'
+  | 'shop-mgmt'
   | 'logs'
   | 'github-sync'
   | 'repo-history'

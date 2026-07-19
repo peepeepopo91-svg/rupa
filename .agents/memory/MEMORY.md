@@ -1,4 +1,5 @@
 - [TanStack Start server function API](tanstack-start-server-fn.md) — this version uses `.inputValidator()` not `.validator()` in the createServerFn chain
+- [Shop System Architecture](shop-system.md) — server fns, SSE via window event forwarding, data files, admin section integration
 - [Mining server-authoritative time](mining-server-auth.md) — offline earnings use server Date.now() only; client stores clockOffset = serverNow − Date.now() on login
 - [GitHub Persistence Architecture](github-persistence.md) — Git Diagnostics is the ONLY sync path; flushes dirty store sections to disk then git commit/rebase/push
 - [Vite watcher and data/ directory](vite-watch-data-dir.md) — writing data/*.json from server fns triggers SSR reload → modal closes; fix: watch.ignored + commit before write

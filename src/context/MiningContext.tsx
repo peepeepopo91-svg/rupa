@@ -162,6 +162,12 @@ export function MiningProvider({ children }: { children: React.ReactNode }) {
         } catch { /* server unreachable — current state is fine */ }
       })
 
+      // Forward shop_updated events to window so ShopPage can react without
+      // a second SSE connection. MiningContext owns the single SSE connection.
+      es.addEventListener('shop_updated', () => {
+        window.dispatchEvent(new CustomEvent('shop_updated'))
+      })
+
       es.onerror = () => {
         es?.close()
         es = null
