@@ -1,0 +1,175 @@
+{
+  "adambobjh22": {
+    "username": "adambobjh22",
+    "createdAt": 1784395095478,
+    "lastCheckedAt": 1784395095478,
+    "balance": 0,
+    "gems": 0,
+    "rigs": [],
+    "rewardHistory": [],
+    "exchangeUsedToday": 0,
+    "exchangeResetAt": 1784395095478,
+    "miningExpiresAt": 1784447014507,
+    "miningRenewedAt": 1784403814507
+  },
+  "bananastylze": {
+    "username": "bananastylze",
+    "createdAt": 1784395600221,
+    "lastCheckedAt": 1784395600221,
+    "balance": 0,
+    "gems": 0,
+    "rigs": [],
+    "rewardHistory": [],
+    "exchangeUsedToday": 0,
+    "exchangeResetAt": 1784395600221,
+    "miningExpiresAt": 1784447014507,
+    "miningRenewedAt": 1784403814507
+  },
+  "blacktagx": {
+    "username": "BlackTagX",
+    "createdAt": 1784396383849,
+    "lastCheckedAt": 1784396383849,
+    "balance": 0,
+    "gems": 0,
+    "rigs": [],
+    "rewardHistory": [],
+    "exchangeUsedToday": 0,
+    "exchangeResetAt": 1784396383849,
+    "miningExpiresAt": 1784447014507,
+    "miningRenewedAt": 1784403814507
+  },
+  "blue_gaming08": {
+    "username": "Blue_Gaming08",
+    "createdAt": 1784396752305,
+    "lastCheckedAt": 1784399360748,
+    "balance": 11498,
+    "gems": 0,
+    "rigs": [
+      {
+        "id": "pro_mrqo1pkz_x304",
+        "tierId": "pro",
+        "name": "Pro Miner",
+        "durability": 9993.41445868946,
+        "status": "idle",
+        "miningSince": null,
+        "purchasedAt": 1784397244355
+      },
+      {
+        "id": "pro_mrqo1rhy_vkb6",
+        "tierId": "pro",
+        "name": "Pro Miner",
+        "durability": 9993.41445868946,
+        "status": "idle",
+        "miningSince": null,
+        "purchasedAt": 1784397246838
+      },
+      {
+        "id": "starter_mrqorbep_fqjq",
+        "tierId": "starter",
+        "name": "Starter Pack",
+        "durability": 9992.217087542087,
+        "status": "idle",
+        "miningSince": null,
+        "purchasedAt": 1784398439041
+      },
+      {
+        "id": "starter_mrqorcqe_mge0",
+        "tierId": "starter",
+        "name": "Starter Pack",
+        "durability": 9992.217087542087,
+        "status": "idle",
+        "miningSince": null,
+        "purchasedAt": 1784398440758
+      },
+      {
+        "id": "starter_mrqordy3_rqcz",
+        "tierId": "starter",
+        "name": "Starter Pack",
+        "durability": 9992.217087542087,
+        "status": "idle",
+        "miningSince": null,
+        "purchasedAt": 1784398442331
+      },
+      {
+        "id": "starter_mrqoregf_fc7t",
+        "tierId": "starter",
+        "name": "Starter Pack",
+        "durability": 0,
+        "status": "broken",
+        "miningSince": null,
+        "purchasedAt": 1784398442991
+      },
+      {
+        "id": "starter_mrqoresz_hvtg",
+        "tierId": "starter",
+        "name": "Starter Pack",
+        "durability": 9995.9297979798,
+        "status": "idle",
+        "miningSince": null,
+        "purchasedAt": 1784398443443
+      },
+      {
+        "id": "starter_mrqorf7s_1jsk",
+        "tierId": "starter",
+        "name": "Starter Pack",
+        "durability": 9997.259217171719,
+        "status": "idle",
+        "miningSince": null,
+        "purchasedAt": 1784398443976
+      },
+      {
+        "id": "starter_mrqorfik_54j1",
+        "tierId": "starter",
+        "name": "Starter Pack",
+        "durability": 9997.259217171719,
+        "status": "idle",
+        "miningSince": null,
+        "purchasedAt": 1784398444364
+      },
+      {
+        "id": "starter_mrqorfv5_47xc",
+        "tierId": "starter",
+        "name": "Starter Pack",
+        "durability": 9997.470917508419,
+        "status": "idle",
+        "miningSince": null,
+        "purchasedAt": 1784398444817
+      }
+    ],
+    "rewardHistory": [],
+    "exchangeUsedToday": 0,
+    "exchangeResetAt": 1784483243029,
+    "miningExpiresAt": 1784447014507,
+    "miningRenewedAt": 1784403814507
+  },
+  "zolup": {
+    "username": "zolup",
+    "createdAt": 1784399298355,
+    "lastCheckedAt": 1784459216605,
+    "balance": 141,
+    "gems": 1000,
+    "rigs": [
+      {
+        "id": "starter_mrrmcik0_lp20",
+        "tierId": "starter",
+        "name": "Starter Pack",
+        "durability": 9908.212226430976,
+        "status": "mining",
+        "miningSince": 1784454858459,
+        "purchasedAt": 1784454855408
+      }
+    ],
+    "rewardHistory": [
+      {
+        "blockNumber": 27,
+        "solvedAt": 1784457562607,
+        "amount": 30,
+        "type": "equal_split"
+      }
+    ],
+    "exchangeUsedToday": 1,
+    "exchangeResetAt": 1784485829331,
+    "miningExpiresAt": 1784497877701,
+    "miningRenewedAt": 1784454677701
+  }
+}
