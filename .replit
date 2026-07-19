@@ -1,4 +1,4 @@
-modules = ["web", "nodejs-22"]
+modules = ["nodejs-20", "web"]
 [agent]
 expertMode = true
 
@@ -8,10 +8,6 @@ channel = "stable-25_05"
 [[ports]]
 localPort = 5000
 externalPort = 5000
-
-[[ports]]
-localPort = 5001
-externalPort = 3000
 
 [workflows]
 runButton = "Project"
