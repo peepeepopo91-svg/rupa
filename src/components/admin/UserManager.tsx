@@ -4,6 +4,9 @@
 // GitHub sync: changes are included in the next Sync Center push (no extra commits).
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { AdminPaginator } from './AdminPaginator'
+
+const PAGE_SIZE = 10
 import {
   adminLoadUsers,
   adminCreateUser,
@@ -1068,6 +1071,8 @@ export function UserManager({ admin }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [expanded, setExpanded] = useState<string | null>(null)
 
+  const [page, setPage] = useState(1)
+
   const [createOpen,          setCreateOpen]          = useState(false)
   const [createMiningTarget,  setCreateMiningTarget]  = useState<UserRecord | null>(null)
   const [editTarget,          setEditTarget]          = useState<UserRecord | null>(null)
@@ -1121,12 +1126,18 @@ export function UserManager({ admin }: Props) {
     return sortUsers(list, sortKey, sortAsc)
   }, [users, search, filter, sortKey, sortAsc])
 
-  const allSelected  = displayList.length > 0 && displayList.every(u => selected.has(u.key))
+  // Pagination
+  useEffect(() => { setPage(1) }, [search, filter, sortKey, sortAsc])
+  const totalPages = Math.max(1, Math.ceil(displayList.length / PAGE_SIZE))
+  const safePage   = Math.min(page, totalPages)
+  const pagedList  = displayList.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
+  const allSelected  = pagedList.length > 0 && pagedList.every(u => selected.has(u.key))
   const someSelected = displayList.some(u => selected.has(u.key))
 
   function toggleAll() {
     if (allSelected) setSelected(new Set())
-    else setSelected(new Set(displayList.map(u => u.key)))
+    else setSelected(new Set(pagedList.map(u => u.key)))
   }
 
   function toggleOne(key: string) {
@@ -1298,7 +1309,7 @@ export function UserManager({ admin }: Props) {
         {/* Rows */}
         {!loading && (
           <div className="divide-y divide-white/4">
-            {displayList.map(u => {
+            {pagedList.map(u => {
               const isSelected = selected.has(u.key)
               const isExpanded = expanded === u.key
               return (
@@ -1431,6 +1442,14 @@ export function UserManager({ admin }: Props) {
           </div>
         )}
       </div>
+
+      <AdminPaginator
+        page={safePage}
+        totalPages={totalPages}
+        totalItems={displayList.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
     </div>
   )
 }

@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
+import { AdminPaginator } from './AdminPaginator'
+
+const ITEMS_PAGE_SIZE = 10
 import type { ShopItem, Purchase, PurchaseStatus, ShopCategory } from '../../data/shop'
 import {
   STATUS_LABELS, STATUS_COLORS, CATEGORY_LABELS, CATEGORY_ICONS,
@@ -851,6 +854,7 @@ export function ShopManager({ admin: _admin }: Props) {
   const [queuePage,    setQueuePage]   = useState(1)
   const [itemFilter,   setItemFilter]  = useState<ShopCategory | 'all'>('all')
   const [itemSearch,   setItemSearch]  = useState('')
+  const [itemPage,     setItemPage]    = useState(1)
 
   const loadAll = useCallback(async () => {
     setLoading(true)
@@ -872,6 +876,7 @@ export function ShopManager({ admin: _admin }: Props) {
 
   // Reset page on filter change
   useEffect(() => { setQueuePage(1); setSelected(new Set()) }, [search, statusFilter, sortBy])
+  useEffect(() => { setItemPage(1) }, [itemFilter, itemSearch])
 
   // Filtered + sorted purchases
   const filteredPurchases = purchases.filter(p => {
@@ -901,6 +906,9 @@ export function ShopManager({ admin: _admin }: Props) {
     }
     return true
   })
+  const totalItemPages = Math.max(1, Math.ceil(filteredItems.length / ITEMS_PAGE_SIZE))
+  const safeItemPage   = Math.min(itemPage, totalItemPages)
+  const pagedItems     = filteredItems.slice((safeItemPage - 1) * ITEMS_PAGE_SIZE, safeItemPage * ITEMS_PAGE_SIZE)
 
   function toggleSelect(id: string) {
     setSelected(prev => {
@@ -1237,11 +1245,19 @@ export function ShopManager({ admin: _admin }: Props) {
             {filteredItems.length === 0 ? (
               <div className="text-center py-12 text-gray-600 text-sm">No items found</div>
             ) : (
-              filteredItems.map(item => (
+              pagedItems.map(item => (
                 <ItemEditor key={item.id} item={item} onSave={loadAll} onDelete={loadAll} />
               ))
             )}
           </div>
+
+          <AdminPaginator
+            page={safeItemPage}
+            totalPages={totalItemPages}
+            totalItems={filteredItems.length}
+            pageSize={ITEMS_PAGE_SIZE}
+            onPageChange={setItemPage}
+          />
         </div>
       )}
 

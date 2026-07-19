@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getLogs, clearLogs, addLog } from '../../store/adminStore'
 import type { AdminLog } from '../../store/adminStore'
+import { AdminPaginator } from './AdminPaginator'
+
+const PAGE_SIZE = 10
 
 interface Props { admin: string }
 
@@ -43,8 +46,12 @@ export function ActivityLogs({ admin }: Props) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<string>('all')
   const [showConfirm, setShowConfirm] = useState(false)
+  const [page, setPage]     = useState(1)
 
   const refresh = () => setLogs(getLogs())
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => { setPage(1) }, [search, filter])
 
   const actionTypes = ['all', ...Array.from(new Set(logs.map(l => l.action)))]
 
@@ -54,6 +61,10 @@ export function ActivityLogs({ admin }: Props) {
     const matchSearch = !q || l.action.includes(q) || l.admin.includes(q) || (l.details ?? '').toLowerCase().includes(q)
     return matchFilter && matchSearch
   })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage   = Math.min(page, totalPages)
+  const pagedLogs  = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   function handleClear() {
     clearLogs()
@@ -119,7 +130,7 @@ export function ActivityLogs({ admin }: Props) {
           <div className="py-16 text-center text-gray-600 text-sm">No logs found.</div>
         ) : (
           <div className="divide-y divide-white/5">
-            {filtered.map(log => (
+            {pagedLogs.map(log => (
               <div key={log.id} className="flex items-start gap-4 px-5 py-3.5 hover:bg-white/2 transition-colors">
                 <span className={`mt-0.5 px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold border shrink-0 ${getColor(log.action)}`}>
                   {log.action}
@@ -136,6 +147,14 @@ export function ActivityLogs({ admin }: Props) {
           </div>
         )}
       </div>
+
+      <AdminPaginator
+        page={safePage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
 
       {/* Confirm clear */}
       {showConfirm && (

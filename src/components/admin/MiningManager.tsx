@@ -4,6 +4,9 @@
 // page, another admin session, or a tick — appears here within milliseconds.
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { AdminPaginator } from './AdminPaginator'
+
+const PAGE_SIZE = 10
 import { getAllMiningUsers, adminUpdateMiningUser, adminRenewMining, adminAdjustRenewal, adminResetRenewal } from '../../server/miningServer'
 import { RIG_TIERS } from '../../data/mining'
 import type { User, UserRig, RigStatus } from '../../data/mining'
@@ -563,6 +566,7 @@ export function MiningManager({ admin }: Props) {
   const [sseOk,    setSseOk]    = useState(false)
   const [lastSync, setLastSync] = useState<number | null>(null)
   const [toast,    setToast]    = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  const [page,     setPage]     = useState(1)
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -669,6 +673,12 @@ export function MiningManager({ admin }: Props) {
       })
   }, [userList, search, sortBy])
 
+  // Pagination
+  useEffect(() => { setPage(1) }, [search, sortBy])
+  const totalPages    = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage      = Math.min(page, totalPages)
+  const pagedFiltered = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
   return (
     <div className="space-y-6">
       {toast && <Toast msg={toast.msg} type={toast.type} />}
@@ -769,8 +779,8 @@ export function MiningManager({ admin }: Props) {
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-white/3 max-h-[420px] overflow-y-auto">
-              {filtered.map(u => {
+            <div className="divide-y divide-white/3">
+              {pagedFiltered.map(u => {
                 const st    = userStatus(u)
                 const rate  = activeHashrate(u)
                 const isSelected = selected === u.username.toLowerCase()
@@ -813,6 +823,14 @@ export function MiningManager({ admin }: Props) {
           </>
         )}
       </div>
+
+      <AdminPaginator
+        page={safePage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
 
       {/* ── User detail panel ──────────────────────────────────────────────── */}
       {selectedUser && (
