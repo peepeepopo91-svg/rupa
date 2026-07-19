@@ -29,6 +29,7 @@ export type AdminSection =
   | 'events'
   | 'logs'
   | 'github-sync'
+  | 'repo-history'
 
 function AdminPage() {
   const [session, setSession] = useState<AdminSession | null>(null)
