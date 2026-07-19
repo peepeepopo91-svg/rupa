@@ -448,6 +448,20 @@
     }
   },
   {
+    "name": "zero",
+    "head": "https://mc-heads.net/avatar/zero",
+    "region": "North America",
+    "ranks": {
+      "mace": "LT5",
+      "sword": "NONE",
+      "axe": "NONE",
+      "uhc": "NONE",
+      "nethpot": "NONE",
+      "diapot": "NONE",
+      "crystal": "NONE"
+    }
+  },
+  {
     "name": "zolup",
     "head": "https://mc-heads.net/avatar/zolup",
     "region": "North America",
