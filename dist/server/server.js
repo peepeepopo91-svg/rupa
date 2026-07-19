@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { H3Event, toResponse } from "h3-v2";
+import { H3Event, toResponse, getRequestIP } from "h3-v2";
 import { rootRouteId, parseRedirect, isRedirect, defaultSerovalPlugins, makeSerovalPlugin, createRawStreamRPCPlugin, invariant, isNotFound, resolveManifestAssetLink, createSerializationAdapter, isResolvedRedirect, executeRewriteInput } from "@tanstack/router-core";
 import { toCrossJSONStream, fromJSON, toCrossJSONAsync } from "seroval";
 import { createMemoryHistory } from "@tanstack/history";
@@ -68,12 +68,15 @@ function getH3Event() {
   if (!event) throw new Error(`No StartEvent found in AsyncLocalStorage. Make sure you are using the function within the server runtime.`);
   return event.h3Event;
 }
+function getRequestIP$1(opts) {
+  return getRequestIP(getH3Event(), opts);
+}
 function getResponse() {
   return getH3Event().res;
 }
 var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 async function getStartManifest(matchedRoutes) {
-  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-OcRSvmNT.js");
+  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-DA3DGo5_.js");
   const startManifest = tsrStartManifest();
   const rootRoute = startManifest.routes[rootRouteId] = startManifest.routes[rootRouteId] || {};
   rootRoute.assets = rootRoute.assets || [];
@@ -100,195 +103,247 @@ async function getStartManifest(matchedRoutes) {
 const manifest = {
   "fb2978d20fe1134bdea5fda77c3454ab7fe06d6f8f25ce5810087b934cbf6d9d": {
     functionName: "loadAllData_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "122baba04c16401cfafde375ba7ad6643336700c3ea9139163e16817a4f8ac87": {
     functionName: "flushStoresToDisk_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "0f21d5fdd8f8b02ab92db2f5563ffd9b0553c088bf6063ab1d5342805db5aa83": {
     functionName: "fetchRepoStatus_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "f091b0a50c4636f6d4743812dc2225adc39a83cc84df7f264588bcf750d92a5b": {
     functionName: "validateAllData_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "d84fa3675279ea0e17dad40462b2750bb2e4b616c1839fd9e9bb25478a5244e2": {
     functionName: "checkGitHubConnection_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "0968b9e500194cfc5a1fddeda76061dfcfe12f83a9d08509cdd9df86c7aca7c9": {
     functionName: "getTokenInfo_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "2abf3e9a8c1b7b7a11f8de5823636e8c40964237c69abf25ad72f518545fdcdd": {
     functionName: "testGitHubToken_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "1f7579febd4fab86592a3e93539f3f565f9671b1c540b25d737c8e8bff462a95": {
     functionName: "saveGitHubToken_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "10ecc1d9c6f957038b8e29917d4a89402354e0da002cf941902f2aaad6df7a58": {
     functionName: "clearGitHubToken_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "73ea4a3c38df80c388f7c8b4ef3cad8833eefa1ea9accb2cd6242733cab06d2f": {
     functionName: "fetchCommitHistory_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "791f5fb5291d52d6022c2fdeba15d0eb794ed38b4d702cfc3068a4ed7403776c": {
     functionName: "restoreToCommit_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "336f16e34d562f78275aa7a3cc022fe8ca0edac416f1900768a9c6ffb285a4af": {
     functionName: "getGitDiagnostics_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "caaa9e2b5c5ad43cde33788c51c45fa7f3c1baa017e74bc1d8e096b2dd152807": {
     functionName: "fixGitDivergence_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "d100192c84dbdf2c323ec92fe16f12f83d269027f1a297e59ca03eef4c8e8d09": {
     functionName: "backupMiningData_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "2e6f0c521503f8024b01a97c2dd6e90b2082c3432492d548bb47ca64a739e11c": {
     functionName: "fetchSyncHistory_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "ab83cb7f457836d6f74c694d5cfeadda8b1f3d4efb517cdda82dc99dd72f810d": {
     functionName: "addSyncHistoryEntry_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "56cb769110f118349cdf266ed2c7834cb8154bfed52328cd3c8ed51d80b5ab91": {
     functionName: "compareLocalToRemote_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "e821b6439e82f7d8bfbe6b1b0d983c1f3e9be135a8c03517106cd7d1e6087322": {
     functionName: "pullRemoteFiles_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "0a0026775ec41c07ff6fce56a504939f56b9fff933b5e8375d7e1697dbb34629": {
     functionName: "previewRepairPlayers_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "20254cac3591853b5c6524a2d69bd49a61d924ce0dff10ed2eb00eafd3a0e653": {
     functionName: "repairPlayers_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "de6707771acf05f33f3f80de52b00b542ba882a03e38764710467ce74988f0e7": {
     functionName: "adminLoadUsers_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "c58b9d75bcc21687bdb01aa8732acbf31ba9ba509383e0b562d75dd5664ce9f3": {
     functionName: "adminCreateUser_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "6d81718f1d6afbe57ef5e2a5807d8f527818d2b133218776c76788af33e21e3a": {
     functionName: "adminUpdateUserPlayer_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "1e2c7ac3337193608c8b38cf66939454d885804b0cc0371e0dbe7f26e4c25c3d": {
     functionName: "adminUpdateUserCred_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "9a7797558969ec6ab39b9a0a106453ff24fd40e5d8dfb39d46da89655e270655": {
     functionName: "adminUpdateUserMining_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "a3482b5d0e0b8bbb058a12f6893630a221cea2ebe0c186f48ef2b6917f1280fd": {
     functionName: "adminCreateMiningForPlayer_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "36c54b2f321d22e3b47f5348ed255687dce04bd1f85a6b0eefe85e5c44a93110": {
     functionName: "adminRenameMiningUser_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "8b1f9c1b45467a38c696fe005b4d5b65163dc553d2104f6804f0494aa848fdbf": {
     functionName: "adminDeleteUser_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "fd27b53ba645f057b63ba6c3fc845d86f9fc2e67ee93bfe4e2467486c46afc01": {
     functionName: "adminBulkDeleteUsers_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "8a8b336fe65eb1a2e8629b73f2badc985dd6ab823a0e411b3e9c3d6120c51a0f": {
     functionName: "getBackupStatusFn_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "ea6082cc957e00016cbedcb2b7376e9e76f2cdc47857ea2b79a07a6f695a1a9e": {
     functionName: "setAutoBackupEnabled_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "2deb2e018fcfe19b7588e8378bbb22d97eeae36e030c9b7892bfd951502a31a3": {
     functionName: "setBackupDebounce_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
   "2e5a86306780c713e09960b6674d29e921669e575d347e82484fd839a21fa174": {
     functionName: "triggerBackupNow_createServerFn_handler",
-    importer: () => import("./assets/dataFiles-FUY-NZ4N.js")
+    importer: () => import("./assets/dataFiles-BsGaoici.js")
   },
-  "9c403a0b1baaa9eb01522526a02467b0bbe7366ce94755351c706515263f9ab1": {
-    functionName: "getServerNow_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
+  "1cd5592b008228410e370e8fdc87f51b9cbd66cb105cb8bbc964ab8ddb0ce73d": {
+    functionName: "validateAdminCredentials_createServerFn_handler",
+    importer: () => import("./assets/adminAuth-DwZCKL1I.js")
   },
-  "ccdb6274a919b4e64faac8870a35fdd9f2379e43902fbc073e763702f8e0edb1": {
-    functionName: "serverCatchUp_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
+  "b2b86fe6fd8b463e98d6022be0964a22100e08fd0fa5abddcd5b4d4a2073f07b": {
+    functionName: "updateAdminCredentials_createServerFn_handler",
+    importer: () => import("./assets/adminAuth-DwZCKL1I.js")
   },
-  "8de7a5ffa64cbe7de66496bd09cd405c8c5bbd016fc0db22792f19363f0ae2c2": {
-    functionName: "saveMiningUser_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
+  "8f49f79f5fe4a79ccddd2d4dd7efef06292b39379b7852b6f90ae7e540a52fee": {
+    functionName: "getAdminInfo_createServerFn_handler",
+    importer: () => import("./assets/adminAuth-DwZCKL1I.js")
   },
-  "14b07c567f9b8c57ebeb2b5013958353bbec125f63a72006a299b990f8a3e5cc": {
-    functionName: "purchaseRigServer_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
-  },
-  "c20eeae52f63782258860f6bf9cdedb36bd505958dfd8199abe8bbed955e893c": {
-    functionName: "getDashboardStats_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
-  },
-  "450e0a26a740dcd825927e9bc6d268f76e8a10fd98c7ba9b681fe818d0b5015b": {
-    functionName: "getAllMiningUsers_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
-  },
-  "8e3d970b0a3780ca5ee670f87b0ba84cb45748760c3b1b1be58131158580b660": {
-    functionName: "adminUpdateMiningUser_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
-  },
-  "7fa8b3cbd5fc8f402a586f9817e3556e666bae0870bfdf16a35ee35117771bb1": {
-    functionName: "getLeaderboard_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
-  },
-  "2a08d77084734e5724f0b7c889d954a908a3bb05d5c0b96eecc2c94776f3daa7": {
-    functionName: "adminDeleteMiningUser_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
-  },
-  "6628a45ae47f2a27610f23af9286c0955b21bcb8e8625b097bfda5976b23544c": {
-    functionName: "renewMiningSession_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
-  },
-  "5fed49ccff1da12a3cf2c454c8f9abb2c8689d155564610245c1506d3223ee3c": {
-    functionName: "adminRenewMining_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
-  },
-  "2aaed4fef1df9d23420ad780edcf7203ac4c445653015df9af9b0178f0277ddc": {
-    functionName: "adminAdjustRenewal_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
-  },
-  "8d5f143a680dcec8b626745cb47685992d8086e2e59ff3b07c97174e40abdbd4": {
-    functionName: "adminResetRenewal_createServerFn_handler",
-    importer: () => import("./assets/miningServer-PCqjBeac.js")
+  "53c321d975df4a591bbd4a2e7e8381e368580bccea0f3accc62ac1e31636fb4e": {
+    functionName: "checkAdminToken_createServerFn_handler",
+    importer: () => import("./assets/adminAuth-DwZCKL1I.js")
   },
   "8ebbe34d9c3cf8d74d5c419c61649060ec2211be4f88f412177da3ea729967ce": {
     functionName: "validateCredentials_createServerFn_handler",
     importer: () => import("./assets/auth-CW-TMnak.js")
   },
-  "1cd5592b008228410e370e8fdc87f51b9cbd66cb105cb8bbc964ab8ddb0ce73d": {
-    functionName: "validateAdminCredentials_createServerFn_handler",
-    importer: () => import("./assets/adminAuth-D3o4syn2.js")
+  "9c403a0b1baaa9eb01522526a02467b0bbe7366ce94755351c706515263f9ab1": {
+    functionName: "getServerNow_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "ccdb6274a919b4e64faac8870a35fdd9f2379e43902fbc073e763702f8e0edb1": {
+    functionName: "serverCatchUp_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "8de7a5ffa64cbe7de66496bd09cd405c8c5bbd016fc0db22792f19363f0ae2c2": {
+    functionName: "saveMiningUser_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "14b07c567f9b8c57ebeb2b5013958353bbec125f63a72006a299b990f8a3e5cc": {
+    functionName: "purchaseRigServer_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "c20eeae52f63782258860f6bf9cdedb36bd505958dfd8199abe8bbed955e893c": {
+    functionName: "getDashboardStats_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "450e0a26a740dcd825927e9bc6d268f76e8a10fd98c7ba9b681fe818d0b5015b": {
+    functionName: "getAllMiningUsers_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "8e3d970b0a3780ca5ee670f87b0ba84cb45748760c3b1b1be58131158580b660": {
+    functionName: "adminUpdateMiningUser_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "7fa8b3cbd5fc8f402a586f9817e3556e666bae0870bfdf16a35ee35117771bb1": {
+    functionName: "getLeaderboard_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "2a08d77084734e5724f0b7c889d954a908a3bb05d5c0b96eecc2c94776f3daa7": {
+    functionName: "adminDeleteMiningUser_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "6628a45ae47f2a27610f23af9286c0955b21bcb8e8625b097bfda5976b23544c": {
+    functionName: "renewMiningSession_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "5fed49ccff1da12a3cf2c454c8f9abb2c8689d155564610245c1506d3223ee3c": {
+    functionName: "adminRenewMining_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "2aaed4fef1df9d23420ad780edcf7203ac4c445653015df9af9b0178f0277ddc": {
+    functionName: "adminAdjustRenewal_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "8d5f143a680dcec8b626745cb47685992d8086e2e59ff3b07c97174e40abdbd4": {
+    functionName: "adminResetRenewal_createServerFn_handler",
+    importer: () => import("./assets/miningServer-CI-TCNRn.js")
+  },
+  "62bb95e491f70187696af701a08661091cd73ae081ddd6e137bc93b3795769bd": {
+    functionName: "getShopItems_createServerFn_handler",
+    importer: () => import("./assets/shopServer-Bnehwhxb.js")
+  },
+  "ec026d36d4ffcb51ac6d6e7a02f5d1118db749d23ae9d41aa9e810d1e639d6d0": {
+    functionName: "purchaseItem_createServerFn_handler",
+    importer: () => import("./assets/shopServer-Bnehwhxb.js")
+  },
+  "59b03fa8204d5c21025a37a43302a6d23470656a41f93cc4c007688c5327b67b": {
+    functionName: "getMyPurchases_createServerFn_handler",
+    importer: () => import("./assets/shopServer-Bnehwhxb.js")
+  },
+  "69f2ce1e7c6571bdd7a19ee26738a2ae2fbba51ad19bdf612c2529bf7a56c68f": {
+    functionName: "adminGetAllPurchases_createServerFn_handler",
+    importer: () => import("./assets/shopServer-Bnehwhxb.js")
+  },
+  "53ec1b36518c94a244d87a9692c1b6cb1944d6a5eff3b7b69e7216d04b7c5883": {
+    functionName: "adminUpdatePurchase_createServerFn_handler",
+    importer: () => import("./assets/shopServer-Bnehwhxb.js")
+  },
+  "ff23368b6f4fcee6548aab800aec16a97e7734b0dc8d2714034e5b260202fe56": {
+    functionName: "adminGetShopItems_createServerFn_handler",
+    importer: () => import("./assets/shopServer-Bnehwhxb.js")
+  },
+  "f9be758d9b42678d51decbe54fe1fd07045e4803ea4ce96286e8884d8315aec0": {
+    functionName: "adminUpdateShopItem_createServerFn_handler",
+    importer: () => import("./assets/shopServer-Bnehwhxb.js")
+  },
+  "635af3f2c52461751a47a6e7f5805fb8fb68776cedf3e6be49ddea69249f08a5": {
+    functionName: "adminAddShopItem_createServerFn_handler",
+    importer: () => import("./assets/shopServer-Bnehwhxb.js")
+  },
+  "3be3696d67cafcd1287434777f69c2da8eaf6a606c0dc566e20e220c1794c05f": {
+    functionName: "adminDeleteShopItem_createServerFn_handler",
+    importer: () => import("./assets/shopServer-Bnehwhxb.js")
+  },
+  "379bd47bb2ec7133dfe6837534062a9ac9f2fe7576ce4a638ebe43f05546b4ff": {
+    functionName: "adminGetShopStats_createServerFn_handler",
+    importer: () => import("./assets/shopServer-Bnehwhxb.js")
   },
   "c6db069f27f7f8f7aa788b0f630ee3e9cdc9b10047ec1783d1514b41bdd96316": {
     functionName: "getRepoInfo_createServerFn_handler",
@@ -1055,7 +1110,7 @@ var baseManifestPromise;
 var cachedFinalManifestPromise;
 async function loadEntries() {
   const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-    import("./assets/router-Drx0aV7R.js").then((n) => n.I),
+    import("./assets/router-C0zKgy4X.js").then((n) => n.I),
     import("./assets/start-HYkvq4Ni.js"),
     import("./assets/__23tanstack-start-plugin-adapters-Cwee5PKy.js")
   ]);
@@ -1378,6 +1433,7 @@ function createServerEntry(entry) {
 const server = createServerEntry({ fetch });
 export {
   TSS_SERVER_FUNCTION as T,
+  getRequestIP$1 as a,
   createServerFn as c,
   createServerEntry,
   server as default,

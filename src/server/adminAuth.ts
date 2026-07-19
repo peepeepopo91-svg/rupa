@@ -88,9 +88,12 @@ function signSession(username: string, loginAt: number): string {
 // ─── Credentials File ─────────────────────────────────────────────────────────
 const AdminSchema = z.object({
   admin: z.object({
-    username:  z.string(),
-    password1: z.string(),
-    password2: z.string(),
+    username:            z.string(),
+    password1:           z.string(),
+    password2:           z.string(),
+    // Any session token whose loginAt < sessionInvalidBefore is rejected.
+    // Bumped on every credential update to force re-authentication.
+    sessionInvalidBefore: z.number().optional().default(0),
   }),
 })
 
@@ -100,11 +103,23 @@ function loadAdminCredentials() {
   return AdminSchema.parse(yamlLoad(raw))
 }
 
+function writeAdminCredentials(data: {
+  username: string
+  password1: string
+  password2: string
+  sessionInvalidBefore: number
+}) {
+  const filePath = resolve(process.cwd(), 'admin.yml')
+  writeFileSync(filePath, yamlDump({ admin: data }), 'utf8')
+}
+
 async function upgradePasswords(username: string, p1Plain: string, p2Plain: string) {
   try {
     const [h1, h2] = await Promise.all([hashPassword(p1Plain), hashPassword(p2Plain)])
-    const filePath  = resolve(process.cwd(), 'admin.yml')
-    writeFileSync(filePath, yamlDump({ admin: { username, password1: h1, password2: h2 } }), 'utf8')
+    // Preserve existing sessionInvalidBefore when upgrading hashes
+    let sib = 0
+    try { sib = loadAdminCredentials().admin.sessionInvalidBefore ?? 0 } catch { /* ok */ }
+    writeAdminCredentials({ username, password1: h1, password2: h2, sessionInvalidBefore: sib })
     console.log('[adminAuth] Passwords upgraded to scrypt hashes')
   } catch (e) {
     console.error('[adminAuth] Password upgrade failed:', e)
@@ -182,6 +197,115 @@ export const validateAdminCredentials = createServerFn({ method: 'POST' })
     return { valid: true as const, username: admin.username, loginAt, token }
   })
 
+// ─── Update Admin Credentials ─────────────────────────────────────────────────
+
+export const updateAdminCredentials = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    // Caller must supply current password1 to authorize any change
+    currentPassword1: z.string(),
+    currentPassword2: z.string(),
+    // What to change — all optional
+    newUsername:   z.string().optional(),
+    newPassword1:  z.string().optional(),
+    newPassword2:  z.string().optional(),
+  }))
+  .handler(async ({ data }) => {
+    // ── 1. Rate-limit ────────────────────────────────────────────────────────
+    const ip = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
+    const rl  = checkRateLimit(ip)
+    if (rl.blocked) {
+      const mins = Math.ceil(rl.remainingMs / 60000)
+      return { ok: false as const, error: `Too many attempts. Try again in ${mins} minute${mins === 1 ? '' : 's'}.` }
+    }
+
+    // ── 2. Load current credentials ──────────────────────────────────────────
+    let cfg: ReturnType<typeof loadAdminCredentials>
+    try { cfg = loadAdminCredentials() }
+    catch { return { ok: false as const, error: 'Failed to read admin.yml' } }
+
+    const { admin } = cfg
+
+    // ── 3. Verify current passwords ──────────────────────────────────────────
+    const [p1Ok, p2Ok] = await Promise.all([
+      verifyPassword(admin.password1, data.currentPassword1),
+      verifyPassword(admin.password2, data.currentPassword2),
+    ])
+    if (!p1Ok || !p2Ok) {
+      recordFailure(ip)
+      return { ok: false as const, error: 'Current passwords are incorrect' }
+    }
+    clearFailures(ip)
+
+    // ── 4. Validate new values ───────────────────────────────────────────────
+    const newUsername  = data.newUsername?.trim()  || admin.username
+    const newPlain1    = data.newPassword1?.trim()
+    const newPlain2    = data.newPassword2?.trim()
+
+    if (newUsername.length < 3)
+      return { ok: false as const, error: 'Username must be at least 3 characters' }
+
+    if (newPlain1 !== undefined && newPlain1.length < 8)
+      return { ok: false as const, error: 'Password 1 must be at least 8 characters' }
+    if (newPlain2 !== undefined && newPlain2.length < 8)
+      return { ok: false as const, error: 'Password 2 must be at least 8 characters' }
+    if (newPlain1 && newPlain2 && newPlain1 === newPlain2)
+      return { ok: false as const, error: 'Password 1 and Password 2 must be different from each other' }
+
+    // ── 5. Hash new passwords if changed ────────────────────────────────────
+    const [h1, h2] = await Promise.all([
+      newPlain1 ? hashPassword(newPlain1) : Promise.resolve(admin.password1),
+      newPlain2 ? hashPassword(newPlain2) : Promise.resolve(admin.password2),
+    ])
+
+    // ── 6. Write updated admin.yml — bump sessionInvalidBefore to revoke all
+    //       existing sessions regardless of which field changed.
+    const sessionInvalidBefore = Date.now()
+    try {
+      writeAdminCredentials({ username: newUsername, password1: h1, password2: h2, sessionInvalidBefore })
+    } catch {
+      return { ok: false as const, error: 'Failed to write admin.yml' }
+    }
+
+    const changed: string[] = []
+    if (newUsername !== admin.username) changed.push('username')
+    if (newPlain1) changed.push('password1')
+    if (newPlain2) changed.push('password2')
+
+    return { ok: true as const, changed, newUsername }
+  })
+
+// ─── Get Admin Info (username only — no passwords) ────────────────────────────
+
+export const getAdminInfo = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ token: z.string(), username: z.string(), loginAt: z.number() }))
+  .handler(async ({ data }) => {
+    // Verify token first
+    if (Date.now() - data.loginAt > SESSION_TTL_MS)
+      return { ok: false as const, error: 'Session expired' }
+
+    let expected: string
+    try { expected = signSession(data.username, data.loginAt) }
+    catch { return { ok: false as const, error: 'Misconfigured' } }
+
+    try {
+      const a = Buffer.from(data.token, 'hex')
+      const b = Buffer.from(expected, 'hex')
+      if (a.length !== b.length || !timingSafeEqual(a, b))
+        return { ok: false as const, error: 'Invalid token' }
+    } catch { return { ok: false as const, error: 'Bad token' } }
+
+    let cfg: ReturnType<typeof loadAdminCredentials>
+    try { cfg = loadAdminCredentials() }
+    catch { return { ok: false as const, error: 'Cannot read admin.yml' } }
+
+    return {
+      ok: true as const,
+      username: cfg.admin.username,
+      password1Hashed: cfg.admin.password1.startsWith('scrypt:'),
+      password2Hashed: cfg.admin.password2.startsWith('scrypt:'),
+    }
+  })
+
 // ─── Token Verification (called on every admin page load) ─────────────────────
 export const checkAdminToken = createServerFn({ method: 'POST' })
   .inputValidator(z.object({
@@ -190,11 +314,12 @@ export const checkAdminToken = createServerFn({ method: 'POST' })
     token:    z.string(),
   }))
   .handler(async ({ data }) => {
-    // Check expiry first
+    // ── 1. Check TTL expiry ───────────────────────────────────────────────────
     if (Date.now() - data.loginAt > SESSION_TTL_MS) {
       return { valid: false as const, reason: 'Session expired — please log in again' }
     }
 
+    // ── 2. Verify HMAC signature ──────────────────────────────────────────────
     let expected: string
     try {
       expected = signSession(data.username, data.loginAt)
@@ -210,6 +335,20 @@ export const checkAdminToken = createServerFn({ method: 'POST' })
       }
     } catch {
       return { valid: false as const, reason: 'Malformed session token' }
+    }
+
+    // ── 3. Enforce credential-rotation revocation ─────────────────────────────
+    // Any credential change bumps sessionInvalidBefore in admin.yml.
+    // Sessions issued before that timestamp are rejected even if the HMAC is valid.
+    try {
+      const cfg = loadAdminCredentials()
+      const sib = cfg.admin.sessionInvalidBefore ?? 0
+      if (sib > 0 && data.loginAt < sib) {
+        return { valid: false as const, reason: 'Credentials were rotated — please log in again' }
+      }
+    } catch {
+      // If admin.yml is unreadable, fail closed
+      return { valid: false as const, reason: 'Cannot verify session against current credentials' }
     }
 
     return { valid: true as const }

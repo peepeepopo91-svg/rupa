@@ -2,7 +2,7 @@ import { createRootRoute, HeadContent, Scripts, createFileRoute, lazyRouteCompon
 import { jsxs, jsx } from "react/jsx-runtime";
 import { T as TSS_SERVER_FUNCTION, g as getServerFnById, c as createServerFn } from "../server.js";
 import { z } from "zod";
-const Route$5 = createRootRoute({
+const Route$6 = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -40,6 +40,10 @@ function RootDocument({ children }) {
     ] })
   ] });
 }
+const $$splitComponentImporter$5 = () => import("./shop-CynAhMsD.js");
+const Route$5 = createFileRoute("/shop")({
+  component: lazyRouteComponent($$splitComponentImporter$5, "component")
+});
 const REGIONS = [
   "North America",
   "South America",
@@ -665,7 +669,7 @@ const setBackupDebounce = createServerFn({
 const triggerBackupNow = createServerFn({
   method: "POST"
 }).handler(createSsrRpc("2e5a86306780c713e09960b6674d29e921669e575d347e82484fd839a21fa174"));
-const $$splitComponentImporter$4 = () => import("./rankings-D3fx6yrG.js");
+const $$splitComponentImporter$4 = () => import("./rankings-Dqwzo5KH.js");
 const Route$4 = createFileRoute("/rankings")({
   loader: async () => {
     try {
@@ -681,55 +685,61 @@ const Route$4 = createFileRoute("/rankings")({
   },
   component: lazyRouteComponent($$splitComponentImporter$4, "component")
 });
-const $$splitComponentImporter$3 = () => import("./mining-CSrNXe5Q.js");
+const $$splitComponentImporter$3 = () => import("./mining-5rTc5GnK.js");
 const Route$3 = createFileRoute("/mining")({
   component: lazyRouteComponent($$splitComponentImporter$3, "component")
 });
-const $$splitComponentImporter$2 = () => import("./exchange-CSX3yqiC.js");
+const $$splitComponentImporter$2 = () => import("./exchange-rJhE9OhT.js");
 const Route$2 = createFileRoute("/exchange")({
   component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-const $$splitComponentImporter$1 = () => import("./admin-CMT3vBsn.js");
+const $$splitComponentImporter$1 = () => import("./admin-DcigpaUy.js");
 const Route$1 = createFileRoute("/admin")({
   component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
-const $$splitComponentImporter = () => import("./index-Dq-7kx_c.js");
+const $$splitComponentImporter = () => import("./index-Clbyankt.js");
 const Route = createFileRoute("/")({
   component: lazyRouteComponent($$splitComponentImporter, "component")
+});
+const ShopRoute = Route$5.update({
+  id: "/shop",
+  path: "/shop",
+  getParentRoute: () => Route$6
 });
 const RankingsRoute = Route$4.update({
   id: "/rankings",
   path: "/rankings",
-  getParentRoute: () => Route$5
+  getParentRoute: () => Route$6
 });
 const MiningRoute = Route$3.update({
   id: "/mining",
   path: "/mining",
-  getParentRoute: () => Route$5
+  getParentRoute: () => Route$6
 });
 const ExchangeRoute = Route$2.update({
   id: "/exchange",
   path: "/exchange",
-  getParentRoute: () => Route$5
+  getParentRoute: () => Route$6
 });
 const AdminRoute = Route$1.update({
   id: "/admin",
   path: "/admin",
-  getParentRoute: () => Route$5
+  getParentRoute: () => Route$6
 });
 const IndexRoute = Route.update({
   id: "/",
   path: "/",
-  getParentRoute: () => Route$5
+  getParentRoute: () => Route$6
 });
 const rootRouteChildren = {
   IndexRoute,
   AdminRoute,
   ExchangeRoute,
   MiningRoute,
-  RankingsRoute
+  RankingsRoute,
+  ShopRoute
 };
-const routeTree = Route$5._addFileChildren(rootRouteChildren)._addFileTypes();
+const routeTree = Route$6._addFileChildren(rootRouteChildren)._addFileTypes();
 const getRouter = () => {
   const router2 = createRouter({
     routeTree,

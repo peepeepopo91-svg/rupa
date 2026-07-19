@@ -3,7 +3,8 @@ import { z } from "zod";
 import { readFileSync, mkdirSync, writeFileSync, renameSync } from "fs";
 import { resolve } from "path";
 import { n as normalizeUser, c as catchUpUser, b as buyRig, R as RIG_TIERS, M as MINING_CONSTANTS } from "./miningStore-BH0mJpub.js";
-import { c as scheduleBackup } from "./miningBackup-DKSByZMd.js";
+import { b as broadcastMiningUpdate } from "./sseRegistry-Dx7GeH-6.js";
+import { c as scheduleBackup } from "./miningBackup-BjAsa7C4.js";
 import { c as createServerFn } from "../server.js";
 import "./syncStore-C_ozCmAO.js";
 import "react";
@@ -22,23 +23,6 @@ import "@tanstack/router-core/ssr/server";
 import "@tanstack/react-router";
 import "react/jsx-runtime";
 import "@tanstack/react-router/ssr/server";
-function getClients() {
-  if (!globalThis.__miningSSEClients) {
-    globalThis.__miningSSEClients = /* @__PURE__ */ new Set();
-  }
-  return globalThis.__miningSSEClients;
-}
-function broadcastMiningUpdate() {
-  const msg = "event: mining_updated\ndata: 1\n\n";
-  const clients = getClients();
-  for (const write of clients) {
-    try {
-      write(msg);
-    } catch {
-      clients.delete(write);
-    }
-  }
-}
 const DATA_DIR = resolve("data");
 function readJson(file) {
   try {

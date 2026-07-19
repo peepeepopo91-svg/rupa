@@ -13,6 +13,7 @@ import { ActivityLogs }    from './ActivityLogs'
 import { GitHubSyncCenter } from './GitHubSyncCenter'
 import { RepoHistoryManager } from './RepoHistoryManager'
 import { ShopManager }     from './ShopManager'
+import { CredentialsManager } from './CredentialsManager'
 import { useSyncState }    from '../../store/syncStore'
 
 interface Props {
@@ -35,6 +36,7 @@ const NAV_ITEMS: { id: AdminSection; label: string; icon: string; desc: string }
   { id: 'logs',        label: 'Activity Logs', icon: '📊', desc: 'Audit trail' },
   { id: 'repo-history', label: 'Repo History',  icon: '🕓', desc: 'Reset history' },
   { id: 'github-sync',  label: 'GitHub Sync',   icon: '☁️',  desc: 'Sync Center' },
+  { id: 'credentials',  label: 'Credentials',   icon: '🔐', desc: 'Manage admin auth' },
 ]
 
 const SECTION_TITLES: Record<AdminSection, { title: string; subtitle: string }> = {
@@ -50,6 +52,7 @@ const SECTION_TITLES: Record<AdminSection, { title: string; subtitle: string }> 
   'logs':        { title: 'Activity Logs',      subtitle: 'Full audit trail of all admin actions' },
   'github-sync':  { title: 'GitHub Sync Center',         subtitle: 'Professional synchronization dashboard — push, validate, rollback' },
   'repo-history': { title: 'Repository History Management', subtitle: 'Reset commit history while preserving all project files' },
+  'credentials':  { title: 'Credentials Manager',        subtitle: 'Manage admin username and dual-password authentication' },
 }
 
 function SectionContent({ section, admin }: { section: AdminSection; admin: string }) {
@@ -66,6 +69,7 @@ function SectionContent({ section, admin }: { section: AdminSection; admin: stri
     case 'logs':        return <ActivityLogs admin={admin} />
     case 'github-sync':  return <GitHubSyncCenter admin={admin} />
     case 'repo-history': return <RepoHistoryManager admin={admin} />
+    case 'credentials':  return <CredentialsManager admin={admin} />
   }
 }
 

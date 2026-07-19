@@ -1,14 +1,15 @@
 import { jsxs, jsx, Fragment } from "react/jsx-runtime";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { c as createSsrRpc, p as players, a as REGIONS, v as validateAllData, b as previewRepairPlayers, r as repairPlayers, l as loadAllData, d as adminLoadUsers, e as adminCreateUser, f as adminCreateMiningForPlayer, g as adminUpdateUserPlayer, h as adminUpdateUserMining, i as adminRenameMiningUser, j as adminUpdateUserCred, k as adminDeleteUser, m as adminBulkDeleteUsers, n as fetchRepoStatus, o as checkGitHubConnection, q as fetchSyncHistory, s as fetchCommitHistory, t as flushStoresToDisk, u as fixGitDivergence, w as getBackupStatusFn, x as getGitDiagnostics, y as triggerBackupNow, z as setAutoBackupEnabled, A as setBackupDebounce, B as getTokenInfo, C as testGitHubToken, D as saveGitHubToken, E as clearGitHubToken, F as restoreToCommit, G as pullRemoteFiles, H as compareLocalToRemote } from "./router-Drx0aV7R.js";
+import { c as createSsrRpc, p as players, a as REGIONS, v as validateAllData, b as previewRepairPlayers, r as repairPlayers, l as loadAllData, d as adminLoadUsers, e as adminCreateUser, f as adminCreateMiningForPlayer, g as adminUpdateUserPlayer, h as adminUpdateUserMining, i as adminRenameMiningUser, j as adminUpdateUserCred, k as adminDeleteUser, m as adminBulkDeleteUsers, n as fetchRepoStatus, o as checkGitHubConnection, q as fetchSyncHistory, s as fetchCommitHistory, t as flushStoresToDisk, u as fixGitDivergence, w as getBackupStatusFn, x as getGitDiagnostics, y as triggerBackupNow, z as setAutoBackupEnabled, A as setBackupDebounce, B as getTokenInfo, C as testGitHubToken, D as saveGitHubToken, E as clearGitHubToken, F as restoreToCommit, G as pullRemoteFiles, H as compareLocalToRemote } from "./router-C0zKgy4X.js";
 import { z } from "zod";
 import { c as createServerFn } from "../server.js";
 import { m as markDirty, u as useSyncState, g as getDirty, c as clearDirty, s as setLastSync } from "./syncStore-C_ozCmAO.js";
 import { g as gamemodes } from "./gamemodes-jMLNKT3S.js";
 import { g as getPlayerTotalPoints, t as tierColors, T as TIER_ORDER } from "./tiers-BAwtsToj.js";
-import { b as getDashboardStats, c as getAllMiningUsers, d as adminRenewMining, e as adminResetRenewal, f as adminAdjustRenewal, h as adminUpdateMiningUser } from "./miningServer-CngrlAXe.js";
+import { b as getDashboardStats, c as getAllMiningUsers, d as adminRenewMining, e as adminResetRenewal, f as adminAdjustRenewal, h as adminUpdateMiningUser } from "./miningServer-C63Kwilz.js";
 import { R as RIG_TIERS, q as getEconomyOverrides, E as EXCHANGE_CONSTANTS, M as MINING_CONSTANTS, t as saveEconomyOverrides } from "./miningStore-BH0mJpub.js";
 import { g as getSiteContent, s as saveSiteContent, r as resetSiteContent, a as getEventConfig, b as saveEventConfig, c as resetEventConfig } from "./contentStore-BHVkzjvQ.js";
+import { e as adminGetAllPurchases, f as adminGetShopItems, h as adminGetShopStats, S as STATUS_LABELS, b as STATUS_COLORS, d as CATEGORY_ICONS, C as CATEGORY_LABELS, i as adminUpdatePurchase, a as RARITY_COLORS, R as RARITY_NAMES, j as adminAddShopItem, k as adminUpdateShopItem, l as adminDeleteShopItem } from "./shopServer-J2xkMrlc.js";
 import "@tanstack/react-router";
 import "node:async_hooks";
 import "h3-v2";
@@ -72,6 +73,31 @@ const validateAdminCredentials = createServerFn({
   password1: z.string(),
   password2: z.string()
 })).handler(createSsrRpc("1cd5592b008228410e370e8fdc87f51b9cbd66cb105cb8bbc964ab8ddb0ce73d"));
+const updateAdminCredentials = createServerFn({
+  method: "POST"
+}).inputValidator(z.object({
+  // Caller must supply current password1 to authorize any change
+  currentPassword1: z.string(),
+  currentPassword2: z.string(),
+  // What to change — all optional
+  newUsername: z.string().optional(),
+  newPassword1: z.string().optional(),
+  newPassword2: z.string().optional()
+})).handler(createSsrRpc("b2b86fe6fd8b463e98d6022be0964a22100e08fd0fa5abddcd5b4d4a2073f07b"));
+const getAdminInfo = createServerFn({
+  method: "POST"
+}).inputValidator(z.object({
+  token: z.string(),
+  username: z.string(),
+  loginAt: z.number()
+})).handler(createSsrRpc("8f49f79f5fe4a79ccddd2d4dd7efef06292b39379b7852b6f90ae7e540a52fee"));
+const checkAdminToken = createServerFn({
+  method: "POST"
+}).inputValidator(z.object({
+  username: z.string(),
+  loginAt: z.number(),
+  token: z.string()
+})).handler(createSsrRpc("53c321d975df4a591bbd4a2e7e8381e368580bccea0f3accc62ac1e31636fb4e"));
 function AdminLogin({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password1, setPassword1] = useState("");
@@ -93,7 +119,7 @@ function AdminLogin({ onLogin }) {
       if (!result?.valid) {
         setError(result?.error ?? "Invalid credentials");
       } else {
-        onLogin({ username: result.username, loginAt: Date.now() });
+        onLogin({ username: result.username, loginAt: result.loginAt, token: result.token });
       }
     } catch {
       setError("Authentication service unavailable");
@@ -172,8 +198,7 @@ function AdminLogin({ onLogin }) {
               "Authenticating…"
             ] }) : "Access Admin Panel"
           }
-        ),
-        /* @__PURE__ */ jsx("p", { className: "text-center text-[10px] text-gray-700 mt-2", children: "All three fields required · Credentials stored in admin.yml" })
+        )
       ] })
     ] })
   ] });
@@ -1225,7 +1250,46 @@ function GamemodeManager({ admin }) {
     ] }) })
   ] });
 }
-function timeAgo$4(ms) {
+function AdminPaginator({
+  page,
+  totalPages,
+  totalItems,
+  pageSize,
+  onPageChange
+}) {
+  if (totalPages <= 1 && totalItems <= pageSize) return null;
+  const from = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, totalItems);
+  function pageRange() {
+    const delta = 2;
+    const range2 = [];
+    for (let i = Math.max(1, page - delta); i <= Math.min(totalPages, page + delta); i++) {
+      range2.push(i);
+    }
+    return range2;
+  }
+  const base = "rounded-lg border text-xs font-semibold transition-all disabled:opacity-30 disabled:pointer-events-none";
+  const inactive = `${base} px-3 py-1.5 border-white/8 text-gray-500 hover:text-white hover:border-white/20`;
+  const active = `${base} w-8 h-8 flex items-center justify-center bg-[#00BFFF]/15 border-[#00BFFF]/30 text-[#00BFFF]`;
+  const num = `${base} w-8 h-8 flex items-center justify-center border-white/8 text-gray-500 hover:text-white hover:border-white/20`;
+  const range = pageRange();
+  const showLeadingEllipsis = range[0] > 2;
+  const showTrailingEllipsis = range[range.length - 1] < totalPages - 1;
+  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col items-center gap-2 pt-4", children: [
+    /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5 flex-wrap justify-center", children: [
+      /* @__PURE__ */ jsx("button", { onClick: () => onPageChange(1), disabled: page === 1, className: inactive, "aria-label": "First page", children: "«" }),
+      /* @__PURE__ */ jsx("button", { onClick: () => onPageChange(page - 1), disabled: page === 1, className: inactive, "aria-label": "Previous page", children: "← Prev" }),
+      showLeadingEllipsis && /* @__PURE__ */ jsx("span", { className: "text-gray-700 text-xs px-1", children: "…" }),
+      range.map((p) => /* @__PURE__ */ jsx("button", { onClick: () => onPageChange(p), className: p === page ? active : num, children: p }, p)),
+      showTrailingEllipsis && /* @__PURE__ */ jsx("span", { className: "text-gray-700 text-xs px-1", children: "…" }),
+      /* @__PURE__ */ jsx("button", { onClick: () => onPageChange(page + 1), disabled: page === totalPages, className: inactive, "aria-label": "Next page", children: "Next →" }),
+      /* @__PURE__ */ jsx("button", { onClick: () => onPageChange(totalPages), disabled: page === totalPages, className: inactive, "aria-label": "Last page", children: "»" })
+    ] }),
+    /* @__PURE__ */ jsx("p", { className: "text-gray-700 text-[10px]", children: totalItems === 0 ? "No records" : `Showing ${from}–${to} of ${totalItems.toLocaleString()} records · Page ${page} of ${totalPages}` })
+  ] });
+}
+const PAGE_SIZE$2 = 10;
+function timeAgo$6(ms) {
   const s = Math.floor((Date.now() - ms) / 1e3);
   if (s < 5) return "just now";
   if (s < 60) return `${s}s ago`;
@@ -1253,17 +1317,17 @@ const STATUS_STYLE = {
   broken: "text-red-400 bg-red-500/10 border-red-500/25",
   inactive: "text-gray-600 bg-white/3 border-white/5"
 };
-function StatusBadge({ status }) {
+function StatusBadge$1({ status }) {
   const labels = { mining: "⛏ Mining", idle: "— Idle", broken: "✕ Broken", inactive: "· No rigs" };
   return /* @__PURE__ */ jsx("span", { className: `px-2 py-0.5 rounded-md text-[10px] font-bold border ${STATUS_STYLE[status]}`, children: labels[status] });
 }
-function Toast$1({ msg, type }) {
+function Toast$2({ msg, type }) {
   return /* @__PURE__ */ jsxs("div", { className: `fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-xl border ${type === "success" ? "bg-green-500/15 border-green-500/30 text-green-400" : "bg-red-500/15 border-red-500/30 text-red-400"}`, children: [
     type === "success" ? "✓ " : "⚠ ",
     msg
   ] });
 }
-function StatCard$1({
+function StatCard$2({
   label,
   value,
   sub,
@@ -1378,7 +1442,7 @@ function UserDetailPanel({
     return Math.round(rig.durability / tier.maxDurability * 100);
   };
   return /* @__PURE__ */ jsxs("div", { className: "glass rounded-2xl border border-[#00BFFF]/20 overflow-hidden", children: [
-    toast && /* @__PURE__ */ jsx(Toast$1, { msg: toast.msg, type: toast.type }),
+    toast && /* @__PURE__ */ jsx(Toast$2, { msg: toast.msg, type: toast.type }),
     /* @__PURE__ */ jsxs("div", { className: "px-6 py-4 border-b border-white/5 flex items-center gap-4", children: [
       /* @__PURE__ */ jsx("div", { className: "w-10 h-10 rounded-xl bg-[#00BFFF]/10 border border-[#00BFFF]/20 flex items-center justify-center text-lg font-black text-[#00BFFF]", children: user.username[0].toUpperCase() }),
       /* @__PURE__ */ jsxs("div", { className: "flex-1 min-w-0", children: [
@@ -1387,10 +1451,10 @@ function UserDetailPanel({
           "Joined ",
           new Date(user.createdAt).toLocaleDateString(),
           " · Last active ",
-          timeAgo$4(user.lastCheckedAt)
+          timeAgo$6(user.lastCheckedAt)
         ] })
       ] }),
-      /* @__PURE__ */ jsx(StatusBadge, { status }),
+      /* @__PURE__ */ jsx(StatusBadge$1, { status }),
       /* @__PURE__ */ jsx("button", { onClick: onClose, className: "text-gray-600 hover:text-white text-lg transition-colors", children: "✕" })
     ] }),
     /* @__PURE__ */ jsx("div", { className: "grid grid-cols-4 divide-x divide-white/5 border-b border-white/5", children: [
@@ -1758,6 +1822,7 @@ function MiningManager({ admin }) {
   const [sseOk, setSseOk] = useState(false);
   const [lastSync, setLastSync2] = useState(null);
   const [toast, setToast] = useState(null);
+  const [page, setPage] = useState(1);
   const pollRef = useRef(null);
   function showMsg(msg, type = "success") {
     setToast({ msg, type });
@@ -1840,12 +1905,18 @@ function MiningManager({ admin }) {
       return 0;
     });
   }, [userList, search, sortBy]);
+  useEffect(() => {
+    setPage(1);
+  }, [search, sortBy]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE$2));
+  const safePage = Math.min(page, totalPages);
+  const pagedFiltered = filtered.slice((safePage - 1) * PAGE_SIZE$2, safePage * PAGE_SIZE$2);
   return /* @__PURE__ */ jsxs("div", { className: "space-y-6", children: [
-    toast && /* @__PURE__ */ jsx(Toast$1, { msg: toast.msg, type: toast.type }),
+    toast && /* @__PURE__ */ jsx(Toast$2, { msg: toast.msg, type: toast.type }),
     /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/2 border border-white/5 text-[11px]", children: [
       /* @__PURE__ */ jsx("span", { className: `w-2 h-2 rounded-full shrink-0 ${sseOk ? "bg-green-400 animate-pulse" : "bg-amber-400"}` }),
       /* @__PURE__ */ jsx("span", { className: sseOk ? "text-green-400" : "text-amber-400", children: sseOk ? "Live — receiving real-time updates" : "Polling (SSE reconnecting…)" }),
-      /* @__PURE__ */ jsx("span", { className: "text-gray-700 ml-auto", children: lastSync ? `Synced ${timeAgo$4(lastSync)}` : "Loading…" }),
+      /* @__PURE__ */ jsx("span", { className: "text-gray-700 ml-auto", children: lastSync ? `Synced ${timeAgo$6(lastSync)}` : "Loading…" }),
       /* @__PURE__ */ jsx(
         "button",
         {
@@ -1856,9 +1927,9 @@ function MiningManager({ admin }) {
       )
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3", children: [
-      /* @__PURE__ */ jsx(StatCard$1, { label: "Total Players", value: userList.length.toString(), color: "text-white" }),
+      /* @__PURE__ */ jsx(StatCard$2, { label: "Total Players", value: userList.length.toString(), color: "text-white" }),
       /* @__PURE__ */ jsx(
-        StatCard$1,
+        StatCard$2,
         {
           label: "Active Miners",
           value: stats.activeMiners.toString(),
@@ -1867,7 +1938,7 @@ function MiningManager({ admin }) {
         }
       ),
       /* @__PURE__ */ jsx(
-        StatCard$1,
+        StatCard$2,
         {
           label: "Total BlueCoin",
           value: Math.floor(stats.totalBC).toLocaleString(),
@@ -1876,7 +1947,7 @@ function MiningManager({ admin }) {
         }
       ),
       /* @__PURE__ */ jsx(
-        StatCard$1,
+        StatCard$2,
         {
           label: "Total Gems",
           value: Math.floor(stats.totalGems).toLocaleString(),
@@ -1885,7 +1956,7 @@ function MiningManager({ admin }) {
         }
       ),
       /* @__PURE__ */ jsx(
-        StatCard$1,
+        StatCard$2,
         {
           label: "Network Rate",
           value: stats.totalRate > 0 ? `${stats.totalRate} MH/s` : "—",
@@ -1894,7 +1965,7 @@ function MiningManager({ admin }) {
         }
       ),
       /* @__PURE__ */ jsx(
-        StatCard$1,
+        StatCard$2,
         {
           label: "Total Rigs",
           value: stats.totalRigs.toString(),
@@ -1965,7 +2036,7 @@ function MiningManager({ admin }) {
           /* @__PURE__ */ jsx("span", { className: "text-right hidden sm:block", children: "Rate" }),
           /* @__PURE__ */ jsx("span", { className: "text-right", children: "Status" })
         ] }),
-        /* @__PURE__ */ jsx("div", { className: "divide-y divide-white/3 max-h-[420px] overflow-y-auto", children: filtered.map((u) => {
+        /* @__PURE__ */ jsx("div", { className: "divide-y divide-white/3", children: pagedFiltered.map((u) => {
           const st = userStatus(u);
           const rate = activeHashrate(u);
           const isSelected = selected === u.username.toLowerCase();
@@ -1979,7 +2050,7 @@ function MiningManager({ admin }) {
                   /* @__PURE__ */ jsx("div", { className: "w-7 h-7 rounded-lg bg-[#00BFFF]/10 border border-[#00BFFF]/20 flex items-center justify-center text-xs font-black text-[#00BFFF] shrink-0", children: u.username[0].toUpperCase() }),
                   /* @__PURE__ */ jsxs("div", { className: "min-w-0", children: [
                     /* @__PURE__ */ jsx("p", { className: "text-white text-xs font-semibold truncate", children: u.username }),
-                    /* @__PURE__ */ jsx("p", { className: "text-gray-700 text-[10px]", children: timeAgo$4(u.lastCheckedAt) })
+                    /* @__PURE__ */ jsx("p", { className: "text-gray-700 text-[10px]", children: timeAgo$6(u.lastCheckedAt) })
                   ] })
                 ] }),
                 /* @__PURE__ */ jsx("span", { className: "text-amber-400 text-xs font-bold text-right tabular-nums", children: Math.floor(u.balance).toLocaleString() }),
@@ -1990,7 +2061,7 @@ function MiningManager({ admin }) {
                   u.rigs.length
                 ] }),
                 /* @__PURE__ */ jsx("span", { className: "text-green-400 text-xs font-bold text-right tabular-nums hidden sm:block", children: rate > 0 ? `${rate}` : "—" }),
-                /* @__PURE__ */ jsx("div", { className: "flex justify-end", children: /* @__PURE__ */ jsx(StatusBadge, { status: st }) })
+                /* @__PURE__ */ jsx("div", { className: "flex justify-end", children: /* @__PURE__ */ jsx(StatusBadge$1, { status: st }) })
               ]
             },
             u.username
@@ -1998,6 +2069,16 @@ function MiningManager({ admin }) {
         }) })
       ] })
     ] }),
+    /* @__PURE__ */ jsx(
+      AdminPaginator,
+      {
+        page: safePage,
+        totalPages,
+        totalItems: filtered.length,
+        pageSize: PAGE_SIZE$2,
+        onPageChange: setPage
+      }
+    ),
     selectedUser && /* @__PURE__ */ jsx(
       UserDetailPanel,
       {
@@ -2133,6 +2214,7 @@ function EconomyManager({ admin }) {
     ] }) })
   ] });
 }
+const PAGE_SIZE$1 = 10;
 const RANK_KEYS = ["mace", "sword", "axe", "uhc", "nethpot", "diapot", "crystal"];
 const RANK_VALUES = ["HT5", "LT5", "HT4", "LT4", "HT3", "LT3", "HT2", "LT2", "HT1", "LT1", "NONE"];
 const REGION_LIST = [...REGIONS];
@@ -2145,7 +2227,7 @@ const REGION_SHORT = {
   Africa: "AF",
   "Middle East": "ME"
 };
-function timeAgo$3(ts) {
+function timeAgo$5(ts) {
   if (!ts) return "—";
   const d = Date.now() - ts;
   if (d < 6e4) return "Just now";
@@ -2230,7 +2312,7 @@ function Avatar({ username, avatar, size = 32 }) {
     }
   );
 }
-function Toast({ msg, type }) {
+function Toast$1({ msg, type }) {
   const cls = type === "success" ? "bg-green-500/15 border-green-500/30 text-green-400" : type === "error" ? "bg-red-500/15 border-red-500/30 text-red-400" : "bg-[#00BFFF]/12 border-[#00BFFF]/30 text-[#00BFFF]";
   return /* @__PURE__ */ jsxs("div", { className: `fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-xl border ${cls} max-w-xs`, children: [
     type === "success" ? "✓ " : type === "error" ? "⚠ " : "ℹ ",
@@ -2247,7 +2329,7 @@ function SortBtn({ label, k, cur, asc, onClick }) {
 function Spinner() {
   return /* @__PURE__ */ jsx("div", { className: "w-4 h-4 border-2 border-white/10 border-t-[#00BFFF] rounded-full animate-spin" });
 }
-function StatCard({ icon, value, label, sub }) {
+function StatCard$1({ icon, value, label, sub }) {
   return /* @__PURE__ */ jsxs("div", { className: "glass rounded-xl border border-white/8 px-5 py-4 flex items-center gap-4", children: [
     /* @__PURE__ */ jsx("div", { className: "w-10 h-10 rounded-xl bg-[#00BFFF]/8 border border-[#00BFFF]/15 flex items-center justify-center text-xl shrink-0", children: icon }),
     /* @__PURE__ */ jsxs("div", { className: "min-w-0", children: [
@@ -2765,7 +2847,7 @@ function EditModal({ user, onClose, onSaved, admin }) {
           { label: "Rigs", val: user.hasMining ? `${user.activeRigs}/${user.totalRigs} active` : "—" },
           { label: "Block Rewards", val: user.hasMining ? `${user.rewardCount} blocks` : "—" },
           { label: "Joined", val: user.joinDate ? new Date(user.joinDate).toLocaleDateString() : "—" },
-          { label: "Last Seen", val: timeAgo$3(user.lastSeen) },
+          { label: "Last Seen", val: timeAgo$5(user.lastSeen) },
           { label: "UUID", val: user.uuid ? user.uuid.slice(0, 18) + "…" : "—" }
         ].map((item) => /* @__PURE__ */ jsxs("div", { className: "glass rounded-xl border border-white/5 p-3", children: [
           /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-[10px] uppercase tracking-widest mb-0.5", children: item.label }),
@@ -2853,7 +2935,7 @@ function EditModal({ user, onClose, onSaved, admin }) {
               { label: "Total Rigs", val: user.totalRigs },
               { label: "Active Rigs", val: user.activeRigs },
               { label: "Rewards", val: user.rewardCount },
-              { label: "Last Seen", val: timeAgo$3(user.lastSeen) }
+              { label: "Last Seen", val: timeAgo$5(user.lastSeen) }
             ].map((s) => /* @__PURE__ */ jsxs("div", { className: "text-center", children: [
               /* @__PURE__ */ jsx("p", { className: "text-white font-bold text-lg", children: s.val }),
               /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-[10px]", children: s.label })
@@ -3153,6 +3235,7 @@ function UserManager({ admin }) {
   const [sortAsc, setSortAsc] = useState(true);
   const [selected, setSelected] = useState(/* @__PURE__ */ new Set());
   const [expanded, setExpanded] = useState(null);
+  const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
   const [createMiningTarget, setCreateMiningTarget] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
@@ -3204,11 +3287,17 @@ function UserManager({ admin }) {
     });
     return sortUsers(list, sortKey, sortAsc);
   }, [users, search, filter, sortKey, sortAsc]);
-  const allSelected = displayList.length > 0 && displayList.every((u) => selected.has(u.key));
+  useEffect(() => {
+    setPage(1);
+  }, [search, filter, sortKey, sortAsc]);
+  const totalPages = Math.max(1, Math.ceil(displayList.length / PAGE_SIZE$1));
+  const safePage = Math.min(page, totalPages);
+  const pagedList = displayList.slice((safePage - 1) * PAGE_SIZE$1, safePage * PAGE_SIZE$1);
+  const allSelected = pagedList.length > 0 && pagedList.every((u) => selected.has(u.key));
   const someSelected = displayList.some((u) => selected.has(u.key));
   function toggleAll() {
     if (allSelected) setSelected(/* @__PURE__ */ new Set());
-    else setSelected(new Set(displayList.map((u) => u.key)));
+    else setSelected(new Set(pagedList.map((u) => u.key)));
   }
   function toggleOne(key) {
     setSelected((prev) => {
@@ -3263,17 +3352,17 @@ function UserManager({ admin }) {
   ];
   const COL = "grid-cols-[20px_36px_1fr_80px_80px_100px_70px_68px_88px_80px]";
   return /* @__PURE__ */ jsxs("div", { className: "space-y-5", children: [
-    toast && /* @__PURE__ */ jsx(Toast, { msg: toast.msg, type: toast.type }),
+    toast && /* @__PURE__ */ jsx(Toast$1, { msg: toast.msg, type: toast.type }),
     createOpen && /* @__PURE__ */ jsx(CreateModal, { onClose: () => setCreateOpen(false), onCreated: handleCreated, admin }),
     createMiningTarget && /* @__PURE__ */ jsx(CreateMiningModal, { player: createMiningTarget, onClose: () => setCreateMiningTarget(null), onCreated: handleMiningCreated, admin }),
     editTarget && /* @__PURE__ */ jsx(EditModal, { user: editTarget, onClose: () => setEditTarget(null), onSaved: handleSaved, admin }),
     deleteTarget && /* @__PURE__ */ jsx(DeleteModal, { user: deleteTarget, onClose: () => setDeleteTarget(null), onDeleted: handleDeleted, admin }),
     bulkDeleteOpen && /* @__PURE__ */ jsx(BulkDeleteModal, { usernames: selectedKeys, onClose: () => setBulkDeleteOpen(false), onDeleted: handleBulkDeleted, admin }),
     /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 lg:grid-cols-4 gap-3", children: [
-      /* @__PURE__ */ jsx(StatCard, { icon: "👥", value: totalUsers, label: "Total Users", sub: `${totalCreds} can log in` }),
-      /* @__PURE__ */ jsx(StatCard, { icon: "📋", value: totalPlayers, label: "Player Profiles", sub: "On the tier list" }),
-      /* @__PURE__ */ jsx(StatCard, { icon: "⛏", value: totalMiners, label: "Mining Accounts", sub: `${Math.floor(totalBC).toLocaleString()} BC in circulation` }),
-      /* @__PURE__ */ jsx(StatCard, { icon: "🔑", value: totalCreds, label: "Login Accounts", sub: `${users.filter((u) => u.role === "admin").length} admin(s)` })
+      /* @__PURE__ */ jsx(StatCard$1, { icon: "👥", value: totalUsers, label: "Total Users", sub: `${totalCreds} can log in` }),
+      /* @__PURE__ */ jsx(StatCard$1, { icon: "📋", value: totalPlayers, label: "Player Profiles", sub: "On the tier list" }),
+      /* @__PURE__ */ jsx(StatCard$1, { icon: "⛏", value: totalMiners, label: "Mining Accounts", sub: `${Math.floor(totalBC).toLocaleString()} BC in circulation` }),
+      /* @__PURE__ */ jsx(StatCard$1, { icon: "🔑", value: totalCreds, label: "Login Accounts", sub: `${users.filter((u) => u.role === "admin").length} admin(s)` })
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "flex flex-wrap gap-3 items-center", children: [
       /* @__PURE__ */ jsxs("div", { className: "relative flex-1 min-w-48", children: [
@@ -3371,7 +3460,7 @@ function UserManager({ admin }) {
         /* @__PURE__ */ jsx("p", { className: "text-4xl mb-3", children: "🔍" }),
         /* @__PURE__ */ jsx("p", { className: "text-gray-500 text-sm", children: search || filter !== "all" ? "No users match your search." : "No users yet — create the first one." })
       ] }),
-      !loading && /* @__PURE__ */ jsx("div", { className: "divide-y divide-white/4", children: displayList.map((u) => {
+      !loading && /* @__PURE__ */ jsx("div", { className: "divide-y divide-white/4", children: pagedList.map((u) => {
         const isSelected = selected.has(u.key);
         const isExpanded = expanded === u.key;
         return /* @__PURE__ */ jsxs("div", { className: isSelected ? "bg-[#00BFFF]/4" : "", children: [
@@ -3414,7 +3503,7 @@ function UserManager({ admin }) {
                     u.totalRigs
                   ] })
                 ] }) : /* @__PURE__ */ jsx("p", { className: "text-gray-700 text-xs text-right", children: "—" }),
-                /* @__PURE__ */ jsx("p", { className: "text-gray-500 text-xs text-right truncate", children: timeAgo$3(u.lastSeen) }),
+                /* @__PURE__ */ jsx("p", { className: "text-gray-500 text-xs text-right truncate", children: timeAgo$5(u.lastSeen) }),
                 /* @__PURE__ */ jsxs("div", { className: "flex gap-1 justify-end", onClick: (e) => e.stopPropagation(), children: [
                   u.hasPlayer && !u.hasMining && /* @__PURE__ */ jsx(
                     "button",
@@ -3494,7 +3583,17 @@ function UserManager({ admin }) {
           " rigs total"
         ] })
       ] })
-    ] })
+    ] }),
+    /* @__PURE__ */ jsx(
+      AdminPaginator,
+      {
+        page: safePage,
+        totalPages,
+        totalItems: displayList.length,
+        pageSize: PAGE_SIZE$1,
+        onPageChange: setPage
+      }
+    )
   ] });
 }
 function AdminToast$1({ msg, type }) {
@@ -3708,6 +3807,7 @@ function EventManager({ admin }) {
     ] }) })
   ] });
 }
+const PAGE_SIZE = 10;
 const ACTION_COLORS = {
   "player:add": "bg-green-500/10 text-green-400 border-green-500/20",
   "player:edit": "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -3732,7 +3832,7 @@ const ACTION_COLORS = {
 function getColor(action) {
   return ACTION_COLORS[action] ?? "bg-white/5 text-gray-400 border-white/10";
 }
-function timeAgo$2(ts) {
+function timeAgo$4(ts) {
   const diff = Date.now() - ts;
   if (diff < 6e4) return `${Math.floor(diff / 1e3)}s ago`;
   if (diff < 36e5) return `${Math.floor(diff / 6e4)}m ago`;
@@ -3744,7 +3844,11 @@ function ActivityLogs({ admin }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [showConfirm, setShowConfirm] = useState(false);
+  const [page, setPage] = useState(1);
   const refresh = () => setLogs(getLogs());
+  useEffect(() => {
+    setPage(1);
+  }, [search, filter]);
   const actionTypes = ["all", ...Array.from(new Set(logs.map((l) => l.action)))];
   const filtered = logs.filter((l) => {
     const matchFilter = filter === "all" || l.action === filter;
@@ -3752,6 +3856,9 @@ function ActivityLogs({ admin }) {
     const matchSearch = !q || l.action.includes(q) || l.admin.includes(q) || (l.details ?? "").toLowerCase().includes(q);
     return matchFilter && matchSearch;
   });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pagedLogs = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   function handleClear() {
     clearLogs();
     addLog(admin, "logs:clear", "Cleared all activity logs");
@@ -3805,7 +3912,7 @@ function ActivityLogs({ admin }) {
         }
       )
     ] }),
-    /* @__PURE__ */ jsx("div", { className: "glass rounded-2xl border border-white/8 overflow-hidden", children: filtered.length === 0 ? /* @__PURE__ */ jsx("div", { className: "py-16 text-center text-gray-600 text-sm", children: "No logs found." }) : /* @__PURE__ */ jsx("div", { className: "divide-y divide-white/5", children: filtered.map((log) => /* @__PURE__ */ jsxs("div", { className: "flex items-start gap-4 px-5 py-3.5 hover:bg-white/2 transition-colors", children: [
+    /* @__PURE__ */ jsx("div", { className: "glass rounded-2xl border border-white/8 overflow-hidden", children: filtered.length === 0 ? /* @__PURE__ */ jsx("div", { className: "py-16 text-center text-gray-600 text-sm", children: "No logs found." }) : /* @__PURE__ */ jsx("div", { className: "divide-y divide-white/5", children: pagedLogs.map((log) => /* @__PURE__ */ jsxs("div", { className: "flex items-start gap-4 px-5 py-3.5 hover:bg-white/2 transition-colors", children: [
       /* @__PURE__ */ jsx("span", { className: `mt-0.5 px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold border shrink-0 ${getColor(log.action)}`, children: log.action }),
       /* @__PURE__ */ jsxs("div", { className: "flex-1 min-w-0", children: [
         log.details && /* @__PURE__ */ jsx("p", { className: "text-gray-400 text-xs truncate", children: log.details }),
@@ -3814,8 +3921,18 @@ function ActivityLogs({ admin }) {
           log.admin
         ] })
       ] }),
-      /* @__PURE__ */ jsx("span", { className: "text-gray-700 text-[10px] shrink-0", children: timeAgo$2(log.timestamp) })
+      /* @__PURE__ */ jsx("span", { className: "text-gray-700 text-[10px] shrink-0", children: timeAgo$4(log.timestamp) })
     ] }, log.id)) }) }),
+    /* @__PURE__ */ jsx(
+      AdminPaginator,
+      {
+        page: safePage,
+        totalPages,
+        totalItems: filtered.length,
+        pageSize: PAGE_SIZE,
+        onPageChange: setPage
+      }
+    ),
     showConfirm && /* @__PURE__ */ jsx("div", { className: "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm", children: /* @__PURE__ */ jsxs("div", { className: "glass rounded-2xl border border-red-500/20 p-6 max-w-sm w-full text-center", children: [
       /* @__PURE__ */ jsx("div", { className: "text-4xl mb-3", children: "🗑️" }),
       /* @__PURE__ */ jsx("h3", { className: "text-white font-bold text-lg mb-2", children: "Clear All Logs?" }),
@@ -3831,7 +3948,8 @@ function ActivityLogs({ admin }) {
     ] }) })
   ] });
 }
-function timeAgo$1(isoOrMs) {
+const SYNC_HISTORY_PAGE_SIZE = 10;
+function timeAgo$3(isoOrMs) {
   const ms = typeof isoOrMs === "number" ? isoOrMs : new Date(isoOrMs).getTime();
   const secs = Math.floor((Date.now() - ms) / 1e3);
   if (secs < 10) return "just now";
@@ -3923,7 +4041,7 @@ function AutoBackupPanel() {
       if (!quiet) setLoading(false);
     }
   }, []);
-  const loadHistory = useCallback(async () => {
+  const loadHistory2 = useCallback(async () => {
     setHistoryLoading(true);
     try {
       const commits = await fetchCommitHistory();
@@ -3935,10 +4053,10 @@ function AutoBackupPanel() {
   }, []);
   useEffect(() => {
     refresh();
-    loadHistory();
+    loadHistory2();
     const poll = setInterval(() => refresh(true), 1e4);
     return () => clearInterval(poll);
-  }, [refresh, loadHistory]);
+  }, [refresh, loadHistory2]);
   useEffect(() => {
     const tick = setInterval(() => {
       const s = statusRef.current;
@@ -3970,7 +4088,7 @@ function AutoBackupPanel() {
       setStatus(result.status);
       setBackupLog(result.message);
       setBackupOk(result.ok);
-      if (result.ok) loadHistory();
+      if (result.ok) loadHistory2();
     } catch (e) {
       setBackupLog(e instanceof Error ? e.message : "Unknown error");
       setBackupOk(false);
@@ -4030,7 +4148,7 @@ function AutoBackupPanel() {
       /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-2", children: [
         /* @__PURE__ */ jsxs("div", { className: "bg-white/2 border border-white/5 rounded-xl px-4 py-3", children: [
           /* @__PURE__ */ jsx("p", { className: "text-[9px] uppercase tracking-widest text-gray-600 mb-1", children: "Last Backup" }),
-          /* @__PURE__ */ jsx("p", { className: `text-sm font-bold ${status.lastBackupAt ? "text-green-400" : "text-gray-600"}`, children: status.lastBackupAt ? timeAgo$1(status.lastBackupAt) : "—" }),
+          /* @__PURE__ */ jsx("p", { className: `text-sm font-bold ${status.lastBackupAt ? "text-green-400" : "text-gray-600"}`, children: status.lastBackupAt ? timeAgo$3(status.lastBackupAt) : "—" }),
           /* @__PURE__ */ jsx("p", { className: "text-[10px] text-gray-700 mt-0.5 truncate", children: status.lastBackupAt ? new Date(status.lastBackupAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "None this session" })
         ] }),
         /* @__PURE__ */ jsxs("div", { className: "bg-white/2 border border-white/5 rounded-xl px-4 py-3", children: [
@@ -4170,7 +4288,7 @@ function AutoBackupPanel() {
           /* @__PURE__ */ jsx(
             "button",
             {
-              onClick: loadHistory,
+              onClick: loadHistory2,
               disabled: historyLoading,
               className: "text-[10px] text-gray-600 hover:text-gray-400 transition-colors disabled:opacity-40",
               children: historyLoading ? "↻ loading…" : "↻ refresh"
@@ -4180,7 +4298,7 @@ function AutoBackupPanel() {
         recentBackups.length > 0 ? /* @__PURE__ */ jsx("div", { className: "rounded-xl border border-white/5 bg-black/20 divide-y divide-white/4", children: recentBackups.map((c) => /* @__PURE__ */ jsxs("div", { className: "px-4 py-2.5 flex items-center gap-3 min-w-0", children: [
           /* @__PURE__ */ jsx("span", { className: "font-mono text-[10px] text-[#00BFFF] shrink-0", children: c.shortSha }),
           /* @__PURE__ */ jsx("span", { className: "text-[11px] text-gray-400 flex-1 truncate", children: c.message.replace("[auto] ", "") }),
-          /* @__PURE__ */ jsx("span", { className: "text-[10px] text-gray-600 shrink-0 tabular-nums", children: timeAgo$1(c.date) })
+          /* @__PURE__ */ jsx("span", { className: "text-[10px] text-gray-600 shrink-0 tabular-nums", children: timeAgo$3(c.date) })
         ] }, c.shortSha)) }) : historyLoading ? /* @__PURE__ */ jsx("div", { className: "px-4 py-4 text-center text-gray-700 text-[11px] animate-pulse", children: "Loading commit history…" }) : /* @__PURE__ */ jsx("div", { className: "px-4 py-4 rounded-xl border border-white/5 bg-black/20 text-center text-gray-700 text-[11px]", children: "No auto-backup commits found in recent history." })
       ] })
     ] }),
@@ -4752,29 +4870,45 @@ function RollbackPanel({ commits }) {
   ] });
 }
 function SyncHistoryPanel({ history }) {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(history.length / SYNC_HISTORY_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pagedHistory = history.slice((safePage - 1) * SYNC_HISTORY_PAGE_SIZE, safePage * SYNC_HISTORY_PAGE_SIZE);
   if (history.length === 0) {
     return /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-sm py-4 text-center", children: "No sync history yet. Push to GitHub to create your first entry." });
   }
-  return /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-white/8 overflow-hidden", children: [
-    /* @__PURE__ */ jsxs("div", { className: "hidden sm:grid grid-cols-[110px_80px_1fr_140px_70px_80px] gap-2 px-4 py-2 border-b border-white/5 text-[9px] text-gray-600 uppercase tracking-widest", children: [
-      /* @__PURE__ */ jsx("span", { children: "Date" }),
-      /* @__PURE__ */ jsx("span", { children: "Commit" }),
-      /* @__PURE__ */ jsx("span", { children: "Message" }),
-      /* @__PURE__ */ jsx("span", { children: "Files" }),
-      /* @__PURE__ */ jsx("span", { children: "Status" }),
-      /* @__PURE__ */ jsx("span", { children: "Duration" })
+  return /* @__PURE__ */ jsxs("div", { className: "space-y-3", children: [
+    /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-white/8 overflow-hidden", children: [
+      /* @__PURE__ */ jsxs("div", { className: "hidden sm:grid grid-cols-[110px_80px_1fr_140px_70px_80px] gap-2 px-4 py-2 border-b border-white/5 text-[9px] text-gray-600 uppercase tracking-widest", children: [
+        /* @__PURE__ */ jsx("span", { children: "Date" }),
+        /* @__PURE__ */ jsx("span", { children: "Commit" }),
+        /* @__PURE__ */ jsx("span", { children: "Message" }),
+        /* @__PURE__ */ jsx("span", { children: "Files" }),
+        /* @__PURE__ */ jsx("span", { children: "Status" }),
+        /* @__PURE__ */ jsx("span", { children: "Duration" })
+      ] }),
+      /* @__PURE__ */ jsx("div", { className: "divide-y divide-white/5", children: pagedHistory.map((h) => /* @__PURE__ */ jsxs("div", { className: "grid sm:grid-cols-[110px_80px_1fr_140px_70px_80px] gap-2 px-4 py-3 items-center", children: [
+        /* @__PURE__ */ jsx("span", { className: "text-[10px] text-gray-500", children: fmtDate(h.date) }),
+        /* @__PURE__ */ jsx("span", { className: "font-mono text-[#00BFFF] text-[10px]", children: h.commitHash.slice(0, 7) }),
+        /* @__PURE__ */ jsx("span", { className: "text-gray-300 text-[11px] truncate", children: h.commitMessage }),
+        /* @__PURE__ */ jsx("span", { className: "text-gray-600 text-[10px] truncate", children: h.filesChanged.join(", ") }),
+        /* @__PURE__ */ jsx("span", { className: `text-[10px] font-bold ${h.status === "success" ? "text-green-400" : "text-red-400"}`, children: h.status === "success" ? "✓ OK" : "✗ Fail" }),
+        /* @__PURE__ */ jsxs("span", { className: "text-gray-600 text-[10px]", children: [
+          (h.durationMs / 1e3).toFixed(1),
+          "s"
+        ] })
+      ] }, h.id)) })
     ] }),
-    /* @__PURE__ */ jsx("div", { className: "divide-y divide-white/5", children: history.map((h) => /* @__PURE__ */ jsxs("div", { className: "grid sm:grid-cols-[110px_80px_1fr_140px_70px_80px] gap-2 px-4 py-3 items-center", children: [
-      /* @__PURE__ */ jsx("span", { className: "text-[10px] text-gray-500", children: fmtDate(h.date) }),
-      /* @__PURE__ */ jsx("span", { className: "font-mono text-[#00BFFF] text-[10px]", children: h.commitHash.slice(0, 7) }),
-      /* @__PURE__ */ jsx("span", { className: "text-gray-300 text-[11px] truncate", children: h.commitMessage }),
-      /* @__PURE__ */ jsx("span", { className: "text-gray-600 text-[10px] truncate", children: h.filesChanged.join(", ") }),
-      /* @__PURE__ */ jsx("span", { className: `text-[10px] font-bold ${h.status === "success" ? "text-green-400" : "text-red-400"}`, children: h.status === "success" ? "✓ OK" : "✗ Fail" }),
-      /* @__PURE__ */ jsxs("span", { className: "text-gray-600 text-[10px]", children: [
-        (h.durationMs / 1e3).toFixed(1),
-        "s"
-      ] })
-    ] }, h.id)) })
+    /* @__PURE__ */ jsx(
+      AdminPaginator,
+      {
+        page: safePage,
+        totalPages,
+        totalItems: history.length,
+        pageSize: SYNC_HISTORY_PAGE_SIZE,
+        onPageChange: setPage
+      }
+    )
   ] });
 }
 function TokenManagerPanel() {
@@ -5251,7 +5385,7 @@ function GitHubSyncCenter({ admin: _admin }) {
             SyncStatCell,
             {
               label: "Last Sync",
-              value: sync.lastSyncAt ? timeAgo$1(sync.lastSyncAt) : "—",
+              value: sync.lastSyncAt ? timeAgo$3(sync.lastSyncAt) : "—",
               valueClass: sync.lastSyncAt ? "text-[#00BFFF]" : "text-gray-600",
               icon: /* @__PURE__ */ jsxs("svg", { width: "13", height: "13", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", className: "text-sky-400", children: [
                 /* @__PURE__ */ jsx("circle", { cx: "12", cy: "12", r: "10" }),
@@ -5329,7 +5463,7 @@ function GitHubSyncCenter({ admin: _admin }) {
         ] }),
         /* @__PURE__ */ jsx("div", { className: "w-px h-3 bg-white/8 shrink-0" }),
         /* @__PURE__ */ jsx("span", { className: "text-[11px] font-mono text-gray-400 truncate flex-1", children: repoStatus.latestCommit.message }),
-        repoStatus.latestCommit.date && /* @__PURE__ */ jsx("span", { className: "text-[10px] text-gray-700 tabular-nums shrink-0", children: timeAgo$1(repoStatus.latestCommit.date) })
+        repoStatus.latestCommit.date && /* @__PURE__ */ jsx("span", { className: "text-[10px] text-gray-700 tabular-nums shrink-0", children: timeAgo$3(repoStatus.latestCommit.date) })
       ] })
     ] }),
     /* @__PURE__ */ jsxs("div", { className: `glass rounded-2xl border overflow-hidden ${isDirty ? "border-amber-500/20" : "border-white/8"}`, children: [
@@ -5464,7 +5598,7 @@ const createBackupBranch = createServerFn({
 const performHistoryReset = createServerFn({
   method: "POST"
 }).inputValidator((data) => data).handler(createSsrRpc("33c01341ce43cf38613dc6607b963376084f7df1160b49db15f8398db1d1b1d5"));
-function formatDate(iso) {
+function formatDate$1(iso) {
   if (!iso) return "—";
   try {
     return new Date(iso).toLocaleString("en-US", {
@@ -5478,7 +5612,7 @@ function formatDate(iso) {
     return iso;
   }
 }
-function timeAgo(iso) {
+function timeAgo$2(iso) {
   if (!iso) return "";
   const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1e3);
   if (secs < 60) return "just now";
@@ -5700,7 +5834,7 @@ function RepoHistoryManager({ admin: _admin }) {
         /* @__PURE__ */ jsx(InfoRow, { label: "Total commits", value: repoInfo.commitCount > 0 ? repoInfo.commitCount.toLocaleString() : "—", mono: true }),
         /* @__PURE__ */ jsx(InfoRow, { label: "HEAD commit", value: repoInfo.headShort, mono: true }),
         /* @__PURE__ */ jsx(InfoRow, { label: "Last commit message", value: repoInfo.lastMessage }),
-        /* @__PURE__ */ jsx(InfoRow, { label: "Last commit date", value: repoInfo.lastDate ? `${formatDate(repoInfo.lastDate)} (${timeAgo(repoInfo.lastDate)})` : "—" }),
+        /* @__PURE__ */ jsx(InfoRow, { label: "Last commit date", value: repoInfo.lastDate ? `${formatDate$1(repoInfo.lastDate)} (${timeAgo$2(repoInfo.lastDate)})` : "—" }),
         /* @__PURE__ */ jsx(InfoRow, { label: "Last commit author", value: repoInfo.lastAuthor }),
         /* @__PURE__ */ jsx(InfoRow, { label: "Repository", value: `${repoInfo.owner}/${repoInfo.repo}`, mono: true })
       ] }) : /* @__PURE__ */ jsx("div", { className: "px-5 py-6 text-center text-gray-600 text-xs", children: "Could not load repository information" })
@@ -5892,6 +6026,2052 @@ function RepoHistoryManager({ admin: _admin }) {
     ] }) })
   ] });
 }
+const ITEMS_PAGE_SIZE = 10;
+function formatGems(n) {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return n.toLocaleString();
+}
+function timeAgo$1(ms) {
+  const diff = Date.now() - ms;
+  const s = Math.floor(diff / 1e3);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+function formatDate(ms) {
+  return new Date(ms).toLocaleString(void 0, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+function StatusBadge({ status }) {
+  const color = STATUS_COLORS[status];
+  return /* @__PURE__ */ jsxs(
+    "span",
+    {
+      className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+      style: { background: `${color}15`, color, border: `1px solid ${color}30` },
+      children: [
+        (status === "pending" || status === "processing") && /* @__PURE__ */ jsx("span", { className: "w-1.5 h-1.5 rounded-full animate-pulse", style: { background: color } }),
+        STATUS_LABELS[status]
+      ]
+    }
+  );
+}
+function RarityBadge({ rarity }) {
+  const color = RARITY_COLORS[rarity] ?? "#9ca3af";
+  return /* @__PURE__ */ jsx(
+    "span",
+    {
+      className: "text-[10px] font-bold px-1.5 py-0.5 rounded",
+      style: { background: `${color}15`, color, border: `1px solid ${color}25` },
+      children: RARITY_NAMES[rarity] ?? `R${rarity}`
+    }
+  );
+}
+function StatCard({ label, value, color, sub }) {
+  return /* @__PURE__ */ jsxs(
+    "div",
+    {
+      className: "rounded-xl border p-4",
+      style: { borderColor: `${color}20`, background: `${color}06` },
+      children: [
+        /* @__PURE__ */ jsx("p", { className: "font-black text-2xl", style: { color }, children: typeof value === "number" ? value.toLocaleString() : value }),
+        sub && /* @__PURE__ */ jsx("p", { className: "text-[10px] mt-0.5", style: { color: `${color}80` }, children: sub }),
+        /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-[10px] mt-1", children: label })
+      ]
+    }
+  );
+}
+function PurchaseRow({ purchase, selected, onSelect, onUpdate }) {
+  const [expanded, setExpanded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [staffNotes, setStaffNotes] = useState(purchase.staffNotes ?? "");
+  const [playerNotes, setPlayerNotes] = useState(purchase.playerNotes ?? "");
+  const [message, setMessage] = useState("");
+  async function updateStatus(status) {
+    setSaving(true);
+    setMessage("");
+    try {
+      const result = await adminUpdatePurchase({
+        data: { purchaseId: purchase.id, status, staffNotes: staffNotes || null, playerNotes: playerNotes || null }
+      });
+      if (result.success) {
+        setMessage(status === "cancelled" || status === "rejected" ? "✅ Status updated — Gems refunded" : "✅ Status updated");
+        onUpdate();
+      } else {
+        setMessage(`❌ ${result.error}`);
+      }
+    } catch {
+      setMessage("❌ Error updating status");
+    } finally {
+      setSaving(false);
+    }
+  }
+  return /* @__PURE__ */ jsxs("div", { className: `rounded-xl border overflow-hidden transition-all duration-200 ${selected ? "border-[#00BFFF]/30 bg-[#00BFFF]/3" : "border-white/8 bg-[#0B0F17]"}`, children: [
+    /* @__PURE__ */ jsxs("div", { className: "p-4 flex items-center gap-3", children: [
+      /* @__PURE__ */ jsx(
+        "input",
+        {
+          type: "checkbox",
+          checked: selected,
+          onChange: () => onSelect(purchase.id),
+          onClick: (e) => e.stopPropagation(),
+          className: "rounded border-white/20 bg-white/5 cursor-pointer shrink-0"
+        }
+      ),
+      /* @__PURE__ */ jsxs(
+        "button",
+        {
+          onClick: () => setExpanded((v) => !v),
+          className: "flex-1 text-left grid grid-cols-1 sm:grid-cols-4 gap-2 items-center min-w-0",
+          children: [
+            /* @__PURE__ */ jsxs("div", { children: [
+              /* @__PURE__ */ jsx("p", { className: "text-[#00BFFF] text-xs font-mono font-bold", children: purchase.id }),
+              /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-[10px]", children: timeAgo$1(purchase.createdAt) })
+            ] }),
+            /* @__PURE__ */ jsxs("div", { children: [
+              /* @__PURE__ */ jsx("p", { className: "text-white text-xs font-semibold truncate", children: purchase.username }),
+              /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-[10px]", children: CATEGORY_LABELS[purchase.category] })
+            ] }),
+            /* @__PURE__ */ jsxs("div", { children: [
+              /* @__PURE__ */ jsx("p", { className: "text-white text-xs font-semibold truncate", children: purchase.itemName }),
+              purchase.quantity > 1 && /* @__PURE__ */ jsxs("p", { className: "text-gray-600 text-[10px]", children: [
+                "×",
+                purchase.quantity
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 flex-wrap", children: [
+              /* @__PURE__ */ jsxs("span", { className: "text-purple-400 text-xs font-bold", children: [
+                "✨ ",
+                formatGems(purchase.totalCost)
+              ] }),
+              /* @__PURE__ */ jsx(StatusBadge, { status: purchase.status })
+            ] })
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsx(
+        "span",
+        {
+          onClick: () => setExpanded((v) => !v),
+          className: `text-gray-600 text-xs cursor-pointer transition-transform duration-200 shrink-0 ${expanded ? "rotate-180" : ""}`,
+          children: "▼"
+        }
+      )
+    ] }),
+    expanded && /* @__PURE__ */ jsxs("div", { className: "border-t border-white/5 p-4 space-y-4", children: [
+      /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-gray-500", children: [
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("span", { className: "text-gray-700 block text-[10px]", children: "Created" }),
+          formatDate(purchase.createdAt)
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("span", { className: "text-gray-700 block text-[10px]", children: "Updated" }),
+          formatDate(purchase.updatedAt)
+        ] }),
+        purchase.completedAt && /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("span", { className: "text-gray-700 block text-[10px]", children: "Completed" }),
+          formatDate(purchase.completedAt)
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("span", { className: "text-gray-700 block text-[10px]", children: "Unit Price" }),
+          "✨ ",
+          purchase.price.toLocaleString()
+        ] })
+      ] }),
+      purchase.refunded && /* @__PURE__ */ jsxs("div", { className: "flex gap-2 bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-2 text-xs text-amber-400", children: [
+        "♻️ Refunded ✨ ",
+        purchase.totalCost.toLocaleString(),
+        " Gems",
+        purchase.refundedAt ? ` • ${formatDate(purchase.refundedAt)}` : ""
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3", children: [
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Staff Notes (internal only)" }),
+          /* @__PURE__ */ jsx(
+            "textarea",
+            {
+              value: staffNotes,
+              onChange: (e) => setStaffNotes(e.target.value),
+              rows: 2,
+              placeholder: "Internal notes for staff…",
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs placeholder-gray-700 outline-none focus:border-white/20 resize-none transition-all"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Player Notes (visible to player)" }),
+          /* @__PURE__ */ jsx(
+            "textarea",
+            {
+              value: playerNotes,
+              onChange: (e) => setPlayerNotes(e.target.value),
+              rows: 2,
+              placeholder: "Message shown to the player…",
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs placeholder-gray-700 outline-none focus:border-white/20 resize-none transition-all"
+            }
+          )
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "flex flex-wrap gap-2 items-center", children: [
+        ["pending", "processing", "completed", "cancelled", "rejected"].map((s) => {
+          const color = STATUS_COLORS[s];
+          const isActive = purchase.status === s;
+          return /* @__PURE__ */ jsx(
+            "button",
+            {
+              onClick: () => updateStatus(s),
+              disabled: saving || isActive,
+              className: `px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${isActive ? "opacity-40 cursor-default" : "hover:opacity-90 active:scale-95"}`,
+              style: { background: `${color}15`, border: `1px solid ${color}30`, color, opacity: saving ? 0.5 : void 0 },
+              children: saving ? "…" : STATUS_LABELS[s]
+            },
+            s
+          );
+        }),
+        message && /* @__PURE__ */ jsx("p", { className: `text-xs font-medium ml-1 ${message.startsWith("✅") ? "text-green-400" : "text-red-400"}`, children: message })
+      ] })
+    ] })
+  ] });
+}
+function ItemEditor({ item, onSave, onDelete }) {
+  const [form, setForm] = useState({ ...item });
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDel, setConfirm] = useState(false);
+  const [message, setMsg] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const rarityColor = RARITY_COLORS[form.rarity] ?? "#9ca3af";
+  async function save() {
+    setSaving(true);
+    setMsg("");
+    try {
+      const result = await adminUpdateShopItem({ data: {
+        id: form.id,
+        name: form.name,
+        description: form.description,
+        price: form.price,
+        icon: form.icon,
+        enabled: form.enabled,
+        featured: form.featured,
+        rarity: form.rarity,
+        purchaseLimit: form.purchaseLimit,
+        stock: form.stock
+      } });
+      if (result.success) {
+        setMsg("✅ Saved");
+        onSave();
+      } else setMsg(`❌ ${result.error}`);
+    } catch {
+      setMsg("❌ Save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+  async function deleteItem() {
+    setDeleting(true);
+    try {
+      const result = await adminDeleteShopItem({ data: { id: item.id } });
+      if (result.success) onDelete();
+      else setMsg(`❌ ${result.error}`);
+    } catch {
+      setMsg("❌ Delete failed");
+    } finally {
+      setDeleting(false);
+      setConfirm(false);
+    }
+  }
+  return /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-white/8 bg-[#0B0F17] overflow-hidden", children: [
+    /* @__PURE__ */ jsxs(
+      "button",
+      {
+        onClick: () => setExpanded((v) => !v),
+        className: "w-full text-left p-4 flex items-center gap-3 hover:bg-white/2 transition-colors",
+        children: [
+          /* @__PURE__ */ jsx(
+            "div",
+            {
+              className: "w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0",
+              style: { background: `${rarityColor}15`, border: `1px solid ${rarityColor}25` },
+              children: form.icon
+            }
+          ),
+          /* @__PURE__ */ jsxs("div", { className: "flex-1 min-w-0", children: [
+            /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 flex-wrap", children: [
+              /* @__PURE__ */ jsx("p", { className: "text-white text-sm font-bold", children: form.name }),
+              /* @__PURE__ */ jsx(RarityBadge, { rarity: form.rarity }),
+              !form.enabled && /* @__PURE__ */ jsx("span", { className: "text-[10px] text-gray-600 bg-white/5 px-1.5 py-0.5 rounded", children: "Disabled" }),
+              form.featured && /* @__PURE__ */ jsx("span", { className: "text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded", children: "★ Featured" })
+            ] }),
+            /* @__PURE__ */ jsxs("p", { className: "text-gray-600 text-[10px] mt-0.5", children: [
+              CATEGORY_LABELS[form.category],
+              " · ✨ ",
+              formatGems(form.price),
+              " · ",
+              form.id
+            ] })
+          ] }),
+          /* @__PURE__ */ jsx("span", { className: `text-gray-600 text-xs shrink-0 transition-transform duration-200 ${expanded ? "rotate-180" : ""}`, children: "▼" })
+        ]
+      }
+    ),
+    expanded && /* @__PURE__ */ jsxs("div", { className: "border-t border-white/5 p-4 space-y-4", children: [
+      /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4 flex-wrap", children: [
+        /* @__PURE__ */ jsxs("label", { className: "flex items-center gap-2 text-xs text-gray-400 cursor-pointer", children: [
+          /* @__PURE__ */ jsx("input", { type: "checkbox", checked: form.enabled, onChange: (e) => setForm((f) => ({ ...f, enabled: e.target.checked })), className: "rounded" }),
+          "Enabled"
+        ] }),
+        /* @__PURE__ */ jsxs("label", { className: "flex items-center gap-2 text-xs text-gray-400 cursor-pointer", children: [
+          /* @__PURE__ */ jsx("input", { type: "checkbox", checked: form.featured, onChange: (e) => setForm((f) => ({ ...f, featured: e.target.checked })), className: "rounded" }),
+          "Featured (shows in hero section)"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3", children: [
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Name" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "text",
+              value: form.name,
+              onChange: (e) => setForm((f) => ({ ...f, name: e.target.value })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Category" }),
+          /* @__PURE__ */ jsxs(
+            "select",
+            {
+              value: form.category,
+              onChange: (e) => setForm((f) => ({ ...f, category: e.target.value })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-[#0B0F17] text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all",
+              children: [
+                /* @__PURE__ */ jsx("option", { value: "ranks", children: "Ranks" }),
+                /* @__PURE__ */ jsx("option", { value: "crate-keys", children: "Crate Keys" }),
+                /* @__PURE__ */ jsx("option", { value: "amethyst-tools", children: "Amethyst Tools" })
+              ]
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Rarity" }),
+          /* @__PURE__ */ jsx(
+            "select",
+            {
+              value: form.rarity,
+              onChange: (e) => setForm((f) => ({ ...f, rarity: parseInt(e.target.value) })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-[#0B0F17] text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all",
+              children: [1, 2, 3, 4, 5, 6].map((r) => /* @__PURE__ */ jsxs("option", { value: r, children: [
+                RARITY_NAMES[r],
+                " (R",
+                r,
+                ")"
+              ] }, r))
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Price (Gems ✨)" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "number",
+              min: 1,
+              value: form.price,
+              onChange: (e) => setForm((f) => ({ ...f, price: Math.max(1, parseInt(e.target.value) || 1) })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Icon (emoji)" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "text",
+              value: form.icon,
+              onChange: (e) => setForm((f) => ({ ...f, icon: e.target.value })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Purchase Limit (blank = unlimited)" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "number",
+              min: 1,
+              value: form.purchaseLimit ?? "",
+              placeholder: "Unlimited",
+              onChange: (e) => setForm((f) => ({ ...f, purchaseLimit: e.target.value ? Math.max(1, parseInt(e.target.value)) : null })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all placeholder-gray-700"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Stock (blank = unlimited)" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "number",
+              min: 0,
+              value: form.stock ?? "",
+              placeholder: "Unlimited",
+              onChange: (e) => setForm((f) => ({ ...f, stock: e.target.value ? Math.max(0, parseInt(e.target.value)) : null })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all placeholder-gray-700"
+            }
+          )
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { children: [
+        /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Description" }),
+        /* @__PURE__ */ jsx(
+          "textarea",
+          {
+            value: form.description,
+            onChange: (e) => setForm((f) => ({ ...f, description: e.target.value })),
+            rows: 2,
+            className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 resize-none transition-all"
+          }
+        )
+      ] }),
+      message && /* @__PURE__ */ jsx("p", { className: `text-xs font-medium ${message.startsWith("✅") ? "text-green-400" : "text-red-400"}`, children: message }),
+      /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3 flex-wrap", children: [
+        /* @__PURE__ */ jsx(
+          "button",
+          {
+            onClick: save,
+            disabled: saving,
+            className: "px-4 py-2 rounded-lg bg-[#00BFFF]/15 border border-[#00BFFF]/25 text-[#00BFFF] text-xs font-semibold hover:bg-[#00BFFF]/25 transition-all disabled:opacity-50",
+            children: saving ? "⏳ Saving…" : "💾 Save Changes"
+          }
+        ),
+        !confirmDel ? /* @__PURE__ */ jsx(
+          "button",
+          {
+            onClick: () => setConfirm(true),
+            className: "px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold hover:bg-red-500/20 transition-all",
+            children: "🗑 Delete Item"
+          }
+        ) : /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsx("span", { className: "text-red-400 text-xs", children: "Confirm delete?" }),
+          /* @__PURE__ */ jsx(
+            "button",
+            {
+              onClick: deleteItem,
+              disabled: deleting,
+              className: "px-3 py-1.5 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold hover:bg-red-500/30 transition-all disabled:opacity-50",
+              children: deleting ? "…" : "Yes, Delete"
+            }
+          ),
+          /* @__PURE__ */ jsx(
+            "button",
+            {
+              onClick: () => setConfirm(false),
+              className: "px-3 py-1.5 rounded-lg border border-white/10 text-gray-500 text-xs hover:text-gray-300 transition-all",
+              children: "Cancel"
+            }
+          )
+        ] })
+      ] })
+    ] })
+  ] });
+}
+const BLANK_ITEM = {
+  category: "ranks",
+  name: "",
+  description: "",
+  price: 5e4,
+  rarity: 1,
+  icon: "⭐",
+  enabled: true,
+  featured: false,
+  purchaseLimit: null,
+  stock: null
+};
+function AddItemForm({ onAdded }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ id: "", ...BLANK_ITEM });
+  const [saving, setSaving] = useState(false);
+  const [message, setMsg] = useState("");
+  const rarityColor = RARITY_COLORS[form.rarity] ?? "#9ca3af";
+  async function submit() {
+    if (!form.id.trim()) {
+      setMsg("❌ Item ID is required");
+      return;
+    }
+    if (!form.name.trim()) {
+      setMsg("❌ Name is required");
+      return;
+    }
+    setSaving(true);
+    setMsg("");
+    try {
+      const result = await adminAddShopItem({ data: { ...form, id: form.id.trim().toLowerCase().replace(/\s+/g, "-") } });
+      if (result.success) {
+        setMsg("✅ Item added!");
+        setForm({ id: "", ...BLANK_ITEM });
+        onAdded();
+        setTimeout(() => {
+          setOpen(false);
+          setMsg("");
+        }, 1200);
+      } else {
+        setMsg(`❌ ${result.error}`);
+      }
+    } catch {
+      setMsg("❌ Error adding item");
+    } finally {
+      setSaving(false);
+    }
+  }
+  return /* @__PURE__ */ jsxs("div", { className: "rounded-xl border-2 border-dashed border-white/10 bg-[#080B11] overflow-hidden", children: [
+    /* @__PURE__ */ jsxs(
+      "button",
+      {
+        onClick: () => setOpen((v) => !v),
+        className: "w-full p-4 flex items-center gap-3 text-left hover:bg-white/2 transition-colors group",
+        children: [
+          /* @__PURE__ */ jsx("div", { className: "w-9 h-9 rounded-lg border border-white/15 flex items-center justify-center text-gray-500 group-hover:text-white group-hover:border-[#00BFFF]/30 transition-all", children: "+" }),
+          /* @__PURE__ */ jsxs("div", { children: [
+            /* @__PURE__ */ jsx("p", { className: "text-gray-400 text-sm font-semibold group-hover:text-white transition-colors", children: "Add New Item" }),
+            /* @__PURE__ */ jsx("p", { className: "text-gray-700 text-[10px]", children: "Create a custom shop item with full control" })
+          ] }),
+          /* @__PURE__ */ jsx("span", { className: `ml-auto text-gray-600 text-xs shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`, children: "▼" })
+        ]
+      }
+    ),
+    open && /* @__PURE__ */ jsxs("div", { className: "border-t border-white/5 p-4 space-y-4", children: [
+      /* @__PURE__ */ jsxs("div", { className: "flex items-start gap-4 p-3 rounded-xl border border-white/8 bg-[#0B0F17]", children: [
+        /* @__PURE__ */ jsx(
+          "div",
+          {
+            className: "w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0",
+            style: { background: `${rarityColor}15`, border: `1px solid ${rarityColor}30` },
+            children: form.icon || "?"
+          }
+        ),
+        /* @__PURE__ */ jsxs("div", { className: "flex-1 min-w-0", children: [
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 flex-wrap", children: [
+            /* @__PURE__ */ jsx("p", { className: "text-white font-bold text-sm", children: form.name || "Item Name" }),
+            /* @__PURE__ */ jsx(RarityBadge, { rarity: form.rarity }),
+            form.featured && /* @__PURE__ */ jsx("span", { className: "text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded", children: "★ Featured" })
+          ] }),
+          /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-xs mt-0.5 line-clamp-1", children: form.description || "Description…" }),
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 mt-1", children: [
+            /* @__PURE__ */ jsxs("span", { className: "text-purple-400 text-xs font-bold", children: [
+              "✨ ",
+              formatGems(form.price)
+            ] }),
+            /* @__PURE__ */ jsxs("span", { className: "text-gray-700 text-[10px]", children: [
+              "· ",
+              CATEGORY_LABELS[form.category]
+            ] }),
+            form.purchaseLimit && /* @__PURE__ */ jsxs("span", { className: "text-gray-700 text-[10px]", children: [
+              "· Limit: ×",
+              form.purchaseLimit
+            ] })
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3", children: [
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsxs("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: [
+            "Item ID ",
+            /* @__PURE__ */ jsx("span", { className: "text-red-400", children: "*" })
+          ] }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "text",
+              value: form.id,
+              placeholder: "e.g. vip-rank-v2",
+              onChange: (e) => setForm((f) => ({ ...f, id: e.target.value })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all placeholder-gray-700"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsxs("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: [
+            "Name ",
+            /* @__PURE__ */ jsx("span", { className: "text-red-400", children: "*" })
+          ] }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "text",
+              value: form.name,
+              placeholder: "Display name…",
+              onChange: (e) => setForm((f) => ({ ...f, name: e.target.value })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all placeholder-gray-700"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Category" }),
+          /* @__PURE__ */ jsxs(
+            "select",
+            {
+              value: form.category,
+              onChange: (e) => setForm((f) => ({ ...f, category: e.target.value })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-[#0B0F17] text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all",
+              children: [
+                /* @__PURE__ */ jsx("option", { value: "ranks", children: "Ranks" }),
+                /* @__PURE__ */ jsx("option", { value: "crate-keys", children: "Crate Keys" }),
+                /* @__PURE__ */ jsx("option", { value: "amethyst-tools", children: "Amethyst Tools" })
+              ]
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Price (Gems ✨)" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "number",
+              min: 1,
+              value: form.price,
+              onChange: (e) => setForm((f) => ({ ...f, price: Math.max(1, parseInt(e.target.value) || 1) })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Rarity" }),
+          /* @__PURE__ */ jsx(
+            "select",
+            {
+              value: form.rarity,
+              onChange: (e) => setForm((f) => ({ ...f, rarity: parseInt(e.target.value) })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-[#0B0F17] text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all",
+              children: [1, 2, 3, 4, 5, 6].map((r) => /* @__PURE__ */ jsxs("option", { value: r, children: [
+                RARITY_NAMES[r],
+                " (Tier ",
+                r,
+                ")"
+              ] }, r))
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Icon (emoji)" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "text",
+              value: form.icon,
+              onChange: (e) => setForm((f) => ({ ...f, icon: e.target.value })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Purchase Limit (blank = unlimited)" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "number",
+              min: 1,
+              value: form.purchaseLimit ?? "",
+              placeholder: "Unlimited",
+              onChange: (e) => setForm((f) => ({ ...f, purchaseLimit: e.target.value ? Math.max(1, parseInt(e.target.value)) : null })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all placeholder-gray-700"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxs("div", { children: [
+          /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Stock (blank = unlimited)" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "number",
+              min: 0,
+              value: form.stock ?? "",
+              placeholder: "Unlimited",
+              onChange: (e) => setForm((f) => ({ ...f, stock: e.target.value ? Math.max(0, parseInt(e.target.value)) : null })),
+              className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 transition-all placeholder-gray-700"
+            }
+          )
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { children: [
+        /* @__PURE__ */ jsx("label", { className: "text-gray-600 text-[10px] uppercase tracking-wide mb-1 block", children: "Description" }),
+        /* @__PURE__ */ jsx(
+          "textarea",
+          {
+            value: form.description,
+            placeholder: "What does this item do? What does the player get?",
+            onChange: (e) => setForm((f) => ({ ...f, description: e.target.value })),
+            rows: 2,
+            className: "w-full px-3 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs outline-none focus:border-[#00BFFF]/30 resize-none transition-all placeholder-gray-700"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4 flex-wrap", children: [
+        /* @__PURE__ */ jsxs("label", { className: "flex items-center gap-2 text-xs text-gray-400 cursor-pointer", children: [
+          /* @__PURE__ */ jsx("input", { type: "checkbox", checked: form.enabled, onChange: (e) => setForm((f) => ({ ...f, enabled: e.target.checked })), className: "rounded" }),
+          "Enabled immediately"
+        ] }),
+        /* @__PURE__ */ jsxs("label", { className: "flex items-center gap-2 text-xs text-gray-400 cursor-pointer", children: [
+          /* @__PURE__ */ jsx("input", { type: "checkbox", checked: form.featured, onChange: (e) => setForm((f) => ({ ...f, featured: e.target.checked })), className: "rounded" }),
+          "Featured (hero section)"
+        ] })
+      ] }),
+      message && /* @__PURE__ */ jsx("p", { className: `text-xs font-medium ${message.startsWith("✅") ? "text-green-400" : "text-red-400"}`, children: message }),
+      /* @__PURE__ */ jsxs("div", { className: "flex gap-3", children: [
+        /* @__PURE__ */ jsx(
+          "button",
+          {
+            onClick: submit,
+            disabled: saving,
+            className: "px-5 py-2 rounded-lg bg-[#00BFFF]/15 border border-[#00BFFF]/30 text-[#00BFFF] text-sm font-bold hover:bg-[#00BFFF]/25 active:scale-95 transition-all disabled:opacity-50",
+            children: saving ? "⏳ Adding…" : "✨ Add Item to Shop"
+          }
+        ),
+        /* @__PURE__ */ jsx(
+          "button",
+          {
+            onClick: () => {
+              setOpen(false);
+              setMsg("");
+              setForm({ id: "", ...BLANK_ITEM });
+            },
+            className: "px-4 py-2 rounded-lg border border-white/10 text-gray-500 text-xs hover:text-gray-300 transition-all",
+            children: "Cancel"
+          }
+        )
+      ] })
+    ] })
+  ] });
+}
+function BarRow({ label, value, max, color }) {
+  const pct = max > 0 ? value / max * 100 : 0;
+  return /* @__PURE__ */ jsxs("div", { className: "space-y-1", children: [
+    /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+      /* @__PURE__ */ jsx("span", { className: "text-gray-400", children: label }),
+      /* @__PURE__ */ jsxs("span", { className: "font-bold", style: { color }, children: [
+        "✨ ",
+        formatGems(value)
+      ] })
+    ] }),
+    /* @__PURE__ */ jsx("div", { className: "h-2 rounded-full bg-white/5", children: /* @__PURE__ */ jsx(
+      "div",
+      {
+        className: "h-full rounded-full transition-all duration-700",
+        style: { width: `${pct}%`, background: color }
+      }
+    ) })
+  ] });
+}
+function AnalyticsTab({ purchases, items, stats }) {
+  const catRevenue = {};
+  const catCount = {};
+  for (const p of purchases.filter((x) => !x.refunded)) {
+    catRevenue[p.category] = (catRevenue[p.category] ?? 0) + p.totalCost;
+    catCount[p.category] = (catCount[p.category] ?? 0) + 1;
+  }
+  const maxCatRev = Math.max(...Object.values(catRevenue), 1);
+  const total = purchases.length;
+  const pending = purchases.filter((p) => p.status === "pending").length;
+  const processing = purchases.filter((p) => p.status === "processing").length;
+  const completed = purchases.filter((p) => p.status === "completed").length;
+  const refunds = purchases.filter((p) => p.refunded).length;
+  const completionRate = total > 0 ? Math.round(completed / total * 100) : 0;
+  const refundRate = total > 0 ? Math.round(refunds / total * 100) : 0;
+  const now = Date.now();
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dailyBuckets = new Array(7).fill(0).map((_, i) => {
+    const start = now - (6 - i) * 864e5;
+    const end = start + 864e5;
+    const count = purchases.filter((p) => p.createdAt >= start && p.createdAt < end).length;
+    const gems = purchases.filter((p) => p.createdAt >= start && p.createdAt < end && !p.refunded).reduce((s, p) => s + p.totalCost, 0);
+    const dayName = days[new Date(start).getDay()];
+    return { dayName, count, gems };
+  });
+  const maxDaily = Math.max(...dailyBuckets.map((d) => d.count), 1);
+  const enabledCount = items.filter((i) => i.enabled).length;
+  const disabledCount = items.filter((i) => !i.enabled).length;
+  const featuredCount = items.filter((i) => i.featured).length;
+  return /* @__PURE__ */ jsxs("div", { className: "space-y-6", children: [
+    /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-3", children: [
+      /* @__PURE__ */ jsx(StatCard, { label: "Completion Rate", value: `${completionRate}%`, color: "#22c55e", sub: `${completed} completed` }),
+      /* @__PURE__ */ jsx(StatCard, { label: "Refund Rate", value: `${refundRate}%`, color: "#f59e0b", sub: `${refunds} refunded` }),
+      /* @__PURE__ */ jsx(StatCard, { label: "Pending + Active", value: pending + processing, color: "#3b82f6", sub: "awaiting action" }),
+      /* @__PURE__ */ jsx(StatCard, { label: "Avg Order Value", value: total > 0 ? `✨ ${formatGems(Math.round(purchases.reduce((s, p) => s + p.totalCost, 0) / total))}` : "—", color: "#a855f7", sub: "per purchase" })
+    ] }),
+    /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-white/8 bg-[#0B0F17] p-4", children: [
+      /* @__PURE__ */ jsx("h3", { className: "text-white font-bold text-sm mb-4", children: "📅 Last 7 Days — Order Activity" }),
+      dailyBuckets.every((d) => d.count === 0) ? /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-xs", children: "No orders in the last 7 days" }) : /* @__PURE__ */ jsx("div", { className: "flex items-end gap-2 h-24", children: dailyBuckets.map((d, i) => {
+        const pct = d.count / maxDaily * 100;
+        return /* @__PURE__ */ jsxs("div", { className: "flex-1 flex flex-col items-center gap-1", children: [
+          /* @__PURE__ */ jsx("span", { className: "text-[9px] text-gray-600", children: d.count > 0 ? d.count : "" }),
+          /* @__PURE__ */ jsx("div", { className: "w-full rounded-t-sm flex-1 flex items-end", children: /* @__PURE__ */ jsx(
+            "div",
+            {
+              className: "w-full rounded-t-md transition-all duration-700",
+              style: {
+                height: `${Math.max(pct, d.count > 0 ? 8 : 0)}%`,
+                background: d.count > 0 ? "#00BFFF" : "#ffffff08"
+              }
+            }
+          ) }),
+          /* @__PURE__ */ jsx("span", { className: "text-[9px] text-gray-600", children: d.dayName })
+        ] }, i);
+      }) })
+    ] }),
+    /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-4", children: [
+      /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-white/8 bg-[#0B0F17] p-4", children: [
+        /* @__PURE__ */ jsx("h3", { className: "text-white font-bold text-sm mb-4", children: "💰 Revenue by Category" }),
+        Object.keys(catRevenue).length === 0 ? /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-xs", children: "No sales yet" }) : /* @__PURE__ */ jsx("div", { className: "space-y-3", children: ["ranks", "crate-keys", "amethyst-tools"].map((cat, i) => {
+          const colors = ["#f59e0b", "#3b82f6", "#a855f7"];
+          return /* @__PURE__ */ jsx(
+            BarRow,
+            {
+              label: `${CATEGORY_ICONS[cat]} ${CATEGORY_LABELS[cat]} (${catCount[cat] ?? 0} orders)`,
+              value: catRevenue[cat] ?? 0,
+              max: maxCatRev,
+              color: colors[i]
+            },
+            cat
+          );
+        }) })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-white/8 bg-[#0B0F17] p-4", children: [
+        /* @__PURE__ */ jsx("h3", { className: "text-white font-bold text-sm mb-4", children: "🏪 Catalog Health" }),
+        /* @__PURE__ */ jsxs("div", { className: "space-y-3", children: [
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+            /* @__PURE__ */ jsx("span", { className: "text-gray-400", children: "Total Items" }),
+            /* @__PURE__ */ jsx("span", { className: "text-white font-bold", children: items.length })
+          ] }),
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+            /* @__PURE__ */ jsx("span", { className: "text-gray-400", children: "Enabled" }),
+            /* @__PURE__ */ jsx("span", { className: "text-green-400 font-bold", children: enabledCount })
+          ] }),
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+            /* @__PURE__ */ jsx("span", { className: "text-gray-400", children: "Disabled / Hidden" }),
+            /* @__PURE__ */ jsx("span", { className: "text-gray-500 font-bold", children: disabledCount })
+          ] }),
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+            /* @__PURE__ */ jsx("span", { className: "text-gray-400", children: "Featured" }),
+            /* @__PURE__ */ jsxs("span", { className: "text-amber-400 font-bold", children: [
+              "★ ",
+              featuredCount
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxs("div", { className: "border-t border-white/5 pt-3", children: [
+            /* @__PURE__ */ jsx("div", { className: "flex items-center justify-between text-xs", children: /* @__PURE__ */ jsx("span", { className: "text-gray-400", children: "By Rarity" }) }),
+            /* @__PURE__ */ jsx("div", { className: "mt-2 flex flex-wrap gap-1.5", children: [1, 2, 3, 4, 5, 6].map((r) => {
+              const cnt = items.filter((i) => i.rarity === r).length;
+              if (!cnt) return null;
+              const col = RARITY_COLORS[r];
+              return /* @__PURE__ */ jsxs("span", { className: "text-[10px] px-2 py-0.5 rounded font-bold", style: { background: `${col}15`, color: col, border: `1px solid ${col}25` }, children: [
+                RARITY_NAMES[r],
+                ": ",
+                cnt
+              ] }, r);
+            }) })
+          ] })
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-4", children: [
+      /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-white/8 bg-[#0B0F17] p-4", children: [
+        /* @__PURE__ */ jsx("h3", { className: "text-white font-bold text-sm mb-3", children: "🏆 Top Selling Items" }),
+        (stats?.topItems ?? []).length === 0 ? /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-xs", children: "No data yet" }) : /* @__PURE__ */ jsx("div", { className: "space-y-2", children: stats.topItems.map((item, i) => /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
+          /* @__PURE__ */ jsxs("span", { className: "text-gray-600 text-xs w-5 shrink-0", children: [
+            i + 1,
+            "."
+          ] }),
+          /* @__PURE__ */ jsx("span", { className: "text-white text-xs flex-1 truncate", children: item.itemName }),
+          /* @__PURE__ */ jsxs("span", { className: "text-purple-400 text-xs font-bold shrink-0", children: [
+            "✨ ",
+            formatGems(item.gemsSpent)
+          ] }),
+          /* @__PURE__ */ jsxs("span", { className: "text-gray-600 text-[10px] shrink-0", children: [
+            "×",
+            item.count
+          ] })
+        ] }, item.itemName)) })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-white/8 bg-[#0B0F17] p-4", children: [
+        /* @__PURE__ */ jsx("h3", { className: "text-white font-bold text-sm mb-3", children: "💎 Highest Spenders" }),
+        (stats?.topBuyers ?? []).length === 0 ? /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-xs", children: "No data yet" }) : /* @__PURE__ */ jsx("div", { className: "space-y-2", children: stats.topBuyers.map((buyer, i) => /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
+          /* @__PURE__ */ jsxs("span", { className: "text-gray-600 text-xs w-5 shrink-0", children: [
+            i + 1,
+            "."
+          ] }),
+          /* @__PURE__ */ jsx("span", { className: "text-white text-xs flex-1 truncate", children: buyer.username }),
+          /* @__PURE__ */ jsxs("span", { className: "text-purple-400 text-xs font-bold shrink-0", children: [
+            "✨ ",
+            formatGems(buyer.gemsSpent)
+          ] }),
+          /* @__PURE__ */ jsxs("span", { className: "text-gray-600 text-[10px] shrink-0", children: [
+            buyer.count,
+            " orders"
+          ] })
+        ] }, buyer.username)) })
+      ] })
+    ] })
+  ] });
+}
+const QUEUE_PAGE_SIZE = 20;
+function ShopManager({ admin: _admin }) {
+  const [tab, setTab] = useState("dashboard");
+  const [purchases, setPurchases] = useState([]);
+  const [items, setItems] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
+  const [selected, setSelected] = useState(/* @__PURE__ */ new Set());
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkMsg, setBulkMsg] = useState("");
+  const [queuePage, setQueuePage] = useState(1);
+  const [itemFilter, setItemFilter] = useState("all");
+  const [itemSearch, setItemSearch] = useState("");
+  const [itemPage, setItemPage] = useState(1);
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [p, i, s] = await Promise.all([adminGetAllPurchases(), adminGetShopItems(), adminGetShopStats()]);
+      setPurchases(p);
+      setItems(i);
+      setStats(s);
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
+  useEffect(() => {
+    function onUpdate() {
+      loadAll();
+    }
+    window.addEventListener("shop_updated", onUpdate);
+    return () => window.removeEventListener("shop_updated", onUpdate);
+  }, [loadAll]);
+  useEffect(() => {
+    setQueuePage(1);
+    setSelected(/* @__PURE__ */ new Set());
+  }, [search, statusFilter, sortBy]);
+  useEffect(() => {
+    setItemPage(1);
+  }, [itemFilter, itemSearch]);
+  const filteredPurchases = purchases.filter((p) => {
+    if (statusFilter !== "all" && p.status !== statusFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (!p.username.toLowerCase().includes(q) && !p.itemName.toLowerCase().includes(q) && !p.id.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  }).sort((a, b) => {
+    if (sortBy === "newest") return b.createdAt - a.createdAt;
+    if (sortBy === "oldest") return a.createdAt - b.createdAt;
+    if (sortBy === "cost-desc") return b.totalCost - a.totalCost;
+    return a.totalCost - b.totalCost;
+  });
+  const totalQueuePages = Math.max(1, Math.ceil(filteredPurchases.length / QUEUE_PAGE_SIZE));
+  const safePage = Math.min(queuePage, totalQueuePages);
+  const pagedPurchases = filteredPurchases.slice((safePage - 1) * QUEUE_PAGE_SIZE, safePage * QUEUE_PAGE_SIZE);
+  const filteredItems = items.filter((item) => {
+    if (itemFilter !== "all" && item.category !== itemFilter) return false;
+    if (itemSearch) {
+      const q = itemSearch.toLowerCase();
+      if (!item.name.toLowerCase().includes(q) && !item.id.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+  const totalItemPages = Math.max(1, Math.ceil(filteredItems.length / ITEMS_PAGE_SIZE));
+  const safeItemPage = Math.min(itemPage, totalItemPages);
+  const pagedItems = filteredItems.slice((safeItemPage - 1) * ITEMS_PAGE_SIZE, safeItemPage * ITEMS_PAGE_SIZE);
+  function toggleSelect(id) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function selectAll() {
+    setSelected(new Set(pagedPurchases.map((p) => p.id)));
+  }
+  function clearSelection() {
+    setSelected(/* @__PURE__ */ new Set());
+  }
+  async function bulkUpdate(status) {
+    if (selected.size === 0) return;
+    setBulkSaving(true);
+    setBulkMsg("");
+    let ok = 0;
+    let fail = 0;
+    for (const id of selected) {
+      try {
+        const r = await adminUpdatePurchase({ data: { purchaseId: id, status } });
+        r.success ? ok++ : fail++;
+      } catch {
+        fail++;
+      }
+    }
+    await loadAll();
+    setBulkMsg(`✅ Updated ${ok} order${ok !== 1 ? "s" : ""}${fail ? ` — ${fail} failed` : ""}`);
+    setSelected(/* @__PURE__ */ new Set());
+    setBulkSaving(false);
+    setTimeout(() => setBulkMsg(""), 3e3);
+  }
+  if (loading && !stats) {
+    return /* @__PURE__ */ jsx("div", { className: "flex items-center justify-center py-24", children: /* @__PURE__ */ jsxs("div", { className: "text-center space-y-3", children: [
+      /* @__PURE__ */ jsx("div", { className: "w-8 h-8 rounded-full border-2 border-[#00BFFF]/40 border-t-[#00BFFF] animate-spin mx-auto" }),
+      /* @__PURE__ */ jsx("p", { className: "text-gray-500 text-sm", children: "Loading shop data…" })
+    ] }) });
+  }
+  return /* @__PURE__ */ jsxs("div", { className: "space-y-6", children: [
+    /* @__PURE__ */ jsxs("div", { className: "flex gap-1 p-1 rounded-xl bg-white/4 border border-white/8 w-fit flex-wrap", children: [
+      [
+        ["dashboard", "📊", "Dashboard"],
+        ["queue", "📋", "Purchase Queue"],
+        ["items", "🛒", "Item Management"],
+        ["analytics", "📈", "Analytics"]
+      ].map(([t, icon, label]) => /* @__PURE__ */ jsxs(
+        "button",
+        {
+          onClick: () => setTab(t),
+          className: `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${tab === t ? "bg-[#00BFFF]/15 border border-[#00BFFF]/25 text-[#00BFFF]" : "text-gray-500 hover:text-gray-300"}`,
+          children: [
+            /* @__PURE__ */ jsx("span", { children: icon }),
+            label,
+            t === "queue" && (stats?.pending ?? 0) > 0 && /* @__PURE__ */ jsx("span", { className: "px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold", children: stats.pending })
+          ]
+        },
+        t
+      )),
+      /* @__PURE__ */ jsx(
+        "button",
+        {
+          onClick: loadAll,
+          disabled: loading,
+          className: "px-3 py-2 rounded-lg text-gray-500 hover:text-gray-300 text-sm border border-white/8 hover:border-white/15 transition-all ml-1 disabled:opacity-40",
+          title: "Refresh",
+          children: loading ? "⏳" : "↻"
+        }
+      )
+    ] }),
+    tab === "dashboard" && stats && /* @__PURE__ */ jsxs("div", { className: "space-y-6", children: [
+      /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3", children: [
+        /* @__PURE__ */ jsx(StatCard, { label: "Total Orders", value: stats.total, color: "#00BFFF" }),
+        /* @__PURE__ */ jsx(StatCard, { label: "Pending", value: stats.pending, color: "#f59e0b", sub: "awaiting action" }),
+        /* @__PURE__ */ jsx(StatCard, { label: "Processing", value: stats.processing, color: "#3b82f6" }),
+        /* @__PURE__ */ jsx(StatCard, { label: "Completed", value: stats.completed, color: "#22c55e" }),
+        /* @__PURE__ */ jsx(StatCard, { label: "Cancelled", value: stats.cancelled, color: "#6b7280" }),
+        /* @__PURE__ */ jsx(
+          StatCard,
+          {
+            label: "Gems Circulated",
+            value: `✨ ${formatGems(stats.totalGemsSpent)}`,
+            color: "#a855f7"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-4", children: [
+        /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-white/8 bg-[#0B0F17] p-4", children: [
+          /* @__PURE__ */ jsx("h3", { className: "text-white font-bold text-sm mb-3", children: "🏆 Top Items" }),
+          stats.topItems.length === 0 ? /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-xs", children: "No purchases yet" }) : /* @__PURE__ */ jsx("div", { className: "space-y-2", children: stats.topItems.slice(0, 5).map((item, i) => /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
+            /* @__PURE__ */ jsxs("span", { className: "text-gray-600 text-xs w-5 shrink-0", children: [
+              i + 1,
+              "."
+            ] }),
+            /* @__PURE__ */ jsx("span", { className: "text-white text-xs flex-1 truncate", children: item.itemName }),
+            /* @__PURE__ */ jsxs("span", { className: "text-purple-400 text-xs font-bold shrink-0", children: [
+              "✨ ",
+              formatGems(item.gemsSpent)
+            ] }),
+            /* @__PURE__ */ jsxs("span", { className: "text-gray-600 text-[10px] shrink-0", children: [
+              "×",
+              item.count
+            ] })
+          ] }, item.itemName)) })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-white/8 bg-[#0B0F17] p-4", children: [
+          /* @__PURE__ */ jsx("h3", { className: "text-white font-bold text-sm mb-3", children: "💎 Top Buyers" }),
+          stats.topBuyers.length === 0 ? /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-xs", children: "No buyers yet" }) : /* @__PURE__ */ jsx("div", { className: "space-y-2", children: stats.topBuyers.slice(0, 5).map((buyer, i) => /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
+            /* @__PURE__ */ jsxs("span", { className: "text-gray-600 text-xs w-5 shrink-0", children: [
+              i + 1,
+              "."
+            ] }),
+            /* @__PURE__ */ jsx("span", { className: "text-white text-xs flex-1 truncate", children: buyer.username }),
+            /* @__PURE__ */ jsxs("span", { className: "text-purple-400 text-xs font-bold shrink-0", children: [
+              "✨ ",
+              formatGems(buyer.gemsSpent)
+            ] }),
+            /* @__PURE__ */ jsxs("span", { className: "text-gray-600 text-[10px] shrink-0", children: [
+              buyer.count,
+              " order",
+              buyer.count !== 1 ? "s" : ""
+            ] })
+          ] }, buyer.username)) })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "rounded-xl border border-white/8 bg-[#0B0F17] p-4", children: [
+        /* @__PURE__ */ jsx("h3", { className: "text-white font-bold text-sm mb-3", children: "🕐 Recent Orders" }),
+        stats.recentPurchases.length === 0 ? /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-xs", children: "No orders yet" }) : /* @__PURE__ */ jsx("div", { className: "space-y-2", children: stats.recentPurchases.map((p) => /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3 text-xs", children: [
+          /* @__PURE__ */ jsx("span", { className: "text-[#00BFFF] font-mono font-bold shrink-0", children: p.id }),
+          /* @__PURE__ */ jsx("span", { className: "text-gray-400 shrink-0", children: p.username }),
+          /* @__PURE__ */ jsx("span", { className: "text-white flex-1 truncate", children: p.itemName }),
+          /* @__PURE__ */ jsxs("span", { className: "text-purple-400 shrink-0", children: [
+            "✨ ",
+            formatGems(p.totalCost)
+          ] }),
+          /* @__PURE__ */ jsx(StatusBadge, { status: p.status })
+        ] }, p.id)) })
+      ] })
+    ] }),
+    tab === "queue" && /* @__PURE__ */ jsxs("div", { className: "space-y-4", children: [
+      /* @__PURE__ */ jsxs("div", { className: "flex flex-wrap gap-3 items-center", children: [
+        /* @__PURE__ */ jsxs("div", { className: "relative", children: [
+          /* @__PURE__ */ jsx("span", { className: "absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs", children: "🔍" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "text",
+              value: search,
+              onChange: (e) => setSearch(e.target.value),
+              placeholder: "Search player, item, ID…",
+              className: "pl-8 pr-4 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs placeholder-gray-600 outline-none focus:border-[#00BFFF]/30 w-56 transition-all"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsx("div", { className: "flex gap-1.5 flex-wrap", children: ["all", "pending", "processing", "completed", "cancelled", "rejected"].map((s) => {
+          const color = s === "all" ? "#00BFFF" : STATUS_COLORS[s];
+          const label = s === "all" ? "All" : STATUS_LABELS[s];
+          const cnt = s === "all" ? purchases.length : purchases.filter((p) => p.status === s).length;
+          return /* @__PURE__ */ jsxs(
+            "button",
+            {
+              onClick: () => setStatusFilter(s),
+              className: `flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${statusFilter === s ? "opacity-100" : "opacity-40 hover:opacity-70"}`,
+              style: { background: `${color}15`, color, border: `1px solid ${color}25` },
+              children: [
+                label,
+                /* @__PURE__ */ jsxs("span", { className: "opacity-60", children: [
+                  "(",
+                  cnt,
+                  ")"
+                ] })
+              ]
+            },
+            s
+          );
+        }) }),
+        /* @__PURE__ */ jsxs(
+          "select",
+          {
+            value: sortBy,
+            onChange: (e) => setSortBy(e.target.value),
+            className: "px-2 py-1.5 rounded-lg border border-white/8 bg-[#0B0F17] text-gray-400 text-xs outline-none focus:border-white/15 transition-all",
+            children: [
+              /* @__PURE__ */ jsx("option", { value: "newest", children: "Newest first" }),
+              /* @__PURE__ */ jsx("option", { value: "oldest", children: "Oldest first" }),
+              /* @__PURE__ */ jsx("option", { value: "cost-desc", children: "Highest cost" }),
+              /* @__PURE__ */ jsx("option", { value: "cost-asc", children: "Lowest cost" })
+            ]
+          }
+        )
+      ] }),
+      selected.size > 0 && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3 p-3 rounded-xl bg-[#00BFFF]/5 border border-[#00BFFF]/20 flex-wrap", children: [
+        /* @__PURE__ */ jsxs("span", { className: "text-[#00BFFF] text-xs font-bold", children: [
+          selected.size,
+          " selected"
+        ] }),
+        /* @__PURE__ */ jsx("span", { className: "text-gray-600 text-xs", children: "Bulk set status:" }),
+        ["pending", "processing", "completed", "cancelled", "rejected"].map((s) => {
+          const color = STATUS_COLORS[s];
+          return /* @__PURE__ */ jsxs(
+            "button",
+            {
+              onClick: () => bulkUpdate(s),
+              disabled: bulkSaving,
+              className: "px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all hover:opacity-90 disabled:opacity-40",
+              style: { background: `${color}15`, border: `1px solid ${color}25`, color },
+              children: [
+                "→ ",
+                STATUS_LABELS[s]
+              ]
+            },
+            s
+          );
+        }),
+        /* @__PURE__ */ jsx("button", { onClick: clearSelection, className: "ml-auto text-gray-600 text-[10px] hover:text-gray-400 transition-colors", children: "✕ Clear" }),
+        bulkMsg && /* @__PURE__ */ jsx("p", { className: "w-full text-xs font-medium text-green-400", children: bulkMsg })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
+        /* @__PURE__ */ jsxs("p", { className: "text-gray-600 text-xs", children: [
+          filteredPurchases.length,
+          " purchase",
+          filteredPurchases.length !== 1 ? "s" : "",
+          totalQueuePages > 1 && ` · Page ${safePage}/${totalQueuePages}`
+        ] }),
+        /* @__PURE__ */ jsx("div", { className: "flex items-center gap-2", children: filteredPurchases.length > 0 && selected.size < pagedPurchases.length && /* @__PURE__ */ jsx("button", { onClick: selectAll, className: "text-[#00BFFF] text-[10px] hover:underline", children: "Select page" }) })
+      ] }),
+      filteredPurchases.length === 0 ? /* @__PURE__ */ jsx("div", { className: "text-center py-12 text-gray-600 text-sm", children: "No purchases found" }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+        /* @__PURE__ */ jsx("div", { className: "space-y-2", children: pagedPurchases.map((p) => /* @__PURE__ */ jsx(
+          PurchaseRow,
+          {
+            purchase: p,
+            selected: selected.has(p.id),
+            onSelect: toggleSelect,
+            onUpdate: loadAll
+          },
+          p.id
+        )) }),
+        totalQueuePages > 1 && /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-center gap-2 pt-2", children: [
+          /* @__PURE__ */ jsx(
+            "button",
+            {
+              onClick: () => setQueuePage((p) => Math.max(1, p - 1)),
+              disabled: safePage === 1,
+              className: "px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs hover:text-white hover:border-white/20 disabled:opacity-30 transition-all",
+              children: "← Prev"
+            }
+          ),
+          Array.from({ length: totalQueuePages }, (_, i) => i + 1).map((p) => /* @__PURE__ */ jsx(
+            "button",
+            {
+              onClick: () => setQueuePage(p),
+              className: `w-8 h-8 rounded-lg text-xs font-semibold transition-all ${p === safePage ? "bg-[#00BFFF]/15 border border-[#00BFFF]/30 text-[#00BFFF]" : "border border-white/8 text-gray-500 hover:text-white hover:border-white/15"}`,
+              children: p
+            },
+            p
+          )),
+          /* @__PURE__ */ jsx(
+            "button",
+            {
+              onClick: () => setQueuePage((p) => Math.min(totalQueuePages, p + 1)),
+              disabled: safePage === totalQueuePages,
+              className: "px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 text-xs hover:text-white hover:border-white/20 disabled:opacity-30 transition-all",
+              children: "Next →"
+            }
+          )
+        ] })
+      ] })
+    ] }),
+    tab === "items" && /* @__PURE__ */ jsxs("div", { className: "space-y-4", children: [
+      /* @__PURE__ */ jsx(AddItemForm, { onAdded: loadAll }),
+      /* @__PURE__ */ jsxs("div", { className: "flex flex-wrap gap-3 items-center", children: [
+        /* @__PURE__ */ jsxs("div", { className: "relative", children: [
+          /* @__PURE__ */ jsx("span", { className: "absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs", children: "🔍" }),
+          /* @__PURE__ */ jsx(
+            "input",
+            {
+              type: "text",
+              value: itemSearch,
+              onChange: (e) => setItemSearch(e.target.value),
+              placeholder: "Search items…",
+              className: "pl-8 pr-4 py-2 rounded-lg border border-white/8 bg-white/3 text-white text-xs placeholder-gray-600 outline-none focus:border-[#00BFFF]/30 w-48 transition-all"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsx("div", { className: "flex gap-1.5 flex-wrap", children: ["all", "ranks", "crate-keys", "amethyst-tools"].map((cat) => {
+          const colors = { all: "#00BFFF", ranks: "#f59e0b", "crate-keys": "#3b82f6", "amethyst-tools": "#a855f7" };
+          const col = colors[cat];
+          return /* @__PURE__ */ jsxs(
+            "button",
+            {
+              onClick: () => setItemFilter(cat),
+              className: `px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${itemFilter === cat ? "opacity-100" : "opacity-40 hover:opacity-70"}`,
+              style: { background: `${col}15`, color: col, border: `1px solid ${col}25` },
+              children: [
+                CATEGORY_ICONS[cat],
+                " ",
+                cat === "all" ? "All" : CATEGORY_LABELS[cat]
+              ]
+            },
+            cat
+          );
+        }) }),
+        /* @__PURE__ */ jsxs("p", { className: "text-gray-600 text-xs ml-auto", children: [
+          filteredItems.length,
+          " of ",
+          items.length,
+          " items"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsx("div", { className: "grid grid-cols-1 gap-2", children: filteredItems.length === 0 ? /* @__PURE__ */ jsx("div", { className: "text-center py-12 text-gray-600 text-sm", children: "No items found" }) : pagedItems.map((item) => /* @__PURE__ */ jsx(ItemEditor, { item, onSave: loadAll, onDelete: loadAll }, item.id)) }),
+      /* @__PURE__ */ jsx(
+        AdminPaginator,
+        {
+          page: safeItemPage,
+          totalPages: totalItemPages,
+          totalItems: filteredItems.length,
+          pageSize: ITEMS_PAGE_SIZE,
+          onPageChange: setItemPage
+        }
+      )
+    ] }),
+    tab === "analytics" && /* @__PURE__ */ jsx(AnalyticsTab, { purchases, items, stats })
+  ] });
+}
+function measureStrength(pw) {
+  if (!pw) return { score: 0, label: "None", color: "bg-gray-800", tips: [] };
+  const tips = [];
+  let score = 0;
+  if (pw.length >= 8) score++;
+  else tips.push("Use at least 8 characters");
+  if (pw.length >= 14) score++;
+  else if (pw.length >= 8) tips.push("Longer passwords are stronger (14+ recommended)");
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  else tips.push("Mix uppercase and lowercase letters");
+  if (/\d/.test(pw)) score++;
+  else tips.push("Add numbers");
+  if (/[^A-Za-z0-9]/.test(pw)) {
+    if (score < 4) score++;
+  } else {
+    tips.push("Add symbols (!@#$%…)");
+  }
+  const capped = Math.min(score, 4);
+  const labels = ["None", "Weak", "Fair", "Good", "Strong"];
+  const colors = ["bg-gray-800", "bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-green-400"];
+  return { score: capped, label: labels[capped], color: colors[capped], tips };
+}
+function StrengthBar({ password }) {
+  const s = measureStrength(password);
+  return /* @__PURE__ */ jsxs("div", { className: "space-y-1.5", children: [
+    /* @__PURE__ */ jsx("div", { className: "flex gap-1 h-1.5", children: [1, 2, 3, 4].map((i) => /* @__PURE__ */ jsx("div", { className: `flex-1 rounded-full transition-all duration-300 ${i <= s.score ? s.color : "bg-white/10"}` }, i)) }),
+    /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ jsx("span", { className: `text-[10px] font-semibold ${s.score === 4 ? "text-green-400" : s.score === 3 ? "text-yellow-400" : s.score === 2 ? "text-orange-400" : s.score >= 1 ? "text-red-400" : "text-gray-700"}`, children: password ? s.label : "" }),
+      s.tips[0] && /* @__PURE__ */ jsxs("span", { className: "text-[10px] text-gray-600 truncate max-w-[60%]", children: [
+        "Tip: ",
+        s.tips[0]
+      ] })
+    ] })
+  ] });
+}
+function Toast({ toasts, remove }) {
+  return /* @__PURE__ */ jsx("div", { className: "fixed top-6 right-6 z-50 flex flex-col gap-2 pointer-events-none", children: toasts.map((t) => /* @__PURE__ */ jsxs(
+    "div",
+    {
+      onClick: () => remove(t.id),
+      className: `pointer-events-auto px-5 py-3 rounded-xl text-sm font-semibold shadow-2xl border backdrop-blur-sm cursor-pointer transition-all duration-200 max-w-sm ${t.type === "success" ? "bg-green-500/15 border-green-500/30 text-green-300" : t.type === "error" ? "bg-red-500/15 border-red-500/30 text-red-300" : t.type === "warning" ? "bg-orange-500/15 border-orange-500/30 text-orange-300" : "bg-[#00BFFF]/12 border-[#00BFFF]/30 text-[#00BFFF]"}`,
+      children: [
+        /* @__PURE__ */ jsx("span", { className: "mr-2", children: t.type === "success" ? "✓" : t.type === "error" ? "✕" : t.type === "warning" ? "⚠" : "ℹ" }),
+        t.msg
+      ]
+    },
+    t.id
+  )) });
+}
+function useToasts() {
+  const [toasts, setToasts] = useState([]);
+  const counterRef = useRef(0);
+  const push = useCallback((msg, type = "info") => {
+    const id = ++counterRef.current;
+    setToasts((p) => [...p, { id, msg, type }]);
+    setTimeout(() => setToasts((p) => p.filter((t) => t.id !== id)), 4500);
+  }, []);
+  const remove = useCallback((id) => setToasts((p) => p.filter((t) => t.id !== id)), []);
+  return { toasts, push, remove };
+}
+function PasswordInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  showStrength,
+  disabled,
+  autoComplete
+}) {
+  const [show, setShow] = useState(false);
+  return /* @__PURE__ */ jsxs("div", { className: "space-y-1.5", children: [
+    /* @__PURE__ */ jsx("label", { className: "block text-xs font-semibold text-gray-400 uppercase tracking-widest", children: label }),
+    /* @__PURE__ */ jsxs("div", { className: "relative", children: [
+      /* @__PURE__ */ jsx(
+        "input",
+        {
+          type: show ? "text" : "password",
+          value,
+          onChange: (e) => onChange(e.target.value),
+          placeholder: placeholder ?? "••••••••••",
+          disabled,
+          autoComplete,
+          className: "w-full bg-white/3 border border-white/8 rounded-xl px-4 py-3 pr-11 text-sm text-white placeholder-gray-700 focus:outline-none focus:border-[#00BFFF]/40 focus:bg-white/5 transition-all disabled:opacity-40 disabled:cursor-not-allowed font-mono"
+        }
+      ),
+      /* @__PURE__ */ jsx(
+        "button",
+        {
+          type: "button",
+          onClick: () => setShow((v) => !v),
+          className: "absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-300 transition-colors text-base",
+          children: show ? "🙈" : "👁"
+        }
+      )
+    ] }),
+    showStrength && /* @__PURE__ */ jsx(StrengthBar, { password: value })
+  ] });
+}
+function Card({ children, className = "" }) {
+  return /* @__PURE__ */ jsx("div", { className: `bg-white/2 border border-white/6 rounded-2xl p-6 space-y-5 ${className}`, children });
+}
+function CardHeader({ icon, title, subtitle, badge }) {
+  return /* @__PURE__ */ jsxs("div", { className: "flex items-start gap-3", children: [
+    /* @__PURE__ */ jsx("div", { className: "w-10 h-10 rounded-xl bg-[#00BFFF]/8 border border-[#00BFFF]/15 flex items-center justify-center text-lg shrink-0", children: icon }),
+    /* @__PURE__ */ jsxs("div", { className: "flex-1 min-w-0", children: [
+      /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 flex-wrap", children: [
+        /* @__PURE__ */ jsx("h3", { className: "font-['Space_Grotesk'] font-bold text-white text-sm", children: title }),
+        badge
+      ] }),
+      /* @__PURE__ */ jsx("p", { className: "text-gray-600 text-xs mt-0.5", children: subtitle })
+    ] })
+  ] });
+}
+const HISTORY_KEY = "bn_cred_history";
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+function pushHistory(changed) {
+  try {
+    const h = loadHistory();
+    h.unshift({ ts: Date.now(), changed });
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 20)));
+  } catch {
+  }
+}
+function timeAgo(ts) {
+  const d = Date.now() - ts;
+  if (d < 6e4) return `${Math.floor(d / 1e3)}s ago`;
+  if (d < 36e5) return `${Math.floor(d / 6e4)}m ago`;
+  if (d < 864e5) return `${Math.floor(d / 36e5)}h ago`;
+  if (d < 30 * 864e5) return `${Math.floor(d / 864e5)}d ago`;
+  return new Date(ts).toLocaleDateString();
+}
+function SessionTimer({ loginAt }) {
+  const [remaining, setRemaining] = useState(0);
+  useEffect(() => {
+    const TTL = 8 * 60 * 60 * 1e3;
+    function tick() {
+      const rem = Math.max(0, loginAt + TTL - Date.now());
+      setRemaining(rem);
+    }
+    tick();
+    const id = setInterval(tick, 1e3);
+    return () => clearInterval(id);
+  }, [loginAt]);
+  const h = Math.floor(remaining / 36e5);
+  const m = Math.floor(remaining % 36e5 / 6e4);
+  const s = Math.floor(remaining % 6e4 / 1e3);
+  const pct = Math.min(100, remaining / (8 * 60 * 60 * 1e3) * 100);
+  const urgent = pct < 10;
+  return /* @__PURE__ */ jsxs("div", { className: "space-y-2", children: [
+    /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+      /* @__PURE__ */ jsx("span", { className: "text-gray-500", children: "Session expires in" }),
+      /* @__PURE__ */ jsxs("span", { className: `font-mono font-bold ${urgent ? "text-red-400 animate-pulse" : "text-[#00BFFF]"}`, children: [
+        String(h).padStart(2, "0"),
+        ":",
+        String(m).padStart(2, "0"),
+        ":",
+        String(s).padStart(2, "0")
+      ] })
+    ] }),
+    /* @__PURE__ */ jsx("div", { className: "h-1.5 bg-white/5 rounded-full overflow-hidden", children: /* @__PURE__ */ jsx(
+      "div",
+      {
+        className: `h-full rounded-full transition-all duration-1000 ${urgent ? "bg-red-500" : pct < 30 ? "bg-orange-400" : "bg-[#00BFFF]"}`,
+        style: { width: `${pct}%` }
+      }
+    ) }),
+    /* @__PURE__ */ jsxs("p", { className: "text-[10px] text-gray-700", children: [
+      "Logged in ",
+      timeAgo(loginAt),
+      ". Session TTL: 8 hours."
+    ] })
+  ] });
+}
+function SecurityPolicy() {
+  const rules = [
+    { icon: "🔐", label: "Dual-password system", desc: "Two separate passwords required to log in — both must match." },
+    { icon: "🔑", label: "scrypt hashing", desc: "All passwords stored as scrypt hashes (salt + 64-byte key). Never plaintext." },
+    { icon: "🛡️", label: "HMAC-SHA256 sessions", desc: "Session tokens are signed with SESSION_SECRET. Tampering is detected on every page load." },
+    { icon: "⏱️", label: "8-hour session TTL", desc: "Sessions expire automatically. Re-authentication required after expiry." },
+    { icon: "🚫", label: "IP rate limiting", desc: "5 failed login attempts trigger a 15-minute IP lockout." },
+    { icon: "⚡", label: "Constant-time compare", desc: "All credential comparisons use timingSafeEqual to prevent timing attacks." },
+    { icon: "📏", label: "Password minimums", desc: "Each password must be ≥ 8 characters. Passwords 1 & 2 must differ from each other." },
+    { icon: "🔄", label: "Auto hash upgrade", desc: "Plaintext passwords are automatically upgraded to scrypt on first login." }
+  ];
+  return /* @__PURE__ */ jsx("div", { className: "grid gap-2", children: rules.map((r) => /* @__PURE__ */ jsxs("div", { className: "flex items-start gap-3 p-3 rounded-xl bg-white/2 border border-white/5", children: [
+    /* @__PURE__ */ jsx("span", { className: "text-base shrink-0 mt-0.5", children: r.icon }),
+    /* @__PURE__ */ jsxs("div", { children: [
+      /* @__PURE__ */ jsx("p", { className: "text-xs font-semibold text-gray-300", children: r.label }),
+      /* @__PURE__ */ jsx("p", { className: "text-[11px] text-gray-600 leading-relaxed", children: r.desc })
+    ] })
+  ] }, r.label)) });
+}
+function CredentialsManager({ admin }) {
+  const { toasts, push, remove } = useToasts();
+  const session = getAdminSession();
+  const [serverUsername, setServerUsername] = useState(admin);
+  const [p1Hashed, setP1Hashed] = useState(true);
+  const [p2Hashed, setP2Hashed] = useState(true);
+  const [loadingInfo, setLoadingInfo] = useState(true);
+  const [history, setHistory] = useState([]);
+  const [tab, setTab] = useState("full-rotation");
+  const [busy, setBusy] = useState(false);
+  const [showPolicy, setShowPolicy] = useState(false);
+  const [showHistory, setShowHistory] = useState(true);
+  const [uNewUsername, setUNewUsername] = useState("");
+  const [uCurP1, setUCurP1] = useState("");
+  const [uCurP2, setUCurP2] = useState("");
+  const [p1CurP1, setP1CurP1] = useState("");
+  const [p1CurP2, setP1CurP2] = useState("");
+  const [p1New, setP1New] = useState("");
+  const [p1Confirm, setP1Confirm] = useState("");
+  const [p2CurP1, setP2CurP1] = useState("");
+  const [p2CurP2, setP2CurP2] = useState("");
+  const [p2New, setP2New] = useState("");
+  const [p2Confirm, setP2Confirm] = useState("");
+  const [frCurP1, setFrCurP1] = useState("");
+  const [frCurP2, setFrCurP2] = useState("");
+  const [frNewUser, setFrNewUser] = useState("");
+  const [frNewP1, setFrNewP1] = useState("");
+  const [frNewP1c, setFrNewP1c] = useState("");
+  const [frNewP2, setFrNewP2] = useState("");
+  const [frNewP2c, setFrNewP2c] = useState("");
+  const [showDanger, setShowDanger] = useState(false);
+  useEffect(() => {
+    setHistory(loadHistory());
+    if (!session) {
+      setLoadingInfo(false);
+      return;
+    }
+    getAdminInfo({ data: { token: session.token, username: session.username, loginAt: session.loginAt } }).then((res) => {
+      if (res.ok) {
+        setServerUsername(res.username);
+        setP1Hashed(res.password1Hashed);
+        setP2Hashed(res.password2Hashed);
+      }
+    }).catch(() => {
+    }).finally(() => setLoadingInfo(false));
+  }, []);
+  async function call(payload, logLabel) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await updateAdminCredentials({ data: payload });
+      if (!res.ok) {
+        push(res.error, "error");
+        return;
+      }
+      const changed = res.changed ?? [];
+      pushHistory(changed);
+      setHistory(loadHistory());
+      addLog(admin, "credentials:update", `Changed: ${changed.join(", ")}`);
+      push(`${logLabel} updated — signing you out now…`, "success");
+      setTimeout(() => {
+        setAdminSession(null);
+        window.location.href = "/admin";
+      }, 1800);
+    } catch (e) {
+      push(e?.message ?? "Network error", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+  function handleChangeUsername(e) {
+    e.preventDefault();
+    if (!uNewUsername.trim()) {
+      push("Enter a new username", "warning");
+      return;
+    }
+    if (!uCurP1 || !uCurP2) {
+      push("Enter both current passwords to confirm", "warning");
+      return;
+    }
+    call({ currentPassword1: uCurP1, currentPassword2: uCurP2, newUsername: uNewUsername }, "Username");
+  }
+  function handleChangeP1(e) {
+    e.preventDefault();
+    if (!p1New) {
+      push("Enter a new password", "warning");
+      return;
+    }
+    if (p1New !== p1Confirm) {
+      push("New passwords do not match", "error");
+      return;
+    }
+    if (p1New.length < 8) {
+      push("Password must be ≥ 8 characters", "error");
+      return;
+    }
+    call({ currentPassword1: p1CurP1, currentPassword2: p1CurP2, newPassword1: p1New }, "Password 1");
+  }
+  function handleChangeP2(e) {
+    e.preventDefault();
+    if (!p2New) {
+      push("Enter a new password", "warning");
+      return;
+    }
+    if (p2New !== p2Confirm) {
+      push("New passwords do not match", "error");
+      return;
+    }
+    if (p2New.length < 8) {
+      push("Password must be ≥ 8 characters", "error");
+      return;
+    }
+    call({ currentPassword1: p2CurP1, currentPassword2: p2CurP2, newPassword2: p2New }, "Password 2");
+  }
+  function handleFullRotation(e) {
+    e.preventDefault();
+    if (!frCurP1 || !frCurP2) {
+      push("Enter both current passwords", "warning");
+      return;
+    }
+    if (frNewP1 && frNewP1 !== frNewP1c) {
+      push("New Password 1 confirmation does not match", "error");
+      return;
+    }
+    if (frNewP2 && frNewP2 !== frNewP2c) {
+      push("New Password 2 confirmation does not match", "error");
+      return;
+    }
+    if (frNewP1 && frNewP1.length < 8) {
+      push("Password 1 must be ≥ 8 characters", "error");
+      return;
+    }
+    if (frNewP2 && frNewP2.length < 8) {
+      push("Password 2 must be ≥ 8 characters", "error");
+      return;
+    }
+    const payload = { currentPassword1: frCurP1, currentPassword2: frCurP2 };
+    if (frNewUser.trim()) payload.newUsername = frNewUser.trim();
+    if (frNewP1) payload.newPassword1 = frNewP1;
+    if (frNewP2) payload.newPassword2 = frNewP2;
+    if (!payload.newUsername && !payload.newPassword1 && !payload.newPassword2) {
+      push("Nothing to change — fill at least one new field", "warning");
+      return;
+    }
+    call(payload, "Credentials");
+  }
+  const TABS = [
+    { id: "full-rotation", label: "Full Rotation", icon: "🔄" },
+    { id: "username", label: "Username Only", icon: "👤" },
+    { id: "password1", label: "Password 1", icon: "🔑" },
+    { id: "password2", label: "Password 2", icon: "🗝️" }
+  ];
+  return /* @__PURE__ */ jsxs("div", { className: "space-y-6 max-w-5xl mx-auto", children: [
+    /* @__PURE__ */ jsx(Toast, { toasts, remove }),
+    /* @__PURE__ */ jsxs("div", { className: "relative overflow-hidden rounded-2xl border border-[#00BFFF]/15 bg-gradient-to-br from-[#00BFFF]/6 via-transparent to-blue-900/10 p-6", children: [
+      /* @__PURE__ */ jsx("div", { className: "absolute inset-0 pointer-events-none", children: [...Array(8)].map((_, i) => /* @__PURE__ */ jsx(
+        "div",
+        {
+          className: "absolute w-px bg-gradient-to-b from-transparent via-[#00BFFF]/10 to-transparent",
+          style: { left: `${12 + i * 12}%`, height: "100%", top: 0, opacity: 0.4 + i % 3 * 0.2 }
+        },
+        i
+      )) }),
+      /* @__PURE__ */ jsxs("div", { className: "relative flex items-center gap-4", children: [
+        /* @__PURE__ */ jsx("div", { className: "w-14 h-14 rounded-2xl bg-[#00BFFF]/10 border border-[#00BFFF]/25 flex items-center justify-center text-2xl shadow-[0_0_30px_rgba(0,191,255,0.12)]", children: "🔐" }),
+        /* @__PURE__ */ jsxs("div", { className: "flex-1 min-w-0", children: [
+          /* @__PURE__ */ jsx("h2", { className: "font-['Space_Grotesk'] font-black text-white text-xl tracking-tight", children: "Admin Credentials" }),
+          /* @__PURE__ */ jsx("p", { className: "text-gray-500 text-xs mt-0.5", children: "Manage administrator username and dual-password authentication system" })
+        ] }),
+        /* @__PURE__ */ jsx("div", { className: "flex flex-col items-end gap-1.5 shrink-0", children: loadingInfo ? /* @__PURE__ */ jsx("div", { className: "w-24 h-6 rounded bg-white/5 animate-pulse" }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+          /* @__PURE__ */ jsx("span", { className: "px-3 py-1 rounded-full bg-[#00BFFF]/10 border border-[#00BFFF]/20 text-[#00BFFF] text-xs font-bold", children: serverUsername }),
+          /* @__PURE__ */ jsx("span", { className: `px-2 py-0.5 rounded-full text-[10px] font-semibold border ${p1Hashed && p2Hashed ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-orange-500/10 border-orange-500/20 text-orange-400"}`, children: p1Hashed && p2Hashed ? "🔒 scrypt hashed" : "⚠ Upgrade needed" })
+        ] }) })
+      ] }),
+      /* @__PURE__ */ jsx("div", { className: "relative grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-white/5", children: [
+        { label: "Auth Mode", value: "Dual Password", icon: "🔑" },
+        { label: "Hash Algorithm", value: "scrypt (64-byte)", icon: "🧮" },
+        { label: "Session TTL", value: "8 hours", icon: "⏱️" },
+        { label: "Rate Limit", value: "5 attempts / 15 min", icon: "🚫" }
+      ].map((s) => /* @__PURE__ */ jsxs("div", { className: "bg-white/3 border border-white/5 rounded-xl px-3 py-2.5", children: [
+        /* @__PURE__ */ jsxs("p", { className: "text-gray-700 text-[10px] uppercase tracking-widest", children: [
+          s.icon,
+          " ",
+          s.label
+        ] }),
+        /* @__PURE__ */ jsx("p", { className: "text-white text-xs font-bold mt-0.5 truncate", children: s.value })
+      ] }, s.label)) })
+    ] }),
+    /* @__PURE__ */ jsxs("div", { className: "grid lg:grid-cols-3 gap-6", children: [
+      /* @__PURE__ */ jsxs("div", { className: "lg:col-span-2 space-y-5", children: [
+        /* @__PURE__ */ jsx("div", { className: "flex gap-1.5 p-1.5 bg-white/3 rounded-xl border border-white/6", children: TABS.map((t) => /* @__PURE__ */ jsxs(
+          "button",
+          {
+            onClick: () => setTab(t.id),
+            className: `flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${tab === t.id ? "bg-[#00BFFF]/15 border border-[#00BFFF]/25 text-[#00BFFF] shadow-sm" : "text-gray-600 hover:text-gray-400 border border-transparent"}`,
+            children: [
+              /* @__PURE__ */ jsx("span", { children: t.icon }),
+              /* @__PURE__ */ jsx("span", { className: "hidden sm:inline", children: t.label })
+            ]
+          },
+          t.id
+        )) }),
+        tab === "full-rotation" && /* @__PURE__ */ jsxs(Card, { children: [
+          /* @__PURE__ */ jsx(
+            CardHeader,
+            {
+              icon: "🔄",
+              title: "Full Credential Rotation",
+              subtitle: "Change username and/or both passwords in one secured operation. Leave any new field blank to keep it unchanged.",
+              badge: /* @__PURE__ */ jsx("span", { className: "px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#00BFFF]/10 border border-[#00BFFF]/20 text-[#00BFFF]", children: "Recommended" })
+            }
+          ),
+          /* @__PURE__ */ jsxs("form", { onSubmit: handleFullRotation, className: "space-y-5", children: [
+            /* @__PURE__ */ jsxs("div", { className: "p-4 rounded-xl bg-white/2 border border-white/6 space-y-3", children: [
+              /* @__PURE__ */ jsxs("p", { className: "text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5", children: [
+                /* @__PURE__ */ jsx("span", { className: "w-4 h-px bg-gray-700 inline-block" }),
+                "Verify Identity",
+                /* @__PURE__ */ jsx("span", { className: "w-4 h-px bg-gray-700 inline-block" })
+              ] }),
+              /* @__PURE__ */ jsxs("div", { className: "grid sm:grid-cols-2 gap-3", children: [
+                /* @__PURE__ */ jsx(PasswordInput, { label: "Current Password 1", value: frCurP1, onChange: setFrCurP1, autoComplete: "current-password" }),
+                /* @__PURE__ */ jsx(PasswordInput, { label: "Current Password 2", value: frCurP2, onChange: setFrCurP2, autoComplete: "current-password" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "p-4 rounded-xl bg-white/2 border border-white/6 space-y-4", children: [
+              /* @__PURE__ */ jsxs("p", { className: "text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5", children: [
+                /* @__PURE__ */ jsx("span", { className: "w-4 h-px bg-gray-700 inline-block" }),
+                "New Values (leave blank to keep current)",
+                /* @__PURE__ */ jsx("span", { className: "w-4 h-px bg-gray-700 inline-block" })
+              ] }),
+              /* @__PURE__ */ jsxs("div", { className: "space-y-1.5", children: [
+                /* @__PURE__ */ jsx("label", { className: "block text-xs font-semibold text-gray-400 uppercase tracking-widest", children: "New Username" }),
+                /* @__PURE__ */ jsx(
+                  "input",
+                  {
+                    type: "text",
+                    value: frNewUser,
+                    onChange: (e) => setFrNewUser(e.target.value),
+                    placeholder: `Keep current: ${serverUsername}`,
+                    autoComplete: "username",
+                    className: "w-full bg-white/3 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-700 focus:outline-none focus:border-[#00BFFF]/40 focus:bg-white/5 transition-all"
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxs("div", { className: "grid sm:grid-cols-2 gap-3", children: [
+                /* @__PURE__ */ jsx(PasswordInput, { label: "New Password 1", value: frNewP1, onChange: setFrNewP1, placeholder: "Leave blank to keep", showStrength: true, autoComplete: "new-password" }),
+                /* @__PURE__ */ jsx(PasswordInput, { label: "Confirm Password 1", value: frNewP1c, onChange: setFrNewP1c, placeholder: "Repeat new password 1", autoComplete: "new-password" })
+              ] }),
+              frNewP1 && frNewP1c && frNewP1 !== frNewP1c && /* @__PURE__ */ jsx("p", { className: "text-xs text-red-400 -mt-2", children: "Password 1 entries don't match" }),
+              /* @__PURE__ */ jsxs("div", { className: "grid sm:grid-cols-2 gap-3", children: [
+                /* @__PURE__ */ jsx(PasswordInput, { label: "New Password 2", value: frNewP2, onChange: setFrNewP2, placeholder: "Leave blank to keep", showStrength: true, autoComplete: "new-password" }),
+                /* @__PURE__ */ jsx(PasswordInput, { label: "Confirm Password 2", value: frNewP2c, onChange: setFrNewP2c, placeholder: "Repeat new password 2", autoComplete: "new-password" })
+              ] }),
+              frNewP2 && frNewP2c && frNewP2 !== frNewP2c && /* @__PURE__ */ jsx("p", { className: "text-xs text-red-400 -mt-2", children: "Password 2 entries don't match" }),
+              frNewP1 && frNewP2 && frNewP1 === frNewP2 && /* @__PURE__ */ jsxs("div", { className: "px-4 py-3 rounded-xl bg-orange-500/8 border border-orange-500/20 text-orange-400 text-xs flex items-center gap-2", children: [
+                /* @__PURE__ */ jsx("span", { children: "⚠" }),
+                " Password 1 and Password 2 must be different from each other."
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs(
+              "button",
+              {
+                type: "submit",
+                disabled: busy,
+                className: "w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-[#00BFFF] to-[#0066FF] text-white hover:from-[#00BFFF]/90 hover:to-[#0066FF]/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-[0_0_20px_rgba(0,191,255,0.25)] hover:shadow-[0_0_30px_rgba(0,191,255,0.35)] flex items-center justify-center gap-2",
+                children: [
+                  busy ? /* @__PURE__ */ jsx("span", { className: "w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" }) : "🔄",
+                  busy ? "Updating…" : "Apply Credential Rotation"
+                ]
+              }
+            )
+          ] })
+        ] }),
+        tab === "username" && /* @__PURE__ */ jsxs(Card, { children: [
+          /* @__PURE__ */ jsx(
+            CardHeader,
+            {
+              icon: "👤",
+              title: "Change Username",
+              subtitle: "Update the administrator login name. Both current passwords required to confirm the change."
+            }
+          ),
+          /* @__PURE__ */ jsxs("form", { onSubmit: handleChangeUsername, className: "space-y-4", children: [
+            /* @__PURE__ */ jsxs("div", { className: "space-y-1.5", children: [
+              /* @__PURE__ */ jsx("label", { className: "block text-xs font-semibold text-gray-400 uppercase tracking-widest", children: "Current Username" }),
+              /* @__PURE__ */ jsx("div", { className: "px-4 py-3 rounded-xl bg-white/2 border border-white/6 text-sm font-mono text-gray-300", children: serverUsername })
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "space-y-1.5", children: [
+              /* @__PURE__ */ jsx("label", { className: "block text-xs font-semibold text-gray-400 uppercase tracking-widest", children: "New Username" }),
+              /* @__PURE__ */ jsx(
+                "input",
+                {
+                  type: "text",
+                  value: uNewUsername,
+                  onChange: (e) => setUNewUsername(e.target.value),
+                  placeholder: "e.g. superadmin",
+                  autoComplete: "username",
+                  minLength: 3,
+                  className: "w-full bg-white/3 border border-white/8 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-700 focus:outline-none focus:border-[#00BFFF]/40 focus:bg-white/5 transition-all"
+                }
+              ),
+              uNewUsername && uNewUsername.length < 3 && /* @__PURE__ */ jsx("p", { className: "text-[11px] text-red-400", children: "Must be at least 3 characters" })
+            ] }),
+            /* @__PURE__ */ jsx("div", { className: "h-px bg-white/5" }),
+            /* @__PURE__ */ jsx("p", { className: "text-[11px] text-gray-600", children: "Confirm identity — both current passwords required:" }),
+            /* @__PURE__ */ jsxs("div", { className: "grid sm:grid-cols-2 gap-3", children: [
+              /* @__PURE__ */ jsx(PasswordInput, { label: "Current Password 1", value: uCurP1, onChange: setUCurP1, autoComplete: "current-password" }),
+              /* @__PURE__ */ jsx(PasswordInput, { label: "Current Password 2", value: uCurP2, onChange: setUCurP2, autoComplete: "current-password" })
+            ] }),
+            /* @__PURE__ */ jsxs(
+              "button",
+              {
+                type: "submit",
+                disabled: busy,
+                className: "w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-[#00BFFF] to-[#0066FF] text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_20px_rgba(0,191,255,0.2)] flex items-center justify-center gap-2",
+                children: [
+                  busy ? /* @__PURE__ */ jsx("span", { className: "w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" }) : "👤",
+                  busy ? "Updating…" : "Update Username"
+                ]
+              }
+            )
+          ] })
+        ] }),
+        tab === "password1" && /* @__PURE__ */ jsxs(Card, { children: [
+          /* @__PURE__ */ jsx(
+            CardHeader,
+            {
+              icon: "🔑",
+              title: "Change Password 1",
+              subtitle: "The primary login password. Both current passwords required to authorize the change."
+            }
+          ),
+          /* @__PURE__ */ jsxs("form", { onSubmit: handleChangeP1, className: "space-y-4", children: [
+            /* @__PURE__ */ jsxs("div", { className: "p-3 rounded-xl bg-white/2 border border-white/5 space-y-3", children: [
+              /* @__PURE__ */ jsx("p", { className: "text-[10px] text-gray-600 uppercase tracking-widest font-bold", children: "Verify identity" }),
+              /* @__PURE__ */ jsxs("div", { className: "grid sm:grid-cols-2 gap-3", children: [
+                /* @__PURE__ */ jsx(PasswordInput, { label: "Current Password 1", value: p1CurP1, onChange: setP1CurP1, autoComplete: "current-password" }),
+                /* @__PURE__ */ jsx(PasswordInput, { label: "Current Password 2", value: p1CurP2, onChange: setP1CurP2, autoComplete: "current-password" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsx("div", { className: "h-px bg-white/5" }),
+            /* @__PURE__ */ jsx(PasswordInput, { label: "New Password 1", value: p1New, onChange: setP1New, showStrength: true, autoComplete: "new-password" }),
+            /* @__PURE__ */ jsx(PasswordInput, { label: "Confirm New Password 1", value: p1Confirm, onChange: setP1Confirm, autoComplete: "new-password" }),
+            p1New && p1Confirm && p1New !== p1Confirm && /* @__PURE__ */ jsx("p", { className: "text-xs text-red-400", children: "Passwords don't match" }),
+            /* @__PURE__ */ jsxs(
+              "button",
+              {
+                type: "submit",
+                disabled: busy,
+                className: "w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-[#00BFFF] to-[#0066FF] text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_20px_rgba(0,191,255,0.2)] flex items-center justify-center gap-2",
+                children: [
+                  busy ? /* @__PURE__ */ jsx("span", { className: "w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" }) : "🔑",
+                  busy ? "Updating…" : "Update Password 1"
+                ]
+              }
+            )
+          ] })
+        ] }),
+        tab === "password2" && /* @__PURE__ */ jsxs(Card, { children: [
+          /* @__PURE__ */ jsx(
+            CardHeader,
+            {
+              icon: "🗝️",
+              title: "Change Password 2",
+              subtitle: "The secondary login password. Both current passwords required to authorize the change."
+            }
+          ),
+          /* @__PURE__ */ jsxs("form", { onSubmit: handleChangeP2, className: "space-y-4", children: [
+            /* @__PURE__ */ jsxs("div", { className: "p-3 rounded-xl bg-white/2 border border-white/5 space-y-3", children: [
+              /* @__PURE__ */ jsx("p", { className: "text-[10px] text-gray-600 uppercase tracking-widest font-bold", children: "Verify identity" }),
+              /* @__PURE__ */ jsxs("div", { className: "grid sm:grid-cols-2 gap-3", children: [
+                /* @__PURE__ */ jsx(PasswordInput, { label: "Current Password 1", value: p2CurP1, onChange: setP2CurP1, autoComplete: "current-password" }),
+                /* @__PURE__ */ jsx(PasswordInput, { label: "Current Password 2", value: p2CurP2, onChange: setP2CurP2, autoComplete: "current-password" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsx("div", { className: "h-px bg-white/5" }),
+            /* @__PURE__ */ jsx(PasswordInput, { label: "New Password 2", value: p2New, onChange: setP2New, showStrength: true, autoComplete: "new-password" }),
+            /* @__PURE__ */ jsx(PasswordInput, { label: "Confirm New Password 2", value: p2Confirm, onChange: setP2Confirm, autoComplete: "new-password" }),
+            p2New && p2Confirm && p2New !== p2Confirm && /* @__PURE__ */ jsx("p", { className: "text-xs text-red-400", children: "Passwords don't match" }),
+            /* @__PURE__ */ jsxs(
+              "button",
+              {
+                type: "submit",
+                disabled: busy,
+                className: "w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-[#00BFFF] to-[#0066FF] text-white hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_20px_rgba(0,191,255,0.2)] flex items-center justify-center gap-2",
+                children: [
+                  busy ? /* @__PURE__ */ jsx("span", { className: "w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" }) : "🗝️",
+                  busy ? "Updating…" : "Update Password 2"
+                ]
+              }
+            )
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxs(Card, { children: [
+          /* @__PURE__ */ jsx(CardHeader, { icon: "✅", title: "Security Checklist", subtitle: "Quick health check for your current credential configuration." }),
+          /* @__PURE__ */ jsx("div", { className: "grid sm:grid-cols-2 gap-2", children: [
+            { ok: p1Hashed, label: "Password 1 is hashed", detail: p1Hashed ? "scrypt" : "Plaintext — upgrade on next login" },
+            { ok: p2Hashed, label: "Password 2 is hashed", detail: p2Hashed ? "scrypt" : "Plaintext — upgrade on next login" },
+            { ok: true, label: "Dual-password auth", detail: "Both passwords required" },
+            { ok: true, label: "HMAC sessions active", detail: "SESSION_SECRET is set" },
+            { ok: history.length > 0, label: "Rotation history exists", detail: history.length > 0 ? `${history.length} rotation(s) recorded` : "No changes yet" },
+            { ok: !!session, label: "Active session", detail: session ? `Logged in as ${session.username}` : "No session" }
+          ].map((item) => /* @__PURE__ */ jsxs("div", { className: `flex items-center gap-3 p-3 rounded-xl border ${item.ok ? "bg-green-500/5 border-green-500/15" : "bg-orange-500/5 border-orange-500/15"}`, children: [
+            /* @__PURE__ */ jsx("span", { className: "text-base shrink-0", children: item.ok ? "✅" : "⚠️" }),
+            /* @__PURE__ */ jsxs("div", { children: [
+              /* @__PURE__ */ jsx("p", { className: "text-xs font-semibold text-gray-300", children: item.label }),
+              /* @__PURE__ */ jsx("p", { className: `text-[11px] ${item.ok ? "text-gray-600" : "text-orange-500"}`, children: item.detail })
+            ] })
+          ] }, item.label)) })
+        ] }),
+        /* @__PURE__ */ jsxs("div", { className: "rounded-2xl border border-red-500/20 bg-red-500/3 overflow-hidden", children: [
+          /* @__PURE__ */ jsxs(
+            "button",
+            {
+              onClick: () => setShowDanger((v) => !v),
+              className: "w-full flex items-center gap-3 px-6 py-4 text-left hover:bg-red-500/5 transition-colors",
+              children: [
+                /* @__PURE__ */ jsx("span", { className: "text-xl", children: "☠️" }),
+                /* @__PURE__ */ jsxs("div", { className: "flex-1", children: [
+                  /* @__PURE__ */ jsx("p", { className: "text-sm font-bold text-red-400", children: "Danger Zone" }),
+                  /* @__PURE__ */ jsx("p", { className: "text-[11px] text-gray-600", children: "Session invalidation and emergency actions" })
+                ] }),
+                /* @__PURE__ */ jsx("span", { className: `text-gray-600 text-sm transition-transform ${showDanger ? "rotate-90" : ""}`, children: "›" })
+              ]
+            }
+          ),
+          showDanger && /* @__PURE__ */ jsxs("div", { className: "px-6 pb-6 space-y-4 border-t border-red-500/10 pt-4", children: [
+            /* @__PURE__ */ jsxs("div", { className: "p-4 rounded-xl bg-white/2 border border-white/5 space-y-3", children: [
+              /* @__PURE__ */ jsx("p", { className: "text-xs font-bold text-gray-400", children: "Session Revocation" }),
+              /* @__PURE__ */ jsxs("p", { className: "text-[11px] text-gray-600 leading-relaxed", children: [
+                "Every credential change — username or either password — bumps a ",
+                /* @__PURE__ */ jsx("span", { className: "text-gray-400 font-mono", children: "sessionInvalidBefore" }),
+                " timestamp written to ",
+                /* @__PURE__ */ jsx("span", { className: "text-gray-400 font-mono", children: "admin.yml" }),
+                ". The server checks this on every page load: any session token issued before that timestamp is rejected, regardless of whether its HMAC signature is valid. This ensures that password rotations revoke all existing sessions immediately — not just the current one."
+              ] }),
+              /* @__PURE__ */ jsx("p", { className: "text-[11px] text-gray-600 leading-relaxed", children: "After a successful update this page will sign you out automatically. Log in with the new credentials to continue." }),
+              /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 px-3 py-2 rounded-lg bg-[#00BFFF]/6 border border-[#00BFFF]/15 text-[#00BFFF] text-[11px]", children: [
+                /* @__PURE__ */ jsx("span", { children: "ℹ" }),
+                /* @__PURE__ */ jsx("span", { children: "To force a sign-out of all sessions, rotate any credential via the forms above." })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs("div", { className: "p-4 rounded-xl bg-white/2 border border-white/5 space-y-2", children: [
+              /* @__PURE__ */ jsx("p", { className: "text-xs font-bold text-gray-400", children: "Current Session Info" }),
+              /* @__PURE__ */ jsxs("div", { className: "font-mono text-[11px] text-gray-500 space-y-1 break-all", children: [
+                /* @__PURE__ */ jsxs("p", { children: [
+                  "Username: ",
+                  /* @__PURE__ */ jsx("span", { className: "text-gray-300", children: session?.username ?? "—" })
+                ] }),
+                /* @__PURE__ */ jsxs("p", { children: [
+                  "Login at: ",
+                  /* @__PURE__ */ jsx("span", { className: "text-gray-300", children: session ? new Date(session.loginAt).toLocaleString() : "—" })
+                ] }),
+                /* @__PURE__ */ jsxs("p", { children: [
+                  "Token: ",
+                  /* @__PURE__ */ jsx("span", { className: "text-gray-500", children: session ? `${session.token.slice(0, 16)}…` : "—" })
+                ] })
+              ] })
+            ] })
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs("div", { className: "space-y-5", children: [
+        session && /* @__PURE__ */ jsxs(Card, { children: [
+          /* @__PURE__ */ jsx(CardHeader, { icon: "⏱️", title: "Active Session", subtitle: "Current session countdown" }),
+          /* @__PURE__ */ jsx(SessionTimer, { loginAt: session.loginAt })
+        ] }),
+        /* @__PURE__ */ jsxs(Card, { children: [
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
+            /* @__PURE__ */ jsx(CardHeader, { icon: "📜", title: "Rotation History", subtitle: "Last 20 credential changes" }),
+            /* @__PURE__ */ jsx(
+              "button",
+              {
+                onClick: () => setShowHistory((v) => !v),
+                className: "text-[10px] text-gray-600 hover:text-gray-400 transition-colors shrink-0",
+                children: showHistory ? "Collapse" : "Expand"
+              }
+            )
+          ] }),
+          showHistory && /* @__PURE__ */ jsx("div", { className: "space-y-2 max-h-64 overflow-y-auto pr-1", children: history.length === 0 ? /* @__PURE__ */ jsx("p", { className: "text-center text-gray-700 text-xs py-6", children: "No rotations recorded yet" }) : history.map((h, i) => /* @__PURE__ */ jsxs("div", { className: "flex items-start gap-2.5 p-2.5 rounded-xl bg-white/2 border border-white/5", children: [
+            /* @__PURE__ */ jsx("span", { className: "text-sm shrink-0 mt-0.5", children: "🔄" }),
+            /* @__PURE__ */ jsxs("div", { className: "flex-1 min-w-0", children: [
+              /* @__PURE__ */ jsxs("p", { className: "text-xs font-semibold text-gray-300 truncate", children: [
+                "Changed: ",
+                h.changed.join(", ")
+              ] }),
+              /* @__PURE__ */ jsxs("p", { className: "text-[10px] text-gray-600", children: [
+                timeAgo(h.ts),
+                " · ",
+                new Date(h.ts).toLocaleString()
+              ] })
+            ] })
+          ] }, i)) })
+        ] }),
+        /* @__PURE__ */ jsxs(Card, { children: [
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
+            /* @__PURE__ */ jsx(CardHeader, { icon: "🛡️", title: "Security Policy", subtitle: "How credentials are protected" }),
+            /* @__PURE__ */ jsx(
+              "button",
+              {
+                onClick: () => setShowPolicy((v) => !v),
+                className: "text-[10px] text-gray-600 hover:text-gray-400 transition-colors shrink-0",
+                children: showPolicy ? "Collapse" : "Expand"
+              }
+            )
+          ] }),
+          showPolicy && /* @__PURE__ */ jsx(SecurityPolicy, {})
+        ] }),
+        /* @__PURE__ */ jsxs(Card, { children: [
+          /* @__PURE__ */ jsx(CardHeader, { icon: "💡", title: "Best Practices", subtitle: "Recommendations for keeping your account secure" }),
+          /* @__PURE__ */ jsx("div", { className: "space-y-2.5", children: [
+            { tip: "Rotate credentials every 90 days", severity: "info" },
+            { tip: "Use a password manager to store complex passwords", severity: "info" },
+            { tip: "Make Password 1 and Password 2 completely different", severity: "warning" },
+            { tip: "Never share your admin credentials", severity: "warning" },
+            { tip: "Use 14+ character passwords for maximum security", severity: "info" },
+            { tip: "Sign out when using shared machines", severity: "warning" },
+            { tip: "After rotating, verify you can log in before closing the tab", severity: "warning" }
+          ].map((b, i) => /* @__PURE__ */ jsxs("div", { className: `flex items-start gap-2 text-[11px] leading-relaxed ${b.severity === "warning" ? "text-orange-400" : "text-gray-500"}`, children: [
+            /* @__PURE__ */ jsx("span", { className: "shrink-0 mt-0.5", children: b.severity === "warning" ? "⚠" : "•" }),
+            b.tip
+          ] }, i)) })
+        ] }),
+        /* @__PURE__ */ jsxs(Card, { children: [
+          /* @__PURE__ */ jsx(CardHeader, { icon: "🧬", title: "Credential Anatomy", subtitle: "What each field does" }),
+          /* @__PURE__ */ jsx("div", { className: "space-y-3", children: [
+            {
+              field: "Username",
+              desc: "The login name shown on the admin panel. Does not affect session signing — changing it invalidates the current token.",
+              color: "border-l-[#00BFFF]"
+            },
+            {
+              field: "Password 1",
+              desc: "Primary authentication factor. Stored as a salted scrypt hash. Required on every login.",
+              color: "border-l-purple-400"
+            },
+            {
+              field: "Password 2",
+              desc: "Secondary authentication factor. Must differ from Password 1. Adds a second layer — both must pass to authenticate.",
+              color: "border-l-green-400"
+            }
+          ].map((c) => /* @__PURE__ */ jsxs("div", { className: `pl-3 border-l-2 ${c.color}`, children: [
+            /* @__PURE__ */ jsx("p", { className: "text-xs font-bold text-gray-300", children: c.field }),
+            /* @__PURE__ */ jsx("p", { className: "text-[11px] text-gray-600 leading-relaxed", children: c.desc })
+          ] }, c.field)) })
+        ] })
+      ] })
+    ] })
+  ] });
+}
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: "🏠", desc: "Overview & stats" },
   { id: "tier-list", label: "Tier List", icon: "📋", desc: "Manage players" },
@@ -5901,9 +8081,11 @@ const NAV_ITEMS = [
   { id: "users", label: "Users", icon: "👥", desc: "Manage accounts" },
   { id: "content", label: "Content", icon: "📝", desc: "Edit site text" },
   { id: "events", label: "Events", icon: "🎉", desc: "Manage events" },
+  { id: "shop-mgmt", label: "Shop", icon: "🛒", desc: "Manage purchases" },
   { id: "logs", label: "Activity Logs", icon: "📊", desc: "Audit trail" },
-  { id: "github-sync", label: "GitHub Sync", icon: "☁", desc: "Sync Center" },
-  { id: "repo-history", label: "Repo History", icon: "🕓", desc: "Reset history" }
+  { id: "repo-history", label: "Repo History", icon: "🕓", desc: "Reset history" },
+  { id: "github-sync", label: "GitHub Sync", icon: "☁️", desc: "Sync Center" },
+  { id: "credentials", label: "Credentials", icon: "🔐", desc: "Manage admin auth" }
 ];
 const SECTION_TITLES = {
   "dashboard": { title: "Dashboard", subtitle: "Overview of Blue Tiers activity" },
@@ -5914,9 +8096,11 @@ const SECTION_TITLES = {
   "users": { title: "User Manager", subtitle: "Full player management — accounts, profiles, and mining data" },
   "content": { title: "Content Manager", subtitle: "Edit homepage, footer, and site text" },
   "events": { title: "Event Manager", subtitle: "Configure event banners and countdowns" },
+  "shop-mgmt": { title: "Shop Management", subtitle: "Manage purchases, prices, refunds, and delivery" },
   "logs": { title: "Activity Logs", subtitle: "Full audit trail of all admin actions" },
   "github-sync": { title: "GitHub Sync Center", subtitle: "Professional synchronization dashboard — push, validate, rollback" },
-  "repo-history": { title: "Repository History Management", subtitle: "Reset commit history while preserving all project files" }
+  "repo-history": { title: "Repository History Management", subtitle: "Reset commit history while preserving all project files" },
+  "credentials": { title: "Credentials Manager", subtitle: "Manage admin username and dual-password authentication" }
 };
 function SectionContent({ section, admin }) {
   switch (section) {
@@ -5936,12 +8120,16 @@ function SectionContent({ section, admin }) {
       return /* @__PURE__ */ jsx(ContentManager, { admin });
     case "events":
       return /* @__PURE__ */ jsx(EventManager, { admin });
+    case "shop-mgmt":
+      return /* @__PURE__ */ jsx(ShopManager, { admin });
     case "logs":
       return /* @__PURE__ */ jsx(ActivityLogs, { admin });
     case "github-sync":
       return /* @__PURE__ */ jsx(GitHubSyncCenter, { admin });
     case "repo-history":
       return /* @__PURE__ */ jsx(RepoHistoryManager, { admin });
+    case "credentials":
+      return /* @__PURE__ */ jsx(CredentialsManager, { admin });
   }
 }
 function AdminLayout({ session, section, setSection, onLogout }) {
@@ -6042,8 +8230,8 @@ function AdminPage() {
   const [section, setSection] = useState("dashboard");
   const [dataReady, setDataReady] = useState(false);
   useEffect(() => {
-    setSession(getAdminSession());
-    loadAllData().then((d) => {
+    const stored = getAdminSession();
+    const dataPromise = loadAllData().then((d) => {
       if (d.players) savePlayers(d.players, {
         silent: true
       });
@@ -6060,7 +8248,26 @@ function AdminPage() {
         silent: true
       });
     }).catch(() => {
-    }).finally(() => setDataReady(true));
+    });
+    if (!stored) {
+      dataPromise.finally(() => setDataReady(true));
+      return;
+    }
+    checkAdminToken({
+      data: {
+        username: stored.username,
+        loginAt: stored.loginAt,
+        token: stored.token
+      }
+    }).then((result) => {
+      if (result.valid) {
+        setSession(stored);
+      } else {
+        setAdminSession(null);
+      }
+    }).catch(() => {
+      setSession(stored);
+    }).finally(() => dataPromise.finally(() => setDataReady(true)));
   }, []);
   function handleLogin(s) {
     setAdminSession(s);

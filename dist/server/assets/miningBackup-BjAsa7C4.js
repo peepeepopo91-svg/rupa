@@ -84,7 +84,9 @@ const DATA_DIR = resolve("data");
 const MAX_RETRIES = 5;
 const MINING_FILES = [
   { local: "mining-users.json", repo: "data/mining-users.json" },
-  { local: "mining-community.json", repo: "data/mining-community.json" }
+  { local: "mining-community.json", repo: "data/mining-community.json" },
+  { local: "shop-purchases.json", repo: "data/shop-purchases.json" },
+  { local: "shop-items.json", repo: "data/shop-items.json" }
 ];
 let debounceMs = 45e3;
 let debounceTimer = null;

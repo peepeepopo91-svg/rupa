@@ -1,4 +1,4 @@
-import { c as createSsrRpc } from "./router-Drx0aV7R.js";
+import { c as createSsrRpc } from "./router-C0zKgy4X.js";
 import { z } from "zod";
 import { c as createServerFn } from "../server.js";
 createServerFn({

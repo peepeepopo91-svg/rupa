@@ -1,8 +1,8 @@
 import { jsxs, jsx } from "react/jsx-runtime";
-import { N as Navbar, F as Footer } from "./Footer-CVsQY5Et.js";
+import { N as Navbar, F as Footer } from "./Footer-DZhz_r1K.js";
 import { useRef, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { p as players } from "./router-Drx0aV7R.js";
+import { p as players } from "./router-C0zKgy4X.js";
 import { e as computeRankings } from "./tiers-BAwtsToj.js";
 import "./contentStore-BHVkzjvQ.js";
 import "./syncStore-C_ozCmAO.js";

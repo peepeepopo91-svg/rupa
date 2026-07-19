@@ -1,13 +1,14 @@
 import { jsx, jsxs, Fragment } from "react/jsx-runtime";
-import { N as Navbar, F as Footer } from "./Footer-CVsQY5Et.js";
+import { N as Navbar, F as Footer } from "./Footer-DZhz_r1K.js";
 import { useState, useRef, useCallback, useEffect } from "react";
-import { u as useMining, M as MiningProvider, a as MiningToast } from "./MiningToast-Celn-pZ8.js";
+import { u as useMining, M as MiningProvider } from "./MiningContext-BYAE3Bcu.js";
 import { R as RIG_TIERS, M as MINING_CONSTANTS } from "./miningStore-BH0mJpub.js";
-import { g as getLeaderboard } from "./miningServer-CngrlAXe.js";
+import { M as MiningToast } from "./MiningToast-rzQ8yn60.js";
+import { g as getLeaderboard } from "./miningServer-C63Kwilz.js";
 import "@tanstack/react-router";
 import "./contentStore-BHVkzjvQ.js";
 import "./syncStore-C_ozCmAO.js";
-import "./router-Drx0aV7R.js";
+import "./router-C0zKgy4X.js";
 import "../server.js";
 import "node:async_hooks";
 import "h3-v2";
@@ -528,6 +529,12 @@ function RigShop() {
     }) })
   ] }) });
 }
+function formatCompact(n) {
+  if (n >= 1e9) return `${+(n / 1e9).toPrecision(3)}B`;
+  if (n >= 1e6) return `${+(n / 1e6).toPrecision(3)}M`;
+  if (n >= 1e3) return `${+(n / 1e3).toPrecision(3)}K`;
+  return String(Math.floor(n));
+}
 const MEDAL = {
   1: { emoji: "🥇", color: "text-yellow-400", bg: "bg-yellow-500/8", border: "border-yellow-500/20" },
   2: { emoji: "🥈", color: "text-gray-300", bg: "bg-gray-500/8", border: "border-gray-500/20" },
@@ -694,11 +701,11 @@ function MiningLeaderboard({ currentUsername }) {
                 ] })
               ] }),
               /* @__PURE__ */ jsxs("div", { className: "text-right", children: [
-                /* @__PURE__ */ jsx("span", { className: `text-sm font-bold tabular-nums ${isMe ? "text-[#00BFFF]" : "text-white"}`, children: entry.balance.toLocaleString() }),
+                /* @__PURE__ */ jsx("span", { className: `text-sm font-bold tabular-nums ${isMe ? "text-[#00BFFF]" : "text-white"}`, children: formatCompact(entry.balance) }),
                 /* @__PURE__ */ jsx("span", { className: "text-gray-600 text-[10px] ml-1", children: "BC" })
               ] }),
               /* @__PURE__ */ jsxs("div", { className: "text-right hidden sm:block", children: [
-                /* @__PURE__ */ jsx("span", { className: "text-sm font-semibold tabular-nums text-purple-300", children: Math.floor(entry.gems).toLocaleString() }),
+                /* @__PURE__ */ jsx("span", { className: "text-sm font-semibold tabular-nums text-purple-300", children: formatCompact(Math.floor(entry.gems)) }),
                 /* @__PURE__ */ jsx("span", { className: "text-gray-600 text-[10px] ml-1", children: "💎" })
               ] }),
               /* @__PURE__ */ jsx("div", { className: "text-center hidden md:block", children: /* @__PURE__ */ jsx(TopRigBadge, { entry }) }),

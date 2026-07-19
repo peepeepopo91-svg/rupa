@@ -226,7 +226,8 @@ function Navbar() {
     { to: "/", label: "Home" },
     { to: "/rankings", label: "Rankings" },
     { to: "/mining", label: "Mining", badge: "⛏️" },
-    { to: "/exchange", label: "Exchange", badge: "◈" }
+    { to: "/exchange", label: "Exchange", badge: "◈" },
+    { to: "/shop", label: "Shop", badge: "🛒" }
   ];
   const isActive = (to) => location.pathname === to;
   return /* @__PURE__ */ jsxs("header", { className: "fixed top-0 left-0 right-0 z-50 flex flex-col w-full", children: [

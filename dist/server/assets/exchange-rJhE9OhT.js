@@ -1,12 +1,13 @@
 import { jsxs, jsx } from "react/jsx-runtime";
-import { N as Navbar, F as Footer } from "./Footer-CVsQY5Et.js";
+import { N as Navbar, F as Footer } from "./Footer-DZhz_r1K.js";
 import { useState, useMemo } from "react";
-import { u as useMining, M as MiningProvider, a as MiningToast } from "./MiningToast-Celn-pZ8.js";
+import { u as useMining, M as MiningProvider } from "./MiningContext-BYAE3Bcu.js";
 import { g as getRateHistory, E as EXCHANGE_CONSTANTS } from "./miningStore-BH0mJpub.js";
+import { M as MiningToast } from "./MiningToast-rzQ8yn60.js";
 import "@tanstack/react-router";
 import "./contentStore-BHVkzjvQ.js";
 import "./syncStore-C_ozCmAO.js";
-import "./router-Drx0aV7R.js";
+import "./router-C0zKgy4X.js";
 import "../server.js";
 import "node:async_hooks";
 import "h3-v2";
@@ -17,7 +18,7 @@ import "@tanstack/router-core/ssr/client";
 import "@tanstack/router-core/ssr/server";
 import "@tanstack/react-router/ssr/server";
 import "zod";
-import "./miningServer-CngrlAXe.js";
+import "./miningServer-C63Kwilz.js";
 function Sparkline({ rates }) {
   const min = Math.min(...rates);
   const max = Math.max(...rates);

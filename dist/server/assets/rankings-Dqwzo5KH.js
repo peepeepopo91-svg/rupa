@@ -1,11 +1,11 @@
 import { jsx, jsxs, Fragment } from "react/jsx-runtime";
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { N as Navbar, F as Footer } from "./Footer-CVsQY5Et.js";
+import { N as Navbar, F as Footer } from "./Footer-DZhz_r1K.js";
 import { g as getPlayerTotalPoints, a as getAverageTier, b as getAveragePoints, c as getHighestTier, d as getLowestTier, t as tierColors, e as computeRankings, f as tierSortValue, T as TIER_ORDER, h as TIER_POINTS } from "./tiers-BAwtsToj.js";
 import { g as gamemodes } from "./gamemodes-jMLNKT3S.js";
 import { createPortal } from "react-dom";
 import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
-import { R as Route } from "./router-Drx0aV7R.js";
+import { R as Route } from "./router-C0zKgy4X.js";
 import "@tanstack/react-router";
 import "./contentStore-BHVkzjvQ.js";
 import "./syncStore-C_ozCmAO.js";
