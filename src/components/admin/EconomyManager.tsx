@@ -734,7 +734,7 @@ export function EconomyManager({ admin }: Props) {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/8">
-                    {['Rig', 'Hashrate', 'Cost', 'Lifespan', 'Repair (full)', 'Max Sell', 'Blocks to ROI', 'BC/day (avg)'].map(h => (
+                    {['Rig', 'Hashrate', 'Cost', 'Lifespan', 'Repair (full)', 'Max Sell', 'Blocks to ROI', 'BC/day (pool est.)'].map(h => (
                       <th key={h} className="text-left py-3 pr-4 text-gray-500 font-semibold">{h}</th>
                     ))}
                   </tr>
@@ -744,9 +744,12 @@ export function EconomyManager({ admin }: Props) {
                     const lifedays = rig.maxDurability / (rig.lossPerSecond * 86400)
                     const repairCost = Math.ceil(rig.cost * MINING_CONSTANTS.REPAIR_COST_PCT)
                     const maxSell = Math.floor(rig.cost * MINING_CONSTANTS.SELL_MAX_PCT)
-                    const avgBlockEarn = blockReward * finderPct
-                      + blockReward * equalPct
-                      + blockReward * hashratePct
+                    const refPoolHR = RIG_TIERS.reduce((s, t) => s + t.hashrate, 0)
+                    const refN      = RIG_TIERS.length
+                    const rigShare  = rig.hashrate / refPoolHR
+                    const avgBlockEarn = blockReward * finderPct  * rigShare
+                                      + blockReward * equalPct   / refN
+                                      + blockReward * hashratePct * rigShare
                     const dailyEarn = avgBlockEarn * blocksPerDay
                     const blocksROI = Math.ceil(rig.cost / (avgBlockEarn || 1))
                     return (
@@ -797,10 +800,13 @@ export function EconomyManager({ admin }: Props) {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {RIG_TIERS.map(rig => {
               const lifedays = rig.maxDurability / (rig.lossPerSecond * 86400)
-              const avgBlockEarn = blockReward * finderPct
-                + blockReward * equalPct
-                + blockReward * hashratePct
-              const daysROI = (rig.cost / (avgBlockEarn * blocksPerDay)) || 0
+              const refPoolHR2 = RIG_TIERS.reduce((s, t) => s + t.hashrate, 0)
+              const refN2      = RIG_TIERS.length
+              const rigShare2  = rig.hashrate / refPoolHR2
+              const avgBlockEarn2 = blockReward * finderPct  * rigShare2
+                                  + blockReward * equalPct   / refN2
+                                  + blockReward * hashratePct * rigShare2
+              const daysROI = (rig.cost / (avgBlockEarn2 * blocksPerDay)) || 0
               return (
                 <div key={rig.id} className={`glass rounded-xl p-4 border ${rig.borderColor} text-center`}
                   style={{ boxShadow: `0 0 20px ${rig.glowColor}20` }}>
@@ -875,7 +881,7 @@ export function EconomyManager({ admin }: Props) {
                   {[
                     { label: 'Total Hashrate', value: `${userHashrate} GH/s`, color: 'text-[#00BFFF]', sub: `${simRigCount} × ${simTier.hashrate} GH/s` },
                     { label: 'Avg Per Block', value: `${fmt(avgPerBlock, 1)} BC`, color: 'text-purple-400', sub: 'expected per block' },
-                    { label: 'Avg Per Block', value: `${fmt(avgPerBlock, 1)} BC`, color: 'text-amber-400', sub: 'expected average' },
+                    { label: 'Total Earnings', value: `${fmt(simEarnings, 0)} BC`, color: 'text-amber-400', sub: `over ${simBlocks} blocks` },
                     { label: 'Time Elapsed', value: fmtMs(simBlocks * blockIntervalMs), color: 'text-green-400', sub: `${simDays.toFixed(1)} days` },
                   ].map(s => (
                     <div key={s.label} className="p-4 rounded-xl bg-white/3 border border-white/5">

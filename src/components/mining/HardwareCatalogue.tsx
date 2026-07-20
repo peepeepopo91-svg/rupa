@@ -17,9 +17,20 @@ export function HardwareCatalogue() {
   const equalPct        = get('EQUAL_SPLIT_PCT',    MINING_CONSTANTS.EQUAL_SPLIT_PCT)
   const hashratePct     = get('HASHRATE_SHARE_PCT', MINING_CONSTANTS.HASHRATE_SHARE_PCT)
 
-  // Solo projection: user is the only active miner (best-case earnings)
-  const avgBlockEarn = blockReward * finderPct + blockReward * equalPct + blockReward * hashratePct
   const blocksPerDay = (24 * 60 * 60 * 1000) / blockIntervalMs
+
+  // Reference-pool projection: estimate earnings for each rig tier competing
+  // against one of every tier (163 GH/s total, 5 miners). This produces
+  // realistically differentiated BC/day values scaled to each rig's hashrate.
+  const refPoolHashrate = RIG_TIERS.reduce((s, t) => s + t.hashrate, 0) // 163 GH/s
+  const refMinerCount   = RIG_TIERS.length // 5
+
+  function rigAvgBlockEarn(hashrate: number): number {
+    const share = hashrate / refPoolHashrate
+    return blockReward * finderPct  * share          // finder: prob ∝ hashrate
+         + blockReward * equalPct   / refMinerCount  // equal: split evenly
+         + blockReward * hashratePct * share          // hashrate share: ∝ hashrate
+  }
 
   return (
     <div className="space-y-5">
@@ -35,7 +46,7 @@ export function HardwareCatalogue() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-white/8">
-                {['Rig', 'Hashrate', 'Cost', 'Lifespan', 'Repair', 'Max Sell', 'Blocks to ROI', 'BC/day'].map(h => (
+                {['Rig', 'Hashrate', 'Cost', 'Lifespan', 'Repair', 'Max Sell', 'Blocks to ROI', 'BC/day (pool est.)'].map(h => (
                   <th key={h} className="text-left py-3 pr-4 text-gray-500 font-semibold whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -45,8 +56,9 @@ export function HardwareCatalogue() {
                 const lifedays   = rig.maxDurability / (rig.lossPerSecond * 86400)
                 const repairCost = Math.ceil(rig.cost * MINING_CONSTANTS.REPAIR_COST_PCT)
                 const maxSell    = Math.floor(rig.cost * MINING_CONSTANTS.SELL_MAX_PCT)
-                const dailyEarn  = avgBlockEarn * blocksPerDay
-                const blocksROI  = Math.ceil(rig.cost / (avgBlockEarn || 1))
+                const avgEarn    = rigAvgBlockEarn(rig.hashrate)
+                const dailyEarn  = avgEarn * blocksPerDay
+                const blocksROI  = Math.ceil(rig.cost / (avgEarn || 1))
                 return (
                   <tr key={rig.id} className="border-b border-white/5 hover:bg-white/2 transition-colors">
                     <td className="py-3 pr-4">
@@ -95,7 +107,7 @@ export function HardwareCatalogue() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {RIG_TIERS.map(rig => {
           const lifedays = rig.maxDurability / (rig.lossPerSecond * 86400)
-          const daysROI  = (rig.cost / (avgBlockEarn * blocksPerDay)) || 0
+          const daysROI  = (rig.cost / (rigAvgBlockEarn(rig.hashrate) * blocksPerDay)) || 0
           return (
             <div key={rig.id}
               className={`glass rounded-xl p-4 border ${rig.borderColor} text-center`}
