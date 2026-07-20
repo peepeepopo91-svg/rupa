@@ -11,7 +11,9 @@ import { TournamentStats }         from '../components/tournament/TournamentStat
 import { TournamentArchive }       from '../components/tournament/TournamentArchive'
 import { TournamentAnnouncements } from '../components/tournament/TournamentAnnouncements'
 import { LiveTournament }          from '../components/tournament/LiveTournament'
+import { TeamRegistration }        from '../components/tournament/TeamRegistration'
 import { Navbar }                  from '../components/Navbar'
+import { STATUS_COLOR, STATUS_LABEL } from '../data/tournament'
 
 export const Route = createFileRoute('/tournament')({
   component: TournamentPage,
@@ -32,10 +34,11 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ]
 
 function TournamentPage() {
-  const [tab, setTab]             = useState<Tab>('home')
-  const [data, setData]           = useState<TournamentsFile | null>(null)
-  const [loading, setLoading]     = useState(true)
-  const esRef                     = useRef<EventSource | null>(null)
+  const [tab, setTab]         = useState<Tab>('home')
+  const [data, setData]       = useState<TournamentsFile | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [showReg, setShowReg] = useState(false)
+  const esRef                 = useRef<EventSource | null>(null)
 
   async function load() {
     try {
@@ -59,14 +62,12 @@ function TournamentPage() {
       : null
 
   const archives = data?.tournaments.filter(t => t.status === 'archived' || t.status === 'completed') ?? []
+  const canRegister = active?.status === 'registration_open'
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0B0F17] flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="text-4xl animate-spin">⟳</div>
-          <p className="text-gray-500 text-sm">Loading tournament data…</p>
-        </div>
+        <span className="w-8 h-8 border-2 border-white/10 border-t-[#00BFFF] rounded-full animate-spin" />
       </div>
     )
   }
@@ -75,21 +76,60 @@ function TournamentPage() {
     <div className="min-h-screen bg-[#0B0F17] text-white">
       <Navbar />
 
-      {/* Page hero */}
-      <div className="pt-28 pb-8 px-4 text-center relative overflow-hidden">
+      {/* Page hero — matches rankings/mining style */}
+      <section className="relative pt-64 pb-10 px-4 overflow-hidden">
+        {/* Ambient glow */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#00BFFF]/5 to-transparent pointer-events-none" />
-        <div className="relative max-w-5xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00BFFF]/10 border border-[#00BFFF]/20 text-[#00BFFF] text-xs font-semibold tracking-widest uppercase mb-4">
-            🏆 Tournament Hub
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-64 bg-[#00BFFF]/10 blur-[110px] pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto text-center relative">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#00BFFF]/20 bg-[#00BFFF]/5 text-[#00BFFF] text-xs font-semibold mb-6 tracking-wide uppercase">
+            {active?.status === 'live'
+              ? <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+              : <span className="w-1.5 h-1.5 rounded-full bg-[#00BFFF] animate-pulse" />
+            }
+            {active ? `${STATUS_LABEL[active.status]} · ${active.name}` : 'Tournament Hub'}
           </div>
-          <h1 className="font-['Space_Grotesk'] font-black text-4xl md:text-6xl text-white mb-3">
-            Blue Network <span className="text-[#00BFFF]">Tournaments</span>
+
+          <h1 className="font-['Space_Grotesk'] font-black text-4xl sm:text-5xl text-white mb-4">
+            Blue Network <span className="text-gradient">Tournaments</span>
           </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Professional PvP tournaments — register your team, track live brackets, and claim glory.
+          <p className="text-gray-500 max-w-md mx-auto text-sm">
+            Register your team, track live brackets, and compete for glory on the Blue Network.
           </p>
+
+          {/* Active tournament status strip */}
+          {active && (
+            <div className="mt-6 inline-flex items-center gap-3 flex-wrap justify-center">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-wider ${STATUS_COLOR[active.status]}`}>
+                {active.status === 'live' && <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />}
+                {STATUS_LABEL[active.status]}
+              </span>
+              {active.prizePool && (
+                <span className="text-gray-500 text-xs">🏆 Prize Pool: <span className="text-white font-semibold">{active.prizePool}</span></span>
+              )}
+              {active.gamemode && (
+                <span className="text-gray-500 text-xs">🎮 <span className="text-white font-semibold">{active.gamemode}</span></span>
+              )}
+            </div>
+          )}
+
+          {/* Registration CTA — always visible when open */}
+          {canRegister && (
+            <div className="mt-8">
+              <button
+                onClick={() => setShowReg(true)}
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#00BFFF] hover:bg-[#00BFFF]/85 text-black font-bold text-sm transition-all shadow-lg shadow-[#00BFFF]/25 hover:scale-105 hover:shadow-[#00BFFF]/40"
+              >
+                ⚔️ Register Your Team
+                <span className="opacity-70">→</span>
+              </button>
+              <p className="text-gray-600 text-xs mt-2">Registrations are open — spots are limited</p>
+            </div>
+          )}
         </div>
-      </div>
+      </section>
 
       {/* Tab bar */}
       <div className="sticky top-16 z-30 bg-[#0B0F17]/95 backdrop-blur-md border-b border-white/5">
@@ -118,7 +158,7 @@ function TournamentPage() {
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {tab === 'home'          && <TournamentHome          active={active} />}
+        {tab === 'home'          && <TournamentHome          active={active} onRegisterClick={canRegister ? () => setShowReg(true) : undefined} />}
         {tab === 'bracket'       && <TournamentBracket       tournament={active} />}
         {tab === 'schedule'      && <TournamentSchedule      tournament={active} />}
         {tab === 'live'          && <LiveTournament          tournament={active} />}
@@ -133,6 +173,11 @@ function TournamentPage() {
       <footer className="border-t border-white/5 py-8 text-center text-gray-600 text-sm">
         Blue Tiers · Tournament Hub · All results are final
       </footer>
+
+      {/* Registration modal — lives here so any tab can open it */}
+      {showReg && active && (
+        <TeamRegistration tournament={active} onClose={() => setShowReg(false)} />
+      )}
     </div>
   )
 }
