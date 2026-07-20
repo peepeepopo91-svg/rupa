@@ -253,125 +253,1161 @@
   "alexpvper": {
     "username": "AlexPvper",
     "createdAt": 1784285991495,
-    "balance": 24011,
-    "gems": 5145,
+    "balance": 7718,
+    "gems": 138630,
     "rigs": [
       {
         "id": "npc_rig_npc_default_3_0",
         "tierId": "pro",
         "name": "AlexPvper Rig #1",
-        "durability": 8000,
+        "durability": 9054,
         "status": "mining",
-        "miningSince": 1784541674982,
+        "miningSince": 1784538412537,
         "purchasedAt": 1784285991495
       },
       {
         "id": "npc_rig_npc_default_3_1",
         "tierId": "pro",
         "name": "AlexPvper Rig #2",
-        "durability": 8000,
+        "durability": 9243,
         "status": "mining",
-        "miningSince": 1784541674982,
+        "miningSince": 1784538412537,
         "purchasedAt": 1784285991495
       }
     ],
-    "rewardHistory": [],
-    "lastCheckedAt": 1784545274982,
+    "rewardHistory": [
+      {
+        "blockNumber": 23,
+        "solvedAt": 1784365612537,
+        "amount": 125.77,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 24,
+        "solvedAt": 1784369212537,
+        "amount": 126.2,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 25,
+        "solvedAt": 1784372812537,
+        "amount": 126.63,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 26,
+        "solvedAt": 1784376412537,
+        "amount": 127.06,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 27,
+        "solvedAt": 1784380012537,
+        "amount": 127.49,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 28,
+        "solvedAt": 1784383612537,
+        "amount": 127.92,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 29,
+        "solvedAt": 1784387212537,
+        "amount": 128.35,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 30,
+        "solvedAt": 1784390812537,
+        "amount": 128.78,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 31,
+        "solvedAt": 1784394412537,
+        "amount": 129.2,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 32,
+        "solvedAt": 1784398012537,
+        "amount": 129.63,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 33,
+        "solvedAt": 1784401612537,
+        "amount": 130.06,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 34,
+        "solvedAt": 1784405212537,
+        "amount": 130.49,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 35,
+        "solvedAt": 1784408812537,
+        "amount": 130.92,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 36,
+        "solvedAt": 1784412412537,
+        "amount": 131.35,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 37,
+        "solvedAt": 1784416012537,
+        "amount": 131.78,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 38,
+        "solvedAt": 1784419612537,
+        "amount": 132.21,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 39,
+        "solvedAt": 1784423212537,
+        "amount": 132.63,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 40,
+        "solvedAt": 1784426812537,
+        "amount": 133.06,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 41,
+        "solvedAt": 1784430412537,
+        "amount": 133.49,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 42,
+        "solvedAt": 1784434012537,
+        "amount": 133.92,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 43,
+        "solvedAt": 1784437612537,
+        "amount": 134.35,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 44,
+        "solvedAt": 1784441212537,
+        "amount": 134.78,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 45,
+        "solvedAt": 1784444812537,
+        "amount": 135.21,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 46,
+        "solvedAt": 1784448412537,
+        "amount": 135.64,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 47,
+        "solvedAt": 1784452012537,
+        "amount": 136.06,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 48,
+        "solvedAt": 1784455612537,
+        "amount": 136.49,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 49,
+        "solvedAt": 1784459212537,
+        "amount": 136.92,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 50,
+        "solvedAt": 1784462812537,
+        "amount": 137.35,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 51,
+        "solvedAt": 1784466412537,
+        "amount": 137.78,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 52,
+        "solvedAt": 1784470012537,
+        "amount": 138.21,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 53,
+        "solvedAt": 1784473612537,
+        "amount": 138.64,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 54,
+        "solvedAt": 1784477212537,
+        "amount": 139.07,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 55,
+        "solvedAt": 1784480812537,
+        "amount": 139.49,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 56,
+        "solvedAt": 1784484412537,
+        "amount": 139.92,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 57,
+        "solvedAt": 1784488012537,
+        "amount": 140.35,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 58,
+        "solvedAt": 1784491612537,
+        "amount": 140.78,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 59,
+        "solvedAt": 1784495212537,
+        "amount": 141.21,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 60,
+        "solvedAt": 1784498812537,
+        "amount": 141.64,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 61,
+        "solvedAt": 1784502412537,
+        "amount": 142.07,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 62,
+        "solvedAt": 1784506012537,
+        "amount": 142.5,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 63,
+        "solvedAt": 1784509612537,
+        "amount": 142.92,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 64,
+        "solvedAt": 1784513212537,
+        "amount": 143.35,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 65,
+        "solvedAt": 1784516812537,
+        "amount": 143.78,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 66,
+        "solvedAt": 1784520412537,
+        "amount": 144.21,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 67,
+        "solvedAt": 1784524012537,
+        "amount": 144.64,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 68,
+        "solvedAt": 1784527612537,
+        "amount": 145.07,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 69,
+        "solvedAt": 1784531212537,
+        "amount": 145.5,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 70,
+        "solvedAt": 1784534812537,
+        "amount": 145.93,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 71,
+        "solvedAt": 1784538412537,
+        "amount": 146.35,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 72,
+        "solvedAt": 1784542012537,
+        "amount": 146.78,
+        "type": "finder"
+      }
+    ],
+    "lastCheckedAt": 1784545612537,
     "exchangeUsedToday": 0,
-    "exchangeResetAt": 1784631674982,
-    "miningExpiresAt": null,
-    "miningRenewedAt": null
+    "exchangeResetAt": 1784632012537,
+    "miningExpiresAt": 1784588812537,
+    "miningRenewedAt": 1784542012537
   },
   "netmaster_99": {
     "username": "NetMaster_99",
     "createdAt": 1784458791495,
-    "balance": 13709,
-    "gems": 2937,
+    "balance": 1469,
+    "gems": 26357,
     "rigs": [
       {
         "id": "npc_rig_npc_default_1_0",
         "tierId": "pro",
         "name": "NetMaster_99 Rig #1",
-        "durability": 8000,
+        "durability": 8729,
         "status": "mining",
-        "miningSince": 1784541677627,
+        "miningSince": 1784538414242,
         "purchasedAt": 1784458791495
       }
     ],
-    "rewardHistory": [],
-    "lastCheckedAt": 1784545277627,
+    "rewardHistory": [
+      {
+        "blockNumber": 1,
+        "solvedAt": 1784459214242,
+        "amount": 71.81,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 2,
+        "solvedAt": 1784462814242,
+        "amount": 72.06,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 3,
+        "solvedAt": 1784466414242,
+        "amount": 72.3,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 4,
+        "solvedAt": 1784470014242,
+        "amount": 72.55,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 5,
+        "solvedAt": 1784473614242,
+        "amount": 72.79,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 6,
+        "solvedAt": 1784477214242,
+        "amount": 73.04,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 7,
+        "solvedAt": 1784480814242,
+        "amount": 73.28,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 8,
+        "solvedAt": 1784484414242,
+        "amount": 73.53,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 9,
+        "solvedAt": 1784488014242,
+        "amount": 73.77,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 10,
+        "solvedAt": 1784491614242,
+        "amount": 74.01,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 11,
+        "solvedAt": 1784495214242,
+        "amount": 74.26,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 12,
+        "solvedAt": 1784498814242,
+        "amount": 74.5,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 13,
+        "solvedAt": 1784502414242,
+        "amount": 74.75,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 14,
+        "solvedAt": 1784506014242,
+        "amount": 74.99,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 15,
+        "solvedAt": 1784509614242,
+        "amount": 75.24,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 16,
+        "solvedAt": 1784513214242,
+        "amount": 75.48,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 17,
+        "solvedAt": 1784516814242,
+        "amount": 75.73,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 18,
+        "solvedAt": 1784520414242,
+        "amount": 75.97,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 19,
+        "solvedAt": 1784524014242,
+        "amount": 76.22,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 20,
+        "solvedAt": 1784527614242,
+        "amount": 76.46,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 21,
+        "solvedAt": 1784531214242,
+        "amount": 76.71,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 22,
+        "solvedAt": 1784534814242,
+        "amount": 76.95,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 23,
+        "solvedAt": 1784538414242,
+        "amount": 77.2,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 24,
+        "solvedAt": 1784542014242,
+        "amount": 77.44,
+        "type": "hashrate_share"
+      }
+    ],
+    "lastCheckedAt": 1784545614242,
     "exchangeUsedToday": 0,
-    "exchangeResetAt": 1784631677627,
-    "miningExpiresAt": null,
-    "miningRenewedAt": null
+    "exchangeResetAt": 1784632014242,
+    "miningExpiresAt": 1784588814242,
+    "miningRenewedAt": 1784542014242
   },
   "qubitx": {
     "username": "QubitX",
     "createdAt": 1784199591495,
-    "balance": 10539,
-    "gems": 2258,
+    "balance": 4517,
+    "gems": 81119,
     "rigs": [
       {
         "id": "npc_rig_npc_default_4_0",
         "tierId": "pro",
         "name": "QubitX Rig #1",
-        "durability": 8000,
+        "durability": 8497,
         "status": "mining",
-        "miningSince": 1784541680877,
+        "miningSince": 1784538417915,
         "purchasedAt": 1784199591495
       }
     ],
-    "rewardHistory": [],
-    "lastCheckedAt": 1784545280877,
-    "exchangeUsedToday": 0,
-    "exchangeResetAt": 1784631680877,
-    "miningExpiresAt": null,
-    "miningRenewedAt": null
+    "rewardHistory": [
+      {
+        "blockNumber": 47,
+        "solvedAt": 1784365617915,
+        "amount": 55.21,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 48,
+        "solvedAt": 1784369217915,
+        "amount": 55.4,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 49,
+        "solvedAt": 1784372817915,
+        "amount": 55.58,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 50,
+        "solvedAt": 1784376417915,
+        "amount": 55.77,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 51,
+        "solvedAt": 1784380017915,
+        "amount": 55.96,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 52,
+        "solvedAt": 1784383617915,
+        "amount": 56.15,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 53,
+        "solvedAt": 1784387217915,
+        "amount": 56.34,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 54,
+        "solvedAt": 1784390817915,
+        "amount": 56.53,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 55,
+        "solvedAt": 1784394417915,
+        "amount": 56.71,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 56,
+        "solvedAt": 1784398017915,
+        "amount": 56.9,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 57,
+        "solvedAt": 1784401617915,
+        "amount": 57.09,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 58,
+        "solvedAt": 1784405217915,
+        "amount": 57.28,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 59,
+        "solvedAt": 1784408817915,
+        "amount": 57.47,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 60,
+        "solvedAt": 1784412417915,
+        "amount": 57.65,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 61,
+        "solvedAt": 1784416017915,
+        "amount": 57.84,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 62,
+        "solvedAt": 1784419617915,
+        "amount": 58.03,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 63,
+        "solvedAt": 1784423217915,
+        "amount": 58.22,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 64,
+        "solvedAt": 1784426817915,
+        "amount": 58.41,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 65,
+        "solvedAt": 1784430417915,
+        "amount": 58.6,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 66,
+        "solvedAt": 1784434017915,
+        "amount": 58.78,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 67,
+        "solvedAt": 1784437617915,
+        "amount": 58.97,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 68,
+        "solvedAt": 1784441217915,
+        "amount": 59.16,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 69,
+        "solvedAt": 1784444817915,
+        "amount": 59.35,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 70,
+        "solvedAt": 1784448417915,
+        "amount": 59.54,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 71,
+        "solvedAt": 1784452017915,
+        "amount": 59.72,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 72,
+        "solvedAt": 1784455617915,
+        "amount": 59.91,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 73,
+        "solvedAt": 1784459217915,
+        "amount": 60.1,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 74,
+        "solvedAt": 1784462817915,
+        "amount": 60.29,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 75,
+        "solvedAt": 1784466417915,
+        "amount": 60.48,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 76,
+        "solvedAt": 1784470017915,
+        "amount": 60.67,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 77,
+        "solvedAt": 1784473617915,
+        "amount": 60.85,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 78,
+        "solvedAt": 1784477217915,
+        "amount": 61.04,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 79,
+        "solvedAt": 1784480817915,
+        "amount": 61.23,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 80,
+        "solvedAt": 1784484417915,
+        "amount": 61.42,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 81,
+        "solvedAt": 1784488017915,
+        "amount": 61.61,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 82,
+        "solvedAt": 1784491617915,
+        "amount": 61.79,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 83,
+        "solvedAt": 1784495217915,
+        "amount": 61.98,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 84,
+        "solvedAt": 1784498817915,
+        "amount": 62.17,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 85,
+        "solvedAt": 1784502417915,
+        "amount": 62.36,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 86,
+        "solvedAt": 1784506017915,
+        "amount": 62.55,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 87,
+        "solvedAt": 1784509617915,
+        "amount": 62.74,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 88,
+        "solvedAt": 1784513217915,
+        "amount": 62.92,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 89,
+        "solvedAt": 1784516817915,
+        "amount": 63.11,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 90,
+        "solvedAt": 1784520417915,
+        "amount": 63.3,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 91,
+        "solvedAt": 1784524017915,
+        "amount": 63.49,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 92,
+        "solvedAt": 1784527617915,
+        "amount": 63.68,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 93,
+        "solvedAt": 1784531217915,
+        "amount": 63.87,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 94,
+        "solvedAt": 1784534817915,
+        "amount": 64.05,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 95,
+        "solvedAt": 1784538417915,
+        "amount": 64.24,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 96,
+        "solvedAt": 1784542017915,
+        "amount": 64.43,
+        "type": "finder"
+      }
+    ],
+    "lastCheckedAt": 1784545617915,
+    "exchangeUsedToday": 1,
+    "exchangeResetAt": 1784632017915,
+    "miningExpiresAt": 1784588817915,
+    "miningRenewedAt": 1784542017915
   },
   "blue_alpha": {
     "username": "Blue_Alpha",
     "createdAt": 1784545191495,
-    "balance": 8162,
-    "gems": 1749,
+    "balance": 0,
+    "gems": 0,
     "rigs": [
       {
         "id": "npc_rig_npc_default_0_0",
         "tierId": "pro",
         "name": "Blue_Alpha Rig #1",
-        "durability": 8000,
+        "durability": 9124,
         "status": "mining",
-        "miningSince": 1784541682618,
+        "miningSince": 1784538416467,
         "purchasedAt": 1784545191495
       }
     ],
     "rewardHistory": [],
-    "lastCheckedAt": 1784545282618,
-    "exchangeUsedToday": 0,
-    "exchangeResetAt": 1784631682618,
-    "miningExpiresAt": null,
-    "miningRenewedAt": null
+    "lastCheckedAt": 1784545616467,
+    "exchangeUsedToday": 1,
+    "exchangeResetAt": 1784632016467,
+    "miningExpiresAt": 1784588816467,
+    "miningRenewedAt": 1784542016467
   },
   "pixelhawk": {
     "username": "PixelHawk",
     "createdAt": 1784372391495,
-    "balance": 6577,
-    "gems": 1409,
+    "balance": 1410,
+    "gems": 25279,
     "rigs": [
       {
         "id": "npc_rig_npc_default_2_0",
         "tierId": "pro",
         "name": "PixelHawk Rig #1",
-        "durability": 8000,
+        "durability": 9341,
         "status": "mining",
-        "miningSince": 1784541691155,
+        "miningSince": 1784538421419,
         "purchasedAt": 1784372391495
       }
     ],
-    "rewardHistory": [],
-    "lastCheckedAt": 1784545291155,
-    "exchangeUsedToday": 0,
-    "exchangeResetAt": 1784631691155,
-    "miningExpiresAt": null,
-    "miningRenewedAt": null
+    "rewardHistory": [
+      {
+        "blockNumber": 1,
+        "solvedAt": 1784372821419,
+        "amount": 34.45,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 2,
+        "solvedAt": 1784376421419,
+        "amount": 34.57,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 3,
+        "solvedAt": 1784380021419,
+        "amount": 34.69,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 4,
+        "solvedAt": 1784383621419,
+        "amount": 34.81,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 5,
+        "solvedAt": 1784387221419,
+        "amount": 34.92,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 6,
+        "solvedAt": 1784390821419,
+        "amount": 35.04,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 7,
+        "solvedAt": 1784394421419,
+        "amount": 35.16,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 8,
+        "solvedAt": 1784398021419,
+        "amount": 35.28,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 9,
+        "solvedAt": 1784401621419,
+        "amount": 35.39,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 10,
+        "solvedAt": 1784405221419,
+        "amount": 35.51,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 11,
+        "solvedAt": 1784408821419,
+        "amount": 35.63,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 12,
+        "solvedAt": 1784412421419,
+        "amount": 35.74,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 13,
+        "solvedAt": 1784416021419,
+        "amount": 35.86,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 14,
+        "solvedAt": 1784419621419,
+        "amount": 35.98,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 15,
+        "solvedAt": 1784423221419,
+        "amount": 36.1,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 16,
+        "solvedAt": 1784426821419,
+        "amount": 36.21,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 17,
+        "solvedAt": 1784430421419,
+        "amount": 36.33,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 18,
+        "solvedAt": 1784434021419,
+        "amount": 36.45,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 19,
+        "solvedAt": 1784437621419,
+        "amount": 36.57,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 20,
+        "solvedAt": 1784441221419,
+        "amount": 36.68,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 21,
+        "solvedAt": 1784444821419,
+        "amount": 36.8,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 22,
+        "solvedAt": 1784448421419,
+        "amount": 36.92,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 23,
+        "solvedAt": 1784452021419,
+        "amount": 37.04,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 24,
+        "solvedAt": 1784455621419,
+        "amount": 37.15,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 25,
+        "solvedAt": 1784459221419,
+        "amount": 37.27,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 26,
+        "solvedAt": 1784462821419,
+        "amount": 37.39,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 27,
+        "solvedAt": 1784466421419,
+        "amount": 37.51,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 28,
+        "solvedAt": 1784470021419,
+        "amount": 37.62,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 29,
+        "solvedAt": 1784473621419,
+        "amount": 37.74,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 30,
+        "solvedAt": 1784477221419,
+        "amount": 37.86,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 31,
+        "solvedAt": 1784480821419,
+        "amount": 37.98,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 32,
+        "solvedAt": 1784484421419,
+        "amount": 38.09,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 33,
+        "solvedAt": 1784488021419,
+        "amount": 38.21,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 34,
+        "solvedAt": 1784491621419,
+        "amount": 38.33,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 35,
+        "solvedAt": 1784495221419,
+        "amount": 38.45,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 36,
+        "solvedAt": 1784498821419,
+        "amount": 38.56,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 37,
+        "solvedAt": 1784502421419,
+        "amount": 38.68,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 38,
+        "solvedAt": 1784506021419,
+        "amount": 38.8,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 39,
+        "solvedAt": 1784509621419,
+        "amount": 38.92,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 40,
+        "solvedAt": 1784513221419,
+        "amount": 39.03,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 41,
+        "solvedAt": 1784516821419,
+        "amount": 39.15,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 42,
+        "solvedAt": 1784520421419,
+        "amount": 39.27,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 43,
+        "solvedAt": 1784524021419,
+        "amount": 39.39,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 44,
+        "solvedAt": 1784527621419,
+        "amount": 39.5,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 45,
+        "solvedAt": 1784531221419,
+        "amount": 39.62,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 46,
+        "solvedAt": 1784534821419,
+        "amount": 39.74,
+        "type": "hashrate_share"
+      },
+      {
+        "blockNumber": 47,
+        "solvedAt": 1784538421419,
+        "amount": 39.86,
+        "type": "equal_split"
+      },
+      {
+        "blockNumber": 48,
+        "solvedAt": 1784542021419,
+        "amount": 39.97,
+        "type": "equal_split"
+      }
+    ],
+    "lastCheckedAt": 1784545621419,
+    "exchangeUsedToday": 1,
+    "exchangeResetAt": 1784632021419,
+    "miningExpiresAt": 1784588821419,
+    "miningRenewedAt": 1784542021419
   }
 }
