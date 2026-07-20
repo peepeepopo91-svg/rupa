@@ -63,6 +63,7 @@ const TournamentInputSchema = z.object({
   serverIp:             z.string().max(100).default(''),
   maxTeamSize:          z.number().int().min(1).max(50).default(2),
   minTeamSize:          z.number().int().min(1).max(50).default(2),
+  requireCaptain:       z.boolean().default(true),
   registrationDeadline: z.number().nullable().default(null),
   startDate:            z.number().nullable().default(null),
   prizePool:            z.string().max(200).default(''),
@@ -83,6 +84,7 @@ export const createTournament = createServerFn({ method: 'POST' })
       serverIp:             data.serverIp,
       maxTeamSize:          data.maxTeamSize,
       minTeamSize:          data.minTeamSize,
+      requireCaptain:       data.requireCaptain,
       registrationDeadline: data.registrationDeadline,
       startDate:            data.startDate,
       prizePool:            data.prizePool,
@@ -399,6 +401,47 @@ function buildRoundNames(n: number): string[] {
   }
   return names
 }
+
+// ─── POST: update bracket slot (edit which teams play each other) ─────────────
+
+export const updateBracketSlot = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    tournamentId: z.string().min(1),
+    matchId:      z.string().min(1),
+    team1Id:      z.string().nullable().default(null),
+    team2Id:      z.string().nullable().default(null),
+  }))
+  .handler(async ({ data }): Promise<{ success: boolean; error?: string }> => {
+    const file  = readData()
+    const t     = findTournament(file, data.tournamentId)
+    if (!t) return { success: false, error: 'Tournament not found' }
+    const match = t.matches.find(m => m.id === data.matchId)
+    if (!match) return { success: false, error: 'Match not found' }
+
+    const changed = match.team1Id !== data.team1Id || match.team2Id !== data.team2Id
+    match.team1Id = data.team1Id
+    match.team2Id = data.team2Id
+
+    // Reset result whenever the matchup changes
+    if (changed) {
+      match.score1   = 0
+      match.score2   = 0
+      match.winnerId = null
+      if (match.status === 'bye') match.status = 'scheduled'
+    }
+
+    // Auto-update status
+    if (match.team1Id && match.team2Id && match.status === 'pending') {
+      match.status = 'scheduled'
+    }
+    if ((!match.team1Id || !match.team2Id) && match.status === 'scheduled') {
+      match.status = 'pending'
+    }
+
+    t.updatedAt = Date.now()
+    writeData(file)
+    return { success: true }
+  })
 
 // ─── POST: update match (admin) ───────────────────────────────────────────────
 

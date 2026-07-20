@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { Tournament, Team, Match, Prize, Reward, TournamentsFile, TournamentStatus } from '../../data/tournament'
 import { STATUS_LABEL, MATCH_STATUS_LABEL, DEFAULT_PRIZES, DEFAULT_RULES } from '../../data/tournament'
 import {
   getTournamentData, createTournament, updateTournament, deleteTournament,
   setActiveTournament, archiveTournament, duplicateTournament,
   updateTeamStatus, removeTeam, addTeamManually, bulkUpdateTeamStatus,
-  generateBracket, updateMatch,
+  generateBracket, updateMatch, updateBracketSlot,
   updatePrizes, updateRules,
   addAnnouncement, deleteAnnouncement,
 } from '../../server/tournamentServer'
@@ -1041,21 +1041,32 @@ function TTeams({ active, flash, reload }: { active: Tournament | null; flash: F
   )
 }
 
-// ─── Bracket visualization ────────────────────────────────────────────────────
+// ─── Bracket visualization + editing ─────────────────────────────────────────
 
 function TBracket({ active, flash, reload }: { active: Tournament | null; flash: F; reload: R }) {
-  const [generating, setGenerating] = useState(false)
-  const [type, setType] = useState<'single_elimination' | 'double_elimination'>('single_elimination')
-  const [shuffle, setShuffle] = useState(true)
+  const [generating, setGenerating]   = useState(false)
+  const [type, setType]               = useState<'single_elimination' | 'double_elimination'>('single_elimination')
+  const [shuffle, setShuffle]         = useState(true)
+  const [editMode, setEditMode]       = useState(false)
+  const [editingId, setEditingId]     = useState<string | null>(null)
 
   if (!active) return <NoActiveTournament />
 
   const approvedTeams = active.teams.filter(t => t.status === 'approved')
 
+  // ── Fix match numbering: assign display numbers sequentially, skipping byes ──
+  const displayNums = useMemo(() => {
+    const nonBye = [...active.matches]
+      .filter(m => m.status !== 'bye')
+      .sort((a, b) => a.matchNumber - b.matchNumber)
+    return new Map(nonBye.map((m, i) => [m.id, i + 1]))
+  }, [active.matches])
+
   async function generate() {
     if (approvedTeams.length < 2) return flash('Need at least 2 approved teams', false)
     if (!confirm(`Generate a ${type.replace(/_/g, ' ')} bracket with ${approvedTeams.length} teams? This will reset existing matches.`)) return
     setGenerating(true)
+    setEditMode(false); setEditingId(null)
     try {
       const res = await generateBracket({ data: { tournamentId: active!.id, type, shuffle } })
       if (res.success) { flash('Bracket generated ✓'); reload() }
@@ -1063,9 +1074,16 @@ function TBracket({ active, flash, reload }: { active: Tournament | null; flash:
     } finally { setGenerating(false) }
   }
 
+  async function saveSlot(matchId: string, team1Id: string | null, team2Id: string | null) {
+    const res = await updateBracketSlot({ data: { tournamentId: active!.id, matchId, team1Id, team2Id } })
+    if (res.success) { flash('Matchup updated ✓'); setEditingId(null); reload() }
+    else flash(res.error ?? 'Error updating slot', false)
+  }
+
   return (
     <div className="space-y-6">
-      {/* Generator */}
+
+      {/* Generator panel */}
       <div className="bg-[#0a0e18] border border-white/5 rounded-2xl p-6 space-y-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-lg flex-shrink-0">⚔️</div>
@@ -1096,50 +1114,108 @@ function TBracket({ active, flash, reload }: { active: Tournament | null; flash:
         </div>
       </div>
 
-      {/* Visual bracket */}
+      {/* Bracket display */}
       {active.bracket && active.matches.length > 0 ? (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-white font-bold text-sm">Bracket — {active.bracket.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</p>
-            <p className="text-gray-600 text-xs">{active.bracket.rounds.length} round(s)</p>
+
+          {/* Header row with Edit toggle */}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-white font-bold text-sm">
+                Bracket — {active.bracket.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+              </p>
+              <p className="text-gray-600 text-xs mt-0.5">{active.bracket.rounds.length} round(s)</p>
+            </div>
+            <button
+              onClick={() => { setEditMode(e => !e); setEditingId(null) }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                editMode
+                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                  : 'bg-white/3 border-white/8 text-gray-400 hover:text-white hover:border-white/15'
+              }`}
+            >
+              {editMode ? '✓ Done Editing' : '✏️ Edit Bracket'}
+            </button>
           </div>
+
+          {editMode && (
+            <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl px-4 py-3 text-xs text-amber-300/80">
+              ✏️ <strong>Edit mode active</strong> — click <strong>Edit</strong> on any match card to change which teams face each other. Scores and results reset when teams change.
+            </div>
+          )}
+
+          {/* Bracket columns */}
           <div className="overflow-x-auto pb-4">
             <div className="flex gap-4 min-w-max">
               {active.bracket.rounds.map((round, ri) => {
-                const roundMatches = round.matchIds.map(id => active.matches.find(m => m.id === id)).filter(Boolean) as Match[]
+                const roundMatches = round.matchIds
+                  .map(id => active.matches.find(m => m.id === id))
+                  .filter(Boolean) as Match[]
+                const visibleMatches = roundMatches.filter(m => m.status !== 'bye')
                 return (
-                  <div key={ri} className="flex flex-col gap-3 min-w-[200px]">
+                  <div key={ri} className="flex flex-col gap-3 min-w-[220px]">
+                    {/* Round header */}
                     <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 text-center">
                       <p className="text-amber-300 text-xs font-bold uppercase tracking-wider">{round.name}</p>
-                      <p className="text-gray-600 text-[10px]">{roundMatches.filter(m => m.status !== 'bye').length} match(es)</p>
+                      <p className="text-gray-600 text-[10px]">{visibleMatches.length} match(es)</p>
                     </div>
+
+                    {/* Match cards */}
                     <div className="flex flex-col gap-2 justify-around flex-1">
-                      {roundMatches.filter(m => m.status !== 'bye').map(match => {
+                      {visibleMatches.map(match => {
                         const t1 = active.teams.find(t => t.id === match.team1Id)
                         const t2 = active.teams.find(t => t.id === match.team2Id)
+                        const dn = displayNums.get(match.id) ?? match.matchNumber
+                        const isEditing = editMode && editingId === match.id
+
                         return (
-                          <div key={match.id} className={`border rounded-xl overflow-hidden text-xs ${
-                            match.status === 'live' ? 'border-red-500/40 shadow-lg shadow-red-500/10' :
+                          <div key={match.id} className={`border rounded-xl overflow-hidden text-xs transition-all ${
+                            isEditing            ? 'border-amber-500/40 shadow-lg shadow-amber-500/10' :
+                            match.status === 'live'      ? 'border-red-500/40 shadow-lg shadow-red-500/10' :
                             match.status === 'completed' ? 'border-green-500/20' :
                             'border-white/8'
                           }`}>
-                            {match.status === 'live' && (
+
+                            {/* Live badge */}
+                            {match.status === 'live' && !isEditing && (
                               <div className="bg-red-500/20 px-2 py-0.5 text-center">
                                 <span className="text-red-400 text-[9px] font-bold uppercase tracking-wider animate-pulse">● LIVE</span>
                               </div>
                             )}
-                            <BracketTeamRow team={t1} score={match.score1} isWinner={match.winnerId === match.team1Id} />
-                            <div className="border-t border-white/5" />
-                            <BracketTeamRow team={t2} score={match.score2} isWinner={match.winnerId === match.team2Id} />
-                            <div className="border-t border-white/5 bg-white/2 px-2 py-1 text-center">
-                              <span className={`text-[9px] font-bold uppercase ${
-                                match.status === 'live' ? 'text-red-400' :
-                                match.status === 'completed' ? 'text-green-400' :
-                                match.status === 'scheduled' ? 'text-[#00BFFF]' : 'text-gray-600'
-                              }`}>
-                                M{match.matchNumber} · {MATCH_STATUS_LABEL[match.status]}
-                              </span>
-                            </div>
+
+                            {isEditing ? (
+                              /* ── Slot editor ── */
+                              <BracketSlotEditor
+                                match={match}
+                                teams={approvedTeams}
+                                onSave={saveSlot}
+                                onCancel={() => setEditingId(null)}
+                              />
+                            ) : (
+                              /* ── Normal view ── */
+                              <>
+                                <BracketTeamRow team={t1} score={match.score1} isWinner={match.winnerId === match.team1Id} />
+                                <div className="border-t border-white/5" />
+                                <BracketTeamRow team={t2} score={match.score2} isWinner={match.winnerId === match.team2Id} />
+                                <div className="border-t border-white/5 bg-white/2 px-2 py-1 flex items-center justify-between">
+                                  <span className={`text-[9px] font-bold uppercase ${
+                                    match.status === 'live'      ? 'text-red-400' :
+                                    match.status === 'completed' ? 'text-green-400' :
+                                    match.status === 'scheduled' ? 'text-[#00BFFF]' : 'text-gray-600'
+                                  }`}>
+                                    M{dn} · {MATCH_STATUS_LABEL[match.status]}
+                                  </span>
+                                  {editMode && (
+                                    <button
+                                      onClick={() => setEditingId(match.id)}
+                                      className="text-[9px] font-bold text-amber-400 hover:text-amber-300 transition-colors ml-2"
+                                    >
+                                      ✏️ Edit
+                                    </button>
+                                  )}
+                                </div>
+                              </>
+                            )}
                           </div>
                         )
                       })}
@@ -1163,7 +1239,7 @@ function TBracket({ active, flash, reload }: { active: Tournament | null; flash:
 function BracketTeamRow({ team, score, isWinner }: { team: Team | undefined; score: number; isWinner: boolean }) {
   return (
     <div className={`flex items-center gap-2 px-3 py-2 ${isWinner ? 'bg-green-500/8' : ''}`}>
-      {team ? (
+      {team?.captain ? (
         <img src={`https://mc-heads.net/avatar/${team.captain}/16`} className="w-5 h-5 rounded flex-shrink-0" alt="" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
       ) : <div className="w-5 h-5 rounded bg-white/5 flex-shrink-0" />}
       <span className={`flex-1 truncate text-[11px] font-semibold ${isWinner ? 'text-green-300' : team ? 'text-white' : 'text-gray-600'}`}>
@@ -1171,6 +1247,73 @@ function BracketTeamRow({ team, score, isWinner }: { team: Team | undefined; sco
         {isWinner && <span className="ml-1">👑</span>}
       </span>
       <span className={`text-[11px] font-black flex-shrink-0 ${isWinner ? 'text-green-300' : 'text-gray-500'}`}>{score}</span>
+    </div>
+  )
+}
+
+function BracketSlotEditor({
+  match, teams, onSave, onCancel,
+}: {
+  match: Match
+  teams: Team[]
+  onSave: (matchId: string, t1: string | null, t2: string | null) => Promise<void>
+  onCancel: () => void
+}) {
+  const [t1, setT1] = useState<string>(match.team1Id ?? '')
+  const [t2, setT2] = useState<string>(match.team2Id ?? '')
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    if (t1 && t1 === t2) { alert('Team 1 and Team 2 must be different.'); return }
+    setSaving(true)
+    await onSave(match.id, t1 || null, t2 || null)
+    setSaving(false)
+  }
+
+  const sel = (val: string, onChange: (v: string) => void, otherVal: string) => (
+    <select
+      value={val}
+      onChange={e => onChange(e.target.value)}
+      className="w-full bg-[#070b12] border border-white/15 rounded-lg px-2 py-1.5 text-white text-[11px] focus:outline-none focus:border-amber-500/50"
+    >
+      <option value="">— TBD —</option>
+      {teams.map(t => (
+        <option key={t.id} value={t.id} disabled={t.id === otherVal}>
+          {t.name}{t.id === otherVal ? ' (used)' : ''}
+        </option>
+      ))}
+    </select>
+  )
+
+  return (
+    <div className="p-3 space-y-2 bg-amber-500/3">
+      <p className="text-amber-400 text-[9px] font-bold uppercase tracking-wider">Edit Matchup</p>
+      <div className="space-y-1.5">
+        <div>
+          <p className="text-gray-500 text-[9px] mb-1">Team 1</p>
+          {sel(t1, setT1, t2)}
+        </div>
+        <div className="text-center text-gray-700 text-[9px] font-bold">VS</div>
+        <div>
+          <p className="text-gray-500 text-[9px] mb-1">Team 2</p>
+          {sel(t2, setT2, t1)}
+        </div>
+      </div>
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={save}
+          disabled={saving}
+          className="flex-1 py-1.5 rounded-lg bg-amber-500 text-black text-[10px] font-bold hover:bg-amber-400 disabled:opacity-50 transition-all"
+        >
+          {saving ? '…' : '✓ Save'}
+        </button>
+        <button
+          onClick={onCancel}
+          className="px-3 py-1.5 rounded-lg border border-white/10 text-gray-500 text-[10px] hover:text-white transition-all"
+        >
+          ✕
+        </button>
+      </div>
     </div>
   )
 }
