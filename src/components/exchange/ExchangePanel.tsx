@@ -8,11 +8,12 @@ import type { ExchangeDirection } from '../../data/mining'
 function buildWavePoints(now: number, points = 96): number[] {
   const { BASE_RATE, MIN_RATE, MAX_RATE, FLUCTUATION_PERIOD_MS } = EXCHANGE_CONSTANTS
   const step = FLUCTUATION_PERIOD_MS / points
-  const phase = now % FLUCTUATION_PERIOD_MS
+  const amplitude = (MAX_RATE - MIN_RATE) / 2
+  // points[0] = 4 h ago, points[95] = now — so the rightmost dot matches currentRate exactly
   return Array.from({ length: points }, (_, i) => {
-    const t = ((phase + i * step) % FLUCTUATION_PERIOD_MS) / FLUCTUATION_PERIOD_MS
+    const tMs = now - (points - 1 - i) * step
+    const t   = ((tMs % FLUCTUATION_PERIOD_MS) + FLUCTUATION_PERIOD_MS) % FLUCTUATION_PERIOD_MS / FLUCTUATION_PERIOD_MS
     const wave = Math.sin(2 * Math.PI * t) * 0.65 + Math.sin(2 * Math.PI * t * 2.7 + 1.2) * 0.35
-    const amplitude = (MAX_RATE - MIN_RATE) / 2
     return Math.round(BASE_RATE + wave * amplitude)
   })
 }
@@ -29,7 +30,7 @@ function RateChart({ points, min, max, base, current }: {
   const d = points.map((v, i) => `${i === 0 ? 'M' : 'L'}${scaleX(i).toFixed(1)},${scaleY(v).toFixed(1)}`).join(' ')
   const area = d + ` L${scaleX(points.length - 1).toFixed(1)},${H} L${PAD},${H} Z`
   const baseY = scaleY(base)
-  const curX  = scaleX(0)
+  const curX  = scaleX(points.length - 1)
   const curY  = scaleY(current)
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-28" preserveAspectRatio="none">
@@ -201,7 +202,7 @@ export function ExchangePanel() {
           base={EXCHANGE_CONSTANTS.BASE_RATE}
           current={currentRate}
         />
-        <p className="text-gray-700 text-[10px] mt-1 text-center">Full 4-hour wave cycle — current position at left</p>
+        <p className="text-gray-700 text-[10px] mt-1 text-center">Full 4-hour wave cycle — current position at right</p>
 
         {/* Exchange-specific stats row */}
         <div className="grid grid-cols-3 gap-px mt-4 pt-4 border-t border-white/6 -mx-6 px-0">
