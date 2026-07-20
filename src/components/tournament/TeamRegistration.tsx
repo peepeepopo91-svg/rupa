@@ -98,7 +98,7 @@ export function TeamRegistration({ tournament, onClose }: Props) {
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 font-semibold mb-1.5 uppercase tracking-wider">Captain (Your Username)</label>
+              <label className="block text-xs text-gray-400 font-semibold mb-1.5 uppercase tracking-wider">Your Username</label>
               <input
                 value={captain}
                 onChange={e => setCaptain(e.target.value)}
