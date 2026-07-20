@@ -47,7 +47,7 @@ export function TournamentHome({ active, onRegisterClick }: Props) {
 
   const approvedTeams = active.teams.filter(t => t.status === 'approved')
   const totalPlayers  = approvedTeams.reduce((n, t) => n + t.players.length, 0)
-  const canRegister   = active.status === 'registration_open'
+  const canRegister   = active.status === 'registration_open' || active.status === 'live'
   const deadline      = active.registrationDeadline
   const start         = active.startDate
 

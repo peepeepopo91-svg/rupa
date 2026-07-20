@@ -62,7 +62,7 @@ function TournamentPage() {
       : null
 
   const archives = data?.tournaments.filter(t => t.status === 'archived' || t.status === 'completed') ?? []
-  const canRegister = active?.status === 'registration_open'
+  const canRegister = active?.status === 'registration_open' || active?.status === 'live'
 
   if (loading) {
     return (
