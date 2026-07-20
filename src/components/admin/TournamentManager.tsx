@@ -223,6 +223,12 @@ function TTournaments({ data, active, flash, reload }: { data: TournamentsFile |
     reload()
   }
 
+  async function quickStatus(t: Tournament, status: Tournament['status']) {
+    await updateTournament({ data: { ...t, status } })
+    flash(`Status → ${STATUS_LABEL[status]}`)
+    reload()
+  }
+
   async function doDuplicate(id: string) {
     await duplicateTournament({ data: { id } })
     flash('Tournament duplicated')
@@ -265,6 +271,11 @@ function TTournaments({ data, active, flash, reload }: { data: TournamentsFile |
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+                {/* Quick status transitions */}
+                {t.status === 'upcoming'             && <button onClick={() => quickStatus(t, 'registration_open')}   className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-all">Open Reg.</button>}
+                {t.status === 'registration_open'    && <button onClick={() => quickStatus(t, 'registration_closed')} className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 transition-all">Close Reg.</button>}
+                {t.status === 'registration_closed'  && <button onClick={() => quickStatus(t, 'live')}                className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all">Go Live</button>}
+                {t.status === 'live'                 && <button onClick={() => quickStatus(t, 'completed')}           className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-gray-500/30 text-gray-400 hover:bg-gray-500/10 transition-all">Complete</button>}
                 <button onClick={() => setActive(active?.id === t.id ? null : t.id)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${active?.id === t.id ? 'border-[#00BFFF]/30 text-[#00BFFF] hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20' : 'border-white/10 text-gray-500 hover:text-[#00BFFF] hover:border-[#00BFFF]/20'}`}>
                   {active?.id === t.id ? 'Deactivate' : 'Set Active'}
                 </button>

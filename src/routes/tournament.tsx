@@ -115,19 +115,38 @@ function TournamentPage() {
             </div>
           )}
 
-          {/* Registration CTA — always visible when open */}
-          {canRegister && (
-            <div className="mt-8">
-              <button
-                onClick={() => setShowReg(true)}
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#00BFFF] hover:bg-[#00BFFF]/85 text-black font-bold text-sm transition-all shadow-lg shadow-[#00BFFF]/25 hover:scale-105 hover:shadow-[#00BFFF]/40"
-              >
-                ⚔️ Register Your Team
-                <span className="opacity-70">→</span>
-              </button>
-              <p className="text-gray-600 text-xs mt-2">Registrations are open — spots are limited</p>
-            </div>
-          )}
+          {/* CTA — shown whenever there's an active tournament */}
+          {active && (() => {
+            if (canRegister) return (
+              <div className="mt-8">
+                <button
+                  onClick={() => setShowReg(true)}
+                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#00BFFF] hover:bg-[#00BFFF]/85 text-black font-bold text-sm transition-all shadow-lg shadow-[#00BFFF]/25 hover:scale-105 hover:shadow-[#00BFFF]/40"
+                >
+                  ⚔️ Register Your Team
+                  <span className="opacity-70">→</span>
+                </button>
+                <p className="text-gray-600 text-xs mt-2">Registrations are open — spots are limited</p>
+              </div>
+            )
+            if (active.status === 'upcoming') return (
+              <div className="mt-8">
+                <div className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl border border-white/10 text-gray-400 font-bold text-sm cursor-default">
+                  🔔 Registration Opening Soon
+                </div>
+                <p className="text-gray-600 text-xs mt-2">Stay tuned — watch the Announcements tab for updates</p>
+              </div>
+            )
+            if (active.status === 'registration_closed') return (
+              <div className="mt-8">
+                <div className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl border border-white/10 text-gray-500 font-bold text-sm cursor-default">
+                  🚫 Registration Closed
+                </div>
+                <p className="text-gray-600 text-xs mt-2">The bracket is set — follow the matches in the Bracket tab</p>
+              </div>
+            )
+            return null
+          })()}
         </div>
       </section>
 
