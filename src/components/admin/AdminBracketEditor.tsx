@@ -109,12 +109,10 @@ function RoundCol({ name, matches, teams, selectedId, onSelect, rtl = false, col
   name: string; matches: Match[]; teams: Team[]; selectedId: string | null
   onSelect: (m: Match) => void; rtl?: boolean; colH: number
 }) {
-  const firstTop = matchTop(0, matches.length, colH)
-  const labelTop = firstTop - LABEL_H - LABEL_MB
   return (
     <div style={{ flexShrink: 0 }}>
       <div style={{ position: 'relative', width: CARD_W, height: colH + LABEL_H + LABEL_MB }}>
-        <div style={{ position: 'absolute', top: labelTop, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
           <div style={{ padding: '2px 10px', height: LABEL_H, display: 'flex', alignItems: 'center',
             background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)',
             borderRadius: 20, fontSize: 8, fontWeight: 700, letterSpacing: '0.13em',
@@ -525,8 +523,9 @@ export function AdminBracketEditor({ active, flash, reload }: Props) {
   const getMs = (ids: string[]) =>
     ids.map(id => active.matches.find(m => m.id === id)).filter((m): m is Match => !!m && m.status !== 'bye')
 
-  const leftCols = bracketRounds.map(r => ({ name: r.name, matches: getMs(r.matchIds).slice(0, Math.ceil(getMs(r.matchIds).length / 2)) }))
-  const rightColsOuter = bracketRounds.map(r => ({ name: r.name, matches: getMs(r.matchIds).slice(Math.ceil(getMs(r.matchIds).length / 2)) }))
+  const visibleRounds = bracketRounds.filter(r => !r.name.toLowerCase().includes('round of'))
+  const leftCols = visibleRounds.map(r => ({ name: r.name, matches: getMs(r.matchIds).slice(0, Math.ceil(getMs(r.matchIds).length / 2)) }))
+  const rightColsOuter = visibleRounds.map(r => ({ name: r.name, matches: getMs(r.matchIds).slice(Math.ceil(getMs(r.matchIds).length / 2)) }))
   const rightCols = [...rightColsOuter].reverse()
   const finalsMatch = finalsRound ? getMs(finalsRound.matchIds)[0] : undefined
 

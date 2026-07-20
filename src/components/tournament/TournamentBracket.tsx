@@ -140,18 +140,13 @@ function MatchCard({ match, teams, onClick, rtl = false }: {
 function RoundColumn({ name, matches, teams, onSelect, rtl = false, colH }: {
   name: string; matches: Match[]; teams: Team[]; onSelect: (m: Match) => void; rtl?: boolean; colH: number
 }) {
-  const firstCardTop = matchTop(0, matches.length, colH)
-  // Place label just above the first card
-  const labelTop = firstCardTop - LABEL_H - LABEL_MB
-
   return (
     <div style={{ flexShrink:0 }}>
-      {/* top padding so absolute label doesn't get clipped */}
       <div style={{ position:'relative', width:CARD_W, height: colH + LABEL_H + LABEL_MB, marginTop:0 }}>
-        {/* Round label — floats just above the first card */}
+        {/* Round label — pinned to top of column */}
         <div style={{
           position:'absolute',
-          top: labelTop,
+          top: 0,
           left:0, right:0,
           display:'flex', justifyContent:'center',
         }}>
@@ -349,6 +344,7 @@ export function TournamentBracket({ tournament }: Props) {
   // ── Split rounds ──────────────────────────────────────────────────────────
   const finalsRound   = rounds[rounds.length - 1]
   const bracketRounds = rounds.slice(0, rounds.length - 1)
+    .filter(r => !r.name.toLowerCase().includes('round of'))
   const finalsMatch   = getMs(finalsRound.matchIds)[0]
 
   // each round → split matches in half: left = first half, right = second half
