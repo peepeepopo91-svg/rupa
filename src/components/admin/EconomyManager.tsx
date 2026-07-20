@@ -304,14 +304,17 @@ export function EconomyManager({ admin }: Props) {
   const activeRigs = userList.reduce((s, u) => s + u.rigs.filter(r => r.status === 'mining').length, 0)
   const overrideCount = Object.values(overrides).filter(v => v !== undefined).length
 
-  // Simulator
-  const simTier = RIG_TIERS.find(t => t.id === simRigTier) ?? RIG_TIERS[2]
-  const userHashrate = simTier.hashrate * simRigCount
-  const blocksPerDay = (24 * 60 * 60 * 1000) / blockIntervalMs
-  const finderBonus   = blockReward * finderPct
-  const equalShare    = blockReward * equalPct
-  const hashrateShare = blockReward * hashratePct
-  const avgPerBlock   = finderBonus + equalShare + hashrateShare
+  // Simulator — reference-pool projection (same formula as Hardware Catalogue)
+  const simTier         = RIG_TIERS.find(t => t.id === simRigTier) ?? RIG_TIERS[2]
+  const userHashrate    = simTier.hashrate * simRigCount
+  const blocksPerDay    = (24 * 60 * 60 * 1000) / blockIntervalMs
+  const refPoolHashrate = RIG_TIERS.reduce((s, t) => s + t.hashrate, 0) // 163 GH/s
+  const refMinerCount   = RIG_TIERS.length  // 5
+  const totalHashrate   = userHashrate + refPoolHashrate
+  const userShare       = userHashrate / totalHashrate
+  const avgPerBlock     = blockReward * finderPct  * userShare
+                        + blockReward * equalPct   / (refMinerCount + 1)
+                        + blockReward * hashratePct * userShare
   const simEarnings   = avgPerBlock * simBlocks
   const simDays       = simBlocks / blocksPerDay
   const rigCost       = simTier.cost * simRigCount
@@ -953,20 +956,20 @@ export function EconomyManager({ admin }: Props) {
                 <div className="mt-4 p-4 rounded-xl bg-white/3 border border-white/5">
                   <p className="text-gray-400 text-xs font-semibold mb-3">Block Win Probability (Finder Bonus)</p>
                   <div className="flex items-center gap-3">
-                    <div className="relative w-16 h-16">
+                    <div className="relative w-16 h-16 shrink-0">
                       <svg viewBox="0 0 56 56" className="w-full h-full -rotate-90">
                         <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6" />
                         <circle cx="28" cy="28" r="22" fill="none" stroke="#f59e0b" strokeWidth="6"
-                          strokeDasharray={`${2 * Math.PI * 22} 0`}
+                          strokeDasharray={`${userShare * 2 * Math.PI * 22} ${2 * Math.PI * 22}`}
                           strokeLinecap="round" />
                       </svg>
                       <span className="absolute inset-0 flex items-center justify-center text-amber-400 font-['Space_Grotesk'] font-black text-xs">
-                        100%
+                        {(userShare * 100).toFixed(1)}%
                       </span>
                     </div>
                     <div className="flex-1 text-xs text-gray-500 space-y-1">
-                      <p>Probability of winning each block's finder bonus</p>
-                      <p>Expected wins in {simBlocks} blocks: <span className="text-amber-400 font-bold">{simBlocks}</span></p>
+                      <p>Your share of pool hashrate ({userHashrate} GH/s of {fmt(totalHashrate)} GH/s)</p>
+                      <p>Expected wins in {simBlocks} blocks: <span className="text-amber-400 font-bold">{(userShare * simBlocks).toFixed(1)}</span></p>
                       <p>Finder BC per win: <span className="text-amber-400 font-bold">{Math.round(blockReward * finderPct)} BC</span></p>
                     </div>
                   </div>
