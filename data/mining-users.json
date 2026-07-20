@@ -145,7 +145,7 @@
   "zolup": {
     "username": "zolup",
     "createdAt": 1784399298355,
-    "lastCheckedAt": 1784544201102,
+    "lastCheckedAt": 1784545452896,
     "balance": 531,
     "gems": 7361000,
     "rigs": [
@@ -153,7 +153,7 @@
         "id": "starter_mrrmcik0_lp20",
         "tierId": "starter",
         "name": "Starter Pack",
-        "durability": 9083.210122053933,
+        "durability": 9056.867655723969,
         "status": "mining",
         "miningSince": 1784543658727,
         "purchasedAt": 1784454855408
@@ -249,5 +249,129 @@
     "exchangeResetAt": 1784574004454,
     "miningExpiresAt": 1784586852089,
     "miningRenewedAt": 1784543652089
+  },
+  "alexpvper": {
+    "username": "AlexPvper",
+    "createdAt": 1784285991495,
+    "balance": 24011,
+    "gems": 5145,
+    "rigs": [
+      {
+        "id": "npc_rig_npc_default_3_0",
+        "tierId": "pro",
+        "name": "AlexPvper Rig #1",
+        "durability": 8000,
+        "status": "mining",
+        "miningSince": 1784541674982,
+        "purchasedAt": 1784285991495
+      },
+      {
+        "id": "npc_rig_npc_default_3_1",
+        "tierId": "pro",
+        "name": "AlexPvper Rig #2",
+        "durability": 8000,
+        "status": "mining",
+        "miningSince": 1784541674982,
+        "purchasedAt": 1784285991495
+      }
+    ],
+    "rewardHistory": [],
+    "lastCheckedAt": 1784545274982,
+    "exchangeUsedToday": 0,
+    "exchangeResetAt": 1784631674982,
+    "miningExpiresAt": null,
+    "miningRenewedAt": null
+  },
+  "netmaster_99": {
+    "username": "NetMaster_99",
+    "createdAt": 1784458791495,
+    "balance": 13709,
+    "gems": 2937,
+    "rigs": [
+      {
+        "id": "npc_rig_npc_default_1_0",
+        "tierId": "pro",
+        "name": "NetMaster_99 Rig #1",
+        "durability": 8000,
+        "status": "mining",
+        "miningSince": 1784541677627,
+        "purchasedAt": 1784458791495
+      }
+    ],
+    "rewardHistory": [],
+    "lastCheckedAt": 1784545277627,
+    "exchangeUsedToday": 0,
+    "exchangeResetAt": 1784631677627,
+    "miningExpiresAt": null,
+    "miningRenewedAt": null
+  },
+  "qubitx": {
+    "username": "QubitX",
+    "createdAt": 1784199591495,
+    "balance": 10539,
+    "gems": 2258,
+    "rigs": [
+      {
+        "id": "npc_rig_npc_default_4_0",
+        "tierId": "pro",
+        "name": "QubitX Rig #1",
+        "durability": 8000,
+        "status": "mining",
+        "miningSince": 1784541680877,
+        "purchasedAt": 1784199591495
+      }
+    ],
+    "rewardHistory": [],
+    "lastCheckedAt": 1784545280877,
+    "exchangeUsedToday": 0,
+    "exchangeResetAt": 1784631680877,
+    "miningExpiresAt": null,
+    "miningRenewedAt": null
+  },
+  "blue_alpha": {
+    "username": "Blue_Alpha",
+    "createdAt": 1784545191495,
+    "balance": 8162,
+    "gems": 1749,
+    "rigs": [
+      {
+        "id": "npc_rig_npc_default_0_0",
+        "tierId": "pro",
+        "name": "Blue_Alpha Rig #1",
+        "durability": 8000,
+        "status": "mining",
+        "miningSince": 1784541682618,
+        "purchasedAt": 1784545191495
+      }
+    ],
+    "rewardHistory": [],
+    "lastCheckedAt": 1784545282618,
+    "exchangeUsedToday": 0,
+    "exchangeResetAt": 1784631682618,
+    "miningExpiresAt": null,
+    "miningRenewedAt": null
+  },
+  "pixelhawk": {
+    "username": "PixelHawk",
+    "createdAt": 1784372391495,
+    "balance": 6577,
+    "gems": 1409,
+    "rigs": [
+      {
+        "id": "npc_rig_npc_default_2_0",
+        "tierId": "pro",
+        "name": "PixelHawk Rig #1",
+        "durability": 8000,
+        "status": "mining",
+        "miningSince": 1784541691155,
+        "purchasedAt": 1784372391495
+      }
+    ],
+    "rewardHistory": [],
+    "lastCheckedAt": 1784545291155,
+    "exchangeUsedToday": 0,
+    "exchangeResetAt": 1784631691155,
+    "miningExpiresAt": null,
+    "miningRenewedAt": null
   }
 }
