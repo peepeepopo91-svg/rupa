@@ -3,6 +3,7 @@
 // and scheduled for GitHub backup.
 
 import { createServerFn }                       from '@tanstack/react-start'
+import { getRequestIP }                         from '@tanstack/react-start/server'
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs'
 import { resolve }                              from 'node:path'
 import { z }                                    from 'zod'
@@ -173,9 +174,20 @@ export const registerTeam = createServerFn({ method: 'POST' })
     if (!t) return { success: false, error: 'Tournament not found' }
     if (t.status !== 'registration_open') return { success: false, error: 'Registration is not open' }
 
-    const now      = Date.now()
+    const now = Date.now()
     if (t.registrationDeadline && now > t.registrationDeadline) {
       return { success: false, error: 'Registration deadline has passed' }
+    }
+
+    // ── IP rate limit: max 3 registrations per IP ─────────────────────────────
+    const ip = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
+    if (ip !== 'unknown') {
+      const fromThisIp = t.teams.filter(
+        team => team.registrationIp === ip && team.status !== 'rejected',
+      ).length
+      if (fromThisIp >= 3) {
+        return { success: false, error: 'Maximum of 3 team registrations per IP address has been reached.' }
+      }
     }
 
     const allPlayers = [data.captain, ...data.players.filter(p => p !== data.captain)]
@@ -202,13 +214,14 @@ export const registerTeam = createServerFn({ method: 'POST' })
     }
 
     const team: Team = {
-      id:           uid(),
-      name:         data.teamName,
-      captain:      data.captain,
-      players:      allPlayers,
-      status:       'pending',
-      registeredAt: now,
-      notes:        '',
+      id:             uid(),
+      name:           data.teamName,
+      captain:        data.captain,
+      players:        allPlayers,
+      status:         'pending',
+      registeredAt:   now,
+      notes:          '',
+      registrationIp: ip,
     }
     t.teams.push(team)
     t.updatedAt = now

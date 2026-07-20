@@ -45,6 +45,7 @@ export interface Team {
   status: TeamStatus
   registeredAt: number
   notes: string
+  registrationIp?: string
 }
 
 export interface Match {
