@@ -165,8 +165,8 @@ export const registerTeam = createServerFn({ method: 'POST' })
   .inputValidator(z.object({
     tournamentId: z.string().min(1),
     teamName:     z.string().min(1).max(50),
-    captain:      z.string().min(1).max(50),
-    players:      z.array(z.string().min(1).max(50)).min(1).max(50),
+    captain:      z.string().max(50).default(''),
+    players:      z.array(z.string().min(1).max(50)).max(50).default([]),
   }))
   .handler(async ({ data }): Promise<{ success: boolean; team?: Team; error?: string }> => {
     const file = readData()
@@ -177,6 +177,12 @@ export const registerTeam = createServerFn({ method: 'POST' })
     const now = Date.now()
     if (t.registrationDeadline && now > t.registrationDeadline) {
       return { success: false, error: 'Registration deadline has passed' }
+    }
+
+    // ── Captain requirement check ─────────────────────────────────────────────
+    const needsCaptain = t.requireCaptain !== false
+    if (needsCaptain && !data.captain.trim()) {
+      return { success: false, error: 'Captain name is required for this tournament' }
     }
 
     // ── IP rate limit: max 3 registrations per IP ─────────────────────────────
@@ -190,7 +196,10 @@ export const registerTeam = createServerFn({ method: 'POST' })
       }
     }
 
-    const allPlayers = [data.captain, ...data.players.filter(p => p !== data.captain)]
+    const captain    = data.captain.trim()
+    const allPlayers = captain
+      ? [captain, ...data.players.filter(p => p !== captain)]
+      : data.players.filter(Boolean)
     if (allPlayers.length < t.minTeamSize) {
       return { success: false, error: `Minimum team size is ${t.minTeamSize}` }
     }
@@ -216,7 +225,7 @@ export const registerTeam = createServerFn({ method: 'POST' })
     const team: Team = {
       id:             uid(),
       name:           data.teamName,
-      captain:        data.captain,
+      captain:        captain,
       players:        allPlayers,
       status:         'pending',
       registeredAt:   now,
@@ -258,8 +267,8 @@ export const editTeam = createServerFn({ method: 'POST' })
     tournamentId: z.string().min(1),
     teamId:       z.string().min(1),
     name:         z.string().min(1).max(50),
-    captain:      z.string().min(1).max(50),
-    players:      z.array(z.string().min(1).max(50)).min(1).max(50),
+    captain:      z.string().max(50).default(''),
+    players:      z.array(z.string().min(1).max(50)).max(50).default([]),
   }))
   .handler(async ({ data }): Promise<{ success: boolean; error?: string }> => {
     const file = readData()
@@ -268,7 +277,7 @@ export const editTeam = createServerFn({ method: 'POST' })
     const team = t.teams.find(team => team.id === data.teamId)
     if (!team) return { success: false, error: 'Team not found' }
     team.name    = data.name
-    team.captain = data.captain
+    team.captain = data.captain.trim()
     team.players = data.players
     t.updatedAt  = Date.now()
     writeData(file)
@@ -578,8 +587,8 @@ export const addTeamManually = createServerFn({ method: 'POST' })
   .inputValidator(z.object({
     tournamentId: z.string().min(1),
     teamName:     z.string().min(1).max(50),
-    captain:      z.string().min(1).max(50),
-    players:      z.array(z.string().min(1).max(50)).min(1).max(50),
+    captain:      z.string().max(50).default(''),
+    players:      z.array(z.string().min(1).max(50)).max(50).default([]),
     status:       z.enum(['pending','approved','rejected','eliminated','disqualified']).default('approved'),
     notes:        z.string().max(500).default(''),
   }))
@@ -588,7 +597,10 @@ export const addTeamManually = createServerFn({ method: 'POST' })
     const t    = findTournament(file, data.tournamentId)
     if (!t) return { success: false, error: 'Tournament not found' }
 
-    const allPlayers = [data.captain, ...data.players.filter(p => p !== data.captain)]
+    const captain    = data.captain.trim()
+    const allPlayers = captain
+      ? [captain, ...data.players.filter(p => p !== captain)]
+      : data.players.filter(Boolean)
 
     const nameLower = data.teamName.toLowerCase()
     if (t.teams.some(team => team.name.toLowerCase() === nameLower && team.status !== 'rejected')) {
@@ -599,7 +611,7 @@ export const addTeamManually = createServerFn({ method: 'POST' })
     const team: Team = {
       id:           uid(),
       name:         data.teamName,
-      captain:      data.captain,
+      captain:      captain,
       players:      allPlayers,
       status:       data.status,
       registeredAt: now,

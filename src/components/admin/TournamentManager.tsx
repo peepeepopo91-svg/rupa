@@ -596,7 +596,7 @@ function TRegistration({ active, flash, reload }: { active: Tournament | null; f
           </div>
           <div className="grid gap-2">
             {pending.map(team => (
-              <PendingTeamRow key={team.id} team={team} tournamentId={active.id} flash={flash} reload={reload} />
+              <PendingTeamRow key={team.id} team={team} tournamentId={active.id} requireCaptain={active.requireCaptain !== false} flash={flash} reload={reload} />
             ))}
           </div>
         </div>
@@ -614,7 +614,7 @@ function TRegistration({ active, flash, reload }: { active: Tournament | null; f
         </button>
         {showAddTeam && (
           <div className="border-t border-white/5 px-5 pb-5 pt-4">
-            <AddTeamForm tournamentId={active.id} flash={flash} reload={reload} onDone={() => setShowAddTeam(false)} />
+            <AddTeamForm tournamentId={active.id} requireCaptain={active.requireCaptain !== false} flash={flash} reload={reload} onDone={() => setShowAddTeam(false)} />
           </div>
         )}
       </div>
@@ -622,7 +622,7 @@ function TRegistration({ active, flash, reload }: { active: Tournament | null; f
   )
 }
 
-function PendingTeamRow({ team, tournamentId, flash, reload }: { team: Team; tournamentId: string; flash: F; reload: R }) {
+function PendingTeamRow({ team, tournamentId, requireCaptain, flash, reload }: { team: Team; tournamentId: string; requireCaptain: boolean; flash: F; reload: R }) {
   const [acting, setActing] = useState(false)
 
   async function act(status: Team['status']) {
@@ -636,10 +636,14 @@ function PendingTeamRow({ team, tournamentId, flash, reload }: { team: Team; tou
 
   return (
     <div className="flex items-center gap-3 bg-yellow-500/3 border border-yellow-500/10 rounded-xl px-4 py-3">
-      <img src={`https://mc-heads.net/avatar/${team.captain}/32`} className="w-8 h-8 rounded-lg flex-shrink-0" alt="" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+      {requireCaptain && team.captain && (
+        <img src={`https://mc-heads.net/avatar/${team.captain}/32`} className="w-8 h-8 rounded-lg flex-shrink-0" alt="" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+      )}
       <div className="flex-1 min-w-0">
         <p className="text-white font-semibold text-sm">{team.name}</p>
-        <p className="text-gray-500 text-xs">Captain: {team.captain} · {team.players.length} players · {timeAgo(team.registeredAt)}</p>
+        <p className="text-gray-500 text-xs">
+          {requireCaptain && team.captain ? `Captain: ${team.captain} · ` : ''}{team.players.length} player(s) · {timeAgo(team.registeredAt)}
+        </p>
       </div>
       <div className="flex gap-2 flex-shrink-0">
         <button onClick={() => act('approved')} disabled={acting} className="px-3 py-1.5 rounded-lg bg-green-500/15 border border-green-500/20 text-green-300 text-[10px] font-bold hover:bg-green-500/25 transition-all disabled:opacity-50">Approve</button>
@@ -649,7 +653,7 @@ function PendingTeamRow({ team, tournamentId, flash, reload }: { team: Team; tou
   )
 }
 
-function AddTeamForm({ tournamentId, flash, reload, onDone }: { tournamentId: string; flash: F; reload: R; onDone: () => void }) {
+function AddTeamForm({ tournamentId, requireCaptain, flash, reload, onDone }: { tournamentId: string; requireCaptain: boolean; flash: F; reload: R; onDone: () => void }) {
   const [name, setName]       = useState('')
   const [captain, setCaptain] = useState('')
   const [players, setPlayers] = useState<string[]>([''])
@@ -657,7 +661,8 @@ function AddTeamForm({ tournamentId, flash, reload, onDone }: { tournamentId: st
   const [saving, setSaving]   = useState(false)
 
   async function save() {
-    if (!name.trim() || !captain.trim()) return flash('Name and captain are required', false)
+    if (!name.trim()) return flash('Team name is required', false)
+    if (requireCaptain && !captain.trim()) return flash('Captain name is required', false)
     setSaving(true)
     try {
       const res = await addTeamManually({ data: { tournamentId, teamName: name.trim(), captain: captain.trim(), players: players.map(p => p.trim()).filter(Boolean), status, notes: 'Added by admin' } })
@@ -668,9 +673,11 @@ function AddTeamForm({ tournamentId, flash, reload, onDone }: { tournamentId: st
 
   return (
     <div className="space-y-4">
-      <div className="grid md:grid-cols-3 gap-3">
+      <div className={`grid gap-3 ${requireCaptain ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
         <GField label="Team Name" value={name} onChange={setName} placeholder="e.g. Blue Dynasty" />
-        <GField label="Captain" value={captain} onChange={setCaptain} placeholder="Minecraft username" />
+        {requireCaptain && (
+          <GField label="Captain" value={captain} onChange={setCaptain} placeholder="Minecraft username" />
+        )}
         <div>
           <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5 font-semibold">Status</label>
           <select value={status} onChange={e => setStatus(e.target.value as any)} className="w-full bg-[#070b12] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/40">
@@ -761,7 +768,7 @@ function TTournaments({ data, active, flash, reload }: { data: TournamentsFile |
       <div className="flex items-center justify-between">
         <p className="text-gray-500 text-sm">{all.length} tournament(s)</p>
         <button
-          onClick={() => setEditing({ name: '', description: '', banner: '', status: 'upcoming', gamemode: '', serverIp: '', maxTeamSize: 2, minTeamSize: 2, registrationDeadline: null, startDate: null, prizePool: '' })}
+          onClick={() => setEditing({ name: '', description: '', banner: '', status: 'upcoming', gamemode: '', serverIp: '', maxTeamSize: 2, minTeamSize: 2, requireCaptain: true, registrationDeadline: null, startDate: null, prizePool: '' })}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold text-xs hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/15"
         >
           + New Tournament
@@ -871,6 +878,21 @@ function TournamentForm({ editing, setEditing, save, saving }: { editing: Partia
           <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5 font-semibold">Description</label>
           <textarea value={editing.description ?? ''} onChange={e => set('description', e.target.value)} rows={3} placeholder="Tournament description…" className="w-full bg-[#070b12] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm resize-none focus:outline-none focus:border-amber-500/40 placeholder-gray-700" />
         </div>
+        <div className="md:col-span-2">
+          <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">Registration Options</label>
+          <label className={`inline-flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer select-none transition-all ${editing.requireCaptain !== false ? 'bg-amber-500/8 border-amber-500/25' : 'bg-white/3 border-white/8'}`}>
+            <div
+              onClick={() => set('requireCaptain', !(editing.requireCaptain !== false))}
+              className={`relative w-10 h-5 rounded-full transition-all flex-shrink-0 cursor-pointer ${editing.requireCaptain !== false ? 'bg-amber-500' : 'bg-white/15'}`}
+            >
+              <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${editing.requireCaptain !== false ? 'left-5' : 'left-0.5'}`} />
+            </div>
+            <div>
+              <p className="text-white text-sm font-semibold">Captain System</p>
+              <p className="text-gray-500 text-xs">{editing.requireCaptain !== false ? 'On — players must designate a captain when registering' : 'Off — all team members are equal, no captain required'}</p>
+            </div>
+          </label>
+        </div>
       </div>
       {editing.banner && (
         <div className="h-24 rounded-xl overflow-hidden border border-white/5">
@@ -890,7 +912,7 @@ function TournamentForm({ editing, setEditing, save, saving }: { editing: Partia
 // ─── Teams management ─────────────────────────────────────────────────────────
 
 function TTeams({ active, flash, reload }: { active: Tournament | null; flash: F; reload: R }) {
-  const [filter, setFilter]     = useState<string>('all')
+  const [filter, setFilter]     = useState<string>('approved')
   const [search, setSearch]     = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [page, setPage]         = useState(1)
@@ -900,7 +922,7 @@ function TTeams({ active, flash, reload }: { active: Tournament | null; flash: F
 
   const teams = active.teams
     .filter(t => filter === 'all' || t.status === filter)
-    .filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()) || t.captain.toLowerCase().includes(search.toLowerCase()))
+    .filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()) || (t.captain ?? '').toLowerCase().includes(search.toLowerCase()))
   const paged  = teams.slice((page - 1) * PER_PAGE, page * PER_PAGE)
   const pages  = Math.ceil(teams.length / PER_PAGE)
 
@@ -943,7 +965,7 @@ function TTeams({ active, flash, reload }: { active: Tournament | null; flash: F
           <input
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1) }}
-            placeholder="Search teams or captains…"
+            placeholder="Search teams…"
             className="w-full bg-[#0a0e18] border border-white/8 rounded-xl pl-9 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/40 placeholder-gray-600"
           />
         </div>
@@ -988,15 +1010,19 @@ function TTeams({ active, flash, reload }: { active: Tournament | null; flash: F
           {paged.map(team => (
             <div key={team.id} className={`bg-[#0a0e18] border rounded-xl p-4 flex items-center gap-4 transition-all hover:border-white/10 ${selected.has(team.id) ? 'border-amber-500/25 bg-amber-500/3' : 'border-white/5'}`}>
               <input type="checkbox" checked={selected.has(team.id)} onChange={() => toggleSelect(team.id)} className="w-4 h-4 rounded accent-amber-400 flex-shrink-0" />
-              <img src={`https://mc-heads.net/avatar/${team.captain}/32`} className="w-10 h-10 rounded-lg flex-shrink-0" alt="" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+              {active.requireCaptain !== false && team.captain && (
+                <img src={`https://mc-heads.net/avatar/${team.captain}/32`} className="w-10 h-10 rounded-lg flex-shrink-0" alt="" onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+              )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-white font-bold text-sm">{team.name}</p>
                   <TeamStatusBadge status={team.status} />
                 </div>
                 <p className="text-gray-500 text-xs mt-0.5">
-                  👑 {team.captain}
-                  {team.players.length > 1 && <span className="ml-2 text-gray-600">· {team.players.slice(1).join(', ')}</span>}
+                  {active.requireCaptain !== false && team.captain
+                    ? <><span>👑 {team.captain}</span>{team.players.length > 1 && <span className="ml-2 text-gray-600">· {team.players.slice(1).join(', ')}</span>}</>
+                    : <span className="text-gray-600">{team.players.join(', ')}</span>
+                  }
                 </p>
                 <p className="text-gray-700 text-[10px] mt-0.5">{timeAgo(team.registeredAt)}</p>
               </div>

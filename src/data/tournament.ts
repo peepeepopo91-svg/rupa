@@ -96,6 +96,7 @@ export interface Tournament {
   serverIp: string
   maxTeamSize: number
   minTeamSize: number
+  requireCaptain: boolean        // when false, no captain role — all players are equal
   registrationDeadline: number | null
   startDate: number | null
   prizePool: string

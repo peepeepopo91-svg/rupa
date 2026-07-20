@@ -8,6 +8,8 @@ interface Props {
 }
 
 export function TeamRegistration({ tournament, onClose }: Props) {
+  const requireCaptain = tournament.requireCaptain !== false
+
   const [teamName, setTeamName]   = useState('')
   const [captain, setCaptain]     = useState('')
   const [players, setPlayers]     = useState<string[]>([''])
@@ -15,12 +17,14 @@ export function TeamRegistration({ tournament, onClose }: Props) {
   const [error, setError]         = useState('')
   const [success, setSuccess]     = useState(false)
 
-  const totalPlayers = [captain, ...players].filter(p => p.trim()).length
+  // When captain system is off, all slots are player slots
+  const maxExtraSlots = requireCaptain ? tournament.maxTeamSize - 1 : tournament.maxTeamSize
+  const totalPlayers  = requireCaptain
+    ? [captain, ...players].filter(p => p.trim()).length
+    : players.filter(p => p.trim()).length
 
   function addPlayer() {
-    if (players.length < tournament.maxTeamSize - 1) {
-      setPlayers(p => [...p, ''])
-    }
+    if (players.length < maxExtraSlots) setPlayers(p => [...p, ''])
   }
 
   function setPlayer(idx: number, val: string) {
@@ -35,11 +39,17 @@ export function TeamRegistration({ tournament, onClose }: Props) {
     e.preventDefault()
     setError('')
     if (!teamName.trim()) return setError('Team name is required')
-    if (!captain.trim())  return setError('Captain name is required')
+    if (requireCaptain && !captain.trim()) return setError('Captain name is required')
 
-    const allPlayers = [captain.trim(), ...players.map(p => p.trim()).filter(Boolean)]
+    const allPlayers = requireCaptain
+      ? [captain.trim(), ...players.map(p => p.trim()).filter(Boolean)]
+      : players.map(p => p.trim()).filter(Boolean)
+
     if (allPlayers.length < tournament.minTeamSize) {
-      return setError(`Minimum team size is ${tournament.minTeamSize}`)
+      return setError(`Minimum team size is ${tournament.minTeamSize} player(s)`)
+    }
+    if (allPlayers.length > tournament.maxTeamSize) {
+      return setError(`Maximum team size is ${tournament.maxTeamSize} player(s)`)
     }
 
     setSubmit(true)
@@ -48,8 +58,10 @@ export function TeamRegistration({ tournament, onClose }: Props) {
         data: {
           tournamentId: tournament.id,
           teamName:     teamName.trim(),
-          captain:      captain.trim(),
-          players:      players.map(p => p.trim()).filter(Boolean),
+          captain:      requireCaptain ? captain.trim() : '',
+          players:      requireCaptain
+            ? players.map(p => p.trim()).filter(Boolean)
+            : players.map(p => p.trim()).filter(Boolean),
         },
       })
       if (res.success) {
@@ -57,7 +69,7 @@ export function TeamRegistration({ tournament, onClose }: Props) {
       } else {
         setError(res.error || 'Registration failed')
       }
-    } catch (err) {
+    } catch {
       setError('Server error. Please try again.')
     } finally {
       setSubmit(false)
@@ -86,6 +98,7 @@ export function TeamRegistration({ tournament, onClose }: Props) {
           </div>
         ) : (
           <form onSubmit={submit} className="p-6 space-y-5">
+            {/* Team name */}
             <div>
               <label className="block text-xs text-gray-400 font-semibold mb-1.5 uppercase tracking-wider">Team Name</label>
               <input
@@ -97,53 +110,60 @@ export function TeamRegistration({ tournament, onClose }: Props) {
               />
             </div>
 
-            <div>
-              <label className="block text-xs text-gray-400 font-semibold mb-1.5 uppercase tracking-wider">Your Username</label>
-              <input
-                value={captain}
-                onChange={e => setCaptain(e.target.value)}
-                placeholder="Minecraft username"
-                maxLength={50}
-                className="w-full bg-[#0B0F17] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-[#00BFFF]/50"
-              />
-            </div>
-
-            {tournament.maxTeamSize > 1 && (
+            {/* Captain (only when requireCaptain is on) */}
+            {requireCaptain && (
               <div>
                 <label className="block text-xs text-gray-400 font-semibold mb-1.5 uppercase tracking-wider">
-                  Teammates ({tournament.minTeamSize - 1}–{tournament.maxTeamSize - 1})
+                  Captain Username <span className="text-[#00BFFF]">👑</span>
                 </label>
-                <div className="space-y-2">
-                  {players.map((p, i) => (
-                    <div key={i} className="flex gap-2">
-                      <input
-                        value={p}
-                        onChange={e => setPlayer(i, e.target.value)}
-                        placeholder={`Player ${i + 2} username`}
-                        maxLength={50}
-                        className="flex-1 bg-[#0B0F17] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-[#00BFFF]/50"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removePlayer(i)}
-                        className="px-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 text-xs"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                  {players.length < tournament.maxTeamSize - 1 && (
-                    <button
-                      type="button"
-                      onClick={addPlayer}
-                      className="w-full py-2 rounded-lg border border-dashed border-white/10 text-gray-600 hover:text-gray-400 hover:border-white/20 text-xs transition-all"
-                    >
-                      + Add Teammate
-                    </button>
-                  )}
-                </div>
+                <input
+                  value={captain}
+                  onChange={e => setCaptain(e.target.value)}
+                  placeholder="Minecraft username"
+                  maxLength={50}
+                  className="w-full bg-[#0B0F17] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-[#00BFFF]/50"
+                />
               </div>
             )}
+
+            {/* Players */}
+            <div>
+              <label className="block text-xs text-gray-400 font-semibold mb-1.5 uppercase tracking-wider">
+                {requireCaptain
+                  ? `Teammates (${Math.max(0, tournament.minTeamSize - 1)}–${tournament.maxTeamSize - 1})`
+                  : `Players (${tournament.minTeamSize}–${tournament.maxTeamSize})`
+                }
+              </label>
+              <div className="space-y-2">
+                {players.map((p, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      value={p}
+                      onChange={e => setPlayer(i, e.target.value)}
+                      placeholder={requireCaptain ? `Player ${i + 2} username` : `Player ${i + 1} username`}
+                      maxLength={50}
+                      className="flex-1 bg-[#0B0F17] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-[#00BFFF]/50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePlayer(i)}
+                      className="px-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 text-xs"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {players.length < maxExtraSlots && (
+                  <button
+                    type="button"
+                    onClick={addPlayer}
+                    className="w-full py-2 rounded-lg border border-dashed border-white/10 text-gray-600 hover:text-gray-400 hover:border-white/20 text-xs transition-all"
+                  >
+                    + Add {requireCaptain ? 'Teammate' : 'Player'}
+                  </button>
+                )}
+              </div>
+            </div>
 
             <div className="bg-[#0B0F17] rounded-lg p-3 text-xs text-gray-500 flex items-center gap-2">
               <span>👥</span>
