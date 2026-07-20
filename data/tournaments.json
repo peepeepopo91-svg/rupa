@@ -143,6 +143,45 @@
           "status": "approved",
           "registeredAt": 1784563106332,
           "notes": ""
+        },
+        {
+          "id": "t_mrteuf95_454c9",
+          "name": "sadasd",
+          "captain": "sadasda",
+          "players": [
+            "sadasda",
+            "asdasda"
+          ],
+          "status": "pending",
+          "registeredAt": 1784563186361,
+          "notes": "",
+          "registrationIp": "103.23.253.54"
+        },
+        {
+          "id": "t_mrteunfr_0urqa",
+          "name": "asdasd",
+          "captain": "asdsadas",
+          "players": [
+            "asdsadas",
+            "asdasdad"
+          ],
+          "status": "pending",
+          "registeredAt": 1784563196967,
+          "notes": "",
+          "registrationIp": "103.23.253.54"
+        },
+        {
+          "id": "t_mrteuykb_465ls",
+          "name": "asdasdasdasd",
+          "captain": "asdasd",
+          "players": [
+            "asdasd",
+            "sadasdas"
+          ],
+          "status": "pending",
+          "registeredAt": 1784563211387,
+          "notes": "",
+          "registrationIp": "103.23.253.54"
         }
       ],
       "matches": [
@@ -168,7 +207,7 @@
       ],
       "announcements": [],
       "createdAt": 1784555332592,
-      "updatedAt": 1784563113023
+      "updatedAt": 1784563211387
     }
   ],
   "activeTournamentId": "t_mrta638x_wlkyi"
