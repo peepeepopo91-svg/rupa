@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { getEconomyOverrides, saveEconomyOverrides, getRateHistory, getExchangeRate } from '../../store/miningStore'
 import type { EconomyOverrides } from '../../store/miningStore'
 import { MINING_CONSTANTS, EXCHANGE_CONSTANTS, RIG_TIERS, NPC_MINERS } from '../../data/mining'
-import type { User, UserRig, RigStatus } from '../../data/mining'
+import type { User, UserRig, RigStatus, MiningReward } from '../../data/mining'
 import { getDashboardStats, adminUpdateMiningUser } from '../../server/miningServer'
 import { addLog } from '../../store/adminStore'
 
@@ -288,6 +288,66 @@ function NpcPoolManager({ blockReward, equalPct, hashratePct, blockIntervalMs, a
   const [npcToast, setNpcToast]     = useState<string | null>(null)
   const toastRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // ── Auto-sync: push updated earnings for every on-leaderboard NPC silently ──
+  // Runs on mount and every 5 minutes while the panel is open.
+  const poolRef = useRef(pool)
+  useEffect(() => { poolRef.current = pool }, [pool])
+
+  useEffect(() => {
+    async function autoSyncAll() {
+      const live = poolRef.current.filter(n => n.onLeaderboard)
+      for (const npc of live) {
+        try {
+          // buildNpcUser uses the current pool values via closure through poolRef
+          const tier      = RIG_TIERS.find(t => t.id === npc.rigTier) ?? RIG_TIERS[2]
+          const rigCount  = Math.max(1, Math.ceil(npc.hashrate / tier.hashrate))
+          const now       = Date.now()
+          const rigs: UserRig[] = Array.from({ length: rigCount }, (_, i) => ({
+            id: `npc_rig_${npc.id}_${i}`, tierId: tier.id, name: `${npc.name} Rig #${i + 1}`,
+            durability: 7500, status: npc.active ? ('mining' as RigStatus) : ('idle' as RigStatus),
+            miningSince: npc.active ? now - blockIntervalMs * 2 : null, purchasedAt: npc.addedAt,
+          }))
+          const currentPool    = poolRef.current.filter(n => n.active)
+          const totalHS        = currentPool.reduce((s, n) => s + n.hashrate, 0)
+          const perBlock       = totalHS > 0
+            ? (npc.hashrate / totalHS) * blockReward * hashratePct
+              + (currentPool.length > 0 ? (blockReward * equalPct) / currentPool.length : 0)
+            : 0
+          const msActive       = Math.max(0, now - npc.addedAt)
+          const blocksActive   = Math.floor(msActive / blockIntervalMs)
+          const historyCount   = Math.min(50, blocksActive)
+          const rewardHistory: MiningReward[] = Array.from({ length: historyCount }, (_, i) => {
+            const blocksAgo = historyCount - i
+            const seed      = (npc.id.charCodeAt(0) + i) % 100
+            const variance  = 0.85 + (seed / 100) * 0.30
+            return {
+              blockNumber: Math.max(1, blocksActive - blocksAgo + 1),
+              solvedAt:    now - blocksAgo * blockIntervalMs,
+              amount:      Math.round(perBlock * variance * 100) / 100,
+              type: (['hashrate_share', 'equal_split', 'equal_split', 'hashrate_share', 'finder'] as MiningReward['type'][])[i % 5],
+            }
+          })
+          const totalEarned  = blocksActive * perBlock
+          const exchangedBC  = Math.floor(totalEarned * 0.25)
+          await adminUpdateMiningUser({ data: { user: {
+            username: npc.name, createdAt: npc.addedAt,
+            balance: Math.floor(totalEarned - exchangedBC),
+            gems: Math.floor(exchangedBC * EXCHANGE_CONSTANTS.BASE_RATE * (1 - EXCHANGE_CONSTANTS.FEE_PCT)),
+            rigs, rewardHistory, lastCheckedAt: now,
+            exchangeUsedToday: 0, exchangeResetAt: now + 86_400_000,
+            miningExpiresAt: npc.active ? now + 12 * 3_600_000 : null,
+            miningRenewedAt: npc.active ? now - 3_600_000 : null,
+          } } })
+        } catch { /* silent — don't disrupt the panel */ }
+      }
+    }
+
+    autoSyncAll()
+    const id = setInterval(autoSyncAll, 5 * 60 * 1000) // every 5 min
+    return () => clearInterval(id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // intentionally empty — runs once on mount, interval handles the rest
+
   function savePool(next: NpcEntry[]) { setPool(next); safeSet(NPC_POOL_KEY, next) }
   function toast(msg: string) {
     setNpcToast(msg)
@@ -334,24 +394,74 @@ function NpcPoolManager({ blockReward, equalPct, hashratePct, blockIntervalMs, a
   function removeNpc(id: string) { savePool(pool.filter(n => n.id !== id)); toast('NPC removed') }
   function toggleActive(id: string) { savePool(pool.map(n => n.id === id ? { ...n, active: !n.active } : n)) }
 
+  // Build a fully-simulated User record for an NPC — realistic balance, reward
+  // history, gems and active rigs based on how long they've been in the pool.
+  function buildNpcUser(npc: NpcEntry): User {
+    const tier      = RIG_TIERS.find(t => t.id === npc.rigTier) ?? RIG_TIERS[2]
+    const rigCount  = Math.max(1, Math.ceil(npc.hashrate / tier.hashrate))
+    const now       = Date.now()
+
+    const rigs: UserRig[] = Array.from({ length: rigCount }, (_, i) => ({
+      id: `npc_rig_${npc.id}_${i}`,
+      tierId: tier.id,
+      name: `${npc.name} Rig #${i + 1}`,
+      durability: 7500 + Math.floor(Math.random() * 2000),
+      status: npc.active ? ('mining' as RigStatus) : ('idle' as RigStatus),
+      miningSince: npc.active ? now - blockIntervalMs * 2 : null,
+      purchasedAt: npc.addedAt,
+    }))
+
+    // How many blocks this NPC has participated in since they were created
+    const msActive    = Math.max(0, now - npc.addedAt)
+    const blocksActive = Math.floor(msActive / blockIntervalMs)
+    const perBlock    = npcEarnings(npc)
+
+    // Generate reward history — store last 50 blocks
+    const historyCount = Math.min(50, blocksActive)
+    const rewardHistory: MiningReward[] = Array.from({ length: historyCount }, (_, i) => {
+      const blocksAgo = historyCount - i          // oldest entry first
+      // small deterministic variance (±15%) so amounts look organic
+      const seed      = (npc.id.charCodeAt(0) + i) % 100
+      const variance  = 0.85 + (seed / 100) * 0.30
+      const amount    = Math.round(perBlock * variance * 100) / 100
+      const types: MiningReward['type'][] = ['hashrate_share', 'equal_split', 'equal_split', 'hashrate_share', 'finder']
+      return {
+        blockNumber: Math.max(1, blocksActive - blocksAgo + 1),
+        solvedAt:    now - blocksAgo * blockIntervalMs,
+        amount,
+        type: types[i % types.length],
+      }
+    })
+
+    // Lifetime earnings — full history (beyond the stored 50)
+    const totalEarned = blocksActive * perBlock
+
+    // Simulate ~25% of earnings exchanged to Gems at roughly base rate
+    const BASE_RATE     = EXCHANGE_CONSTANTS.BASE_RATE
+    const FEE           = EXCHANGE_CONSTANTS.FEE_PCT
+    const exchangedBC   = Math.floor(totalEarned * 0.25)
+    const gemsFromExch  = Math.floor(exchangedBC * BASE_RATE * (1 - FEE))
+    const balance       = Math.floor(totalEarned - exchangedBC)
+
+    return {
+      username:          npc.name,
+      createdAt:         npc.addedAt,
+      balance,
+      gems:              gemsFromExch,
+      rigs,
+      rewardHistory,
+      lastCheckedAt:     now,
+      exchangeUsedToday: Math.floor(Math.random() * 2),
+      exchangeResetAt:   now + 86_400_000,
+      miningExpiresAt:   npc.active ? now + 12 * 3_600_000 : null,
+      miningRenewedAt:   npc.active ? now - 3_600_000 : null,
+    }
+  }
+
   async function pushToLeaderboard(npc: NpcEntry) {
     setLbWorking(npc.id)
     try {
-      const tier = RIG_TIERS.find(t => t.id === npc.rigTier) ?? RIG_TIERS[2]
-      const rigCount = Math.max(1, Math.ceil(npc.hashrate / tier.hashrate))
-      const rigs: UserRig[] = Array.from({ length: rigCount }, (_, i) => ({
-        id: `npc_rig_${npc.id}_${i}`, tierId: tier.id, name: `${npc.name} Rig #${i + 1}`,
-        durability: 8000, status: 'mining' as RigStatus,
-        miningSince: Date.now() - 3_600_000, purchasedAt: npc.addedAt,
-      }))
-      const syntheticUser: User = {
-        username: npc.name, createdAt: npc.addedAt,
-        balance: Math.floor(npcBcDay(npc) * 7), gems: Math.floor(npcBcDay(npc) * 1.5),
-        rigs, rewardHistory: [], lastCheckedAt: Date.now(),
-        exchangeUsedToday: 0, exchangeResetAt: Date.now() + 86_400_000,
-        miningExpiresAt: null, miningRenewedAt: null,
-      }
-      await adminUpdateMiningUser({ data: { user: syntheticUser } })
+      await adminUpdateMiningUser({ data: { user: buildNpcUser(npc) } })
       savePool(pool.map(n => n.id === npc.id ? { ...n, onLeaderboard: true } : n))
       addLog(`NPC "${npc.name}" injected into live leaderboard`, 'economy', adminName)
       toast(`🏆 ${npc.name} is now on the live leaderboard`)
@@ -361,18 +471,29 @@ function NpcPoolManager({ blockReward, equalPct, hashratePct, blockIntervalMs, a
     setLbWorking(null)
   }
 
+  async function syncEarnings(npc: NpcEntry) {
+    setLbWorking(npc.id)
+    try {
+      await adminUpdateMiningUser({ data: { user: buildNpcUser(npc) } })
+      addLog(`NPC "${npc.name}" earnings synced`, 'economy', adminName)
+      toast(`🔄 ${npc.name} earnings synced`)
+    } catch {
+      toast('❌ Sync failed')
+    }
+    setLbWorking(null)
+  }
+
   async function removeFromLeaderboard(npc: NpcEntry) {
     setLbWorking(npc.id)
     try {
-      // We mark them offline in the mining user record so they drop naturally
-      const tier = RIG_TIERS.find(t => t.id === npc.rigTier) ?? RIG_TIERS[2]
-      const syntheticUser: User = {
+      const emptyUser: User = {
         username: npc.name, createdAt: npc.addedAt,
         balance: 0, gems: 0, rigs: [], rewardHistory: [],
-        lastCheckedAt: Date.now(), exchangeUsedToday: 0, exchangeResetAt: Date.now() + 86_400_000,
+        lastCheckedAt: Date.now(), exchangeUsedToday: 0,
+        exchangeResetAt: Date.now() + 86_400_000,
         miningExpiresAt: null, miningRenewedAt: null,
       }
-      await adminUpdateMiningUser({ data: { user: syntheticUser } })
+      await adminUpdateMiningUser({ data: { user: emptyUser } })
       savePool(pool.map(n => n.id === npc.id ? { ...n, onLeaderboard: false } : n))
       addLog(`NPC "${npc.name}" removed from leaderboard`, 'economy', adminName)
       toast(`${npc.name} removed from leaderboard`)
@@ -669,16 +790,22 @@ function NpcPoolManager({ blockReward, equalPct, hashratePct, blockIntervalMs, a
               </div>
 
               {/* Action footer */}
-              <div className="flex gap-2 pt-2 border-t border-white/5">
+              <div className="flex gap-1.5 pt-2 border-t border-white/5">
                 <button onClick={() => toggleActive(n.id)}
                   className={`flex-1 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${n.active ? 'bg-red-500/8 border-red-500/15 text-red-400 hover:bg-red-500/14' : 'bg-green-500/8 border-green-500/15 text-green-400 hover:bg-green-500/14'}`}>
                   {n.active ? 'Disable' : 'Activate'}
                 </button>
                 {n.onLeaderboard ? (
-                  <button onClick={() => removeFromLeaderboard(n)} disabled={!!lbWorking}
-                    className="flex-1 py-1.5 rounded-xl text-xs font-semibold border bg-amber-500/8 border-amber-500/15 text-amber-400 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 transition-colors disabled:opacity-50">
-                    {lbWorking === n.id ? '…' : '🏆 Remove LB'}
-                  </button>
+                  <>
+                    <button onClick={() => syncEarnings(n)} disabled={!!lbWorking} title="Recalculate balance + reward history based on time active"
+                      className="flex-1 py-1.5 rounded-xl text-xs font-semibold border bg-[#00BFFF]/8 border-[#00BFFF]/15 text-[#00BFFF] hover:bg-[#00BFFF]/14 transition-colors disabled:opacity-50">
+                      {lbWorking === n.id ? '…' : '🔄 Sync'}
+                    </button>
+                    <button onClick={() => removeFromLeaderboard(n)} disabled={!!lbWorking}
+                      className="flex-1 py-1.5 rounded-xl text-xs font-semibold border bg-amber-500/8 border-amber-500/15 text-amber-400 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 transition-colors disabled:opacity-50">
+                      {lbWorking === n.id ? '…' : '🏆 Remove'}
+                    </button>
+                  </>
                 ) : (
                   <button onClick={() => pushToLeaderboard(n)} disabled={!!lbWorking}
                     className="flex-1 py-1.5 rounded-xl text-xs font-semibold border bg-white/5 border-white/10 text-gray-400 hover:text-amber-400 hover:border-amber-500/20 hover:bg-amber-500/6 transition-colors disabled:opacity-50">
