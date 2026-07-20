@@ -78,9 +78,25 @@
         "type": "single_elimination",
         "rounds": [
           {
+            "name": "Quarter-Finals",
+            "matchIds": [
+              "t_mrteyffh_zjdli",
+              "t_mrteyffh_3fdk0",
+              "t_mrteyffh_5a1c4",
+              "t_mrteyffh_s133l"
+            ]
+          },
+          {
+            "name": "Semi-Finals",
+            "matchIds": [
+              "t_mrteyffh_fxf7w",
+              "t_mrteyffh_c3jat"
+            ]
+          },
+          {
             "name": "Finals",
             "matchIds": [
-              "t_mrtecqiu_r8on7"
+              "t_mrteyffh_aeo7j"
             ]
           }
         ]
@@ -94,7 +110,7 @@
             "dsfsdfs",
             "sdfsdf"
           ],
-          "status": "rejected",
+          "status": "approved",
           "registeredAt": 1784562086954,
           "notes": ""
         },
@@ -111,17 +127,6 @@
           "notes": ""
         },
         {
-          "id": "t_mrteqxmq_wkz3x",
-          "name": "dffgdfg",
-          "captain": "dfgdfg",
-          "players": [
-            "dfgdfg"
-          ],
-          "status": "approved",
-          "registeredAt": 1784563023554,
-          "notes": ""
-        },
-        {
           "id": "t_mrterzy5_4ifyz",
           "name": "dfgfd",
           "captain": "dfgdfg",
@@ -129,19 +134,8 @@
             "dfgdfg",
             "dgfdfg"
           ],
-          "status": "rejected",
-          "registeredAt": 1784563073213,
-          "notes": ""
-        },
-        {
-          "id": "t_mrtespi4_a6v9d",
-          "name": "dfgdfg",
-          "captain": "dfgdfg",
-          "players": [
-            "dfgdfg"
-          ],
           "status": "approved",
-          "registeredAt": 1784563106332,
+          "registeredAt": 1784563073213,
           "notes": ""
         },
         {
@@ -152,7 +146,7 @@
             "sadasda",
             "asdasda"
           ],
-          "status": "pending",
+          "status": "approved",
           "registeredAt": 1784563186361,
           "notes": "",
           "registrationIp": "103.23.253.54"
@@ -165,7 +159,7 @@
             "asdsadas",
             "asdasdad"
           ],
-          "status": "pending",
+          "status": "approved",
           "registeredAt": 1784563196967,
           "notes": "",
           "registrationIp": "103.23.253.54"
@@ -178,7 +172,7 @@
             "asdasd",
             "sadasdas"
           ],
-          "status": "pending",
+          "status": "approved",
           "registeredAt": 1784563211387,
           "notes": "",
           "registrationIp": "103.23.253.54"
@@ -186,12 +180,12 @@
       ],
       "matches": [
         {
-          "id": "t_mrtecqiu_r8on7",
+          "id": "t_mrteyffh_zjdli",
           "round": 0,
           "matchNumber": 1,
-          "bracketSide": "finals",
-          "team1Id": "t_mrte71as_7p5ti",
-          "team2Id": "t_mrte6uy2_o0m1q",
+          "bracketSide": "winners",
+          "team1Id": "t_mrte6uy2_o0m1q",
+          "team2Id": "t_mrte71as_7p5ti",
           "score1": 0,
           "score2": 0,
           "winnerId": null,
@@ -203,11 +197,125 @@
           "referee": "",
           "notes": "",
           "replayLink": ""
+        },
+        {
+          "id": "t_mrteyffh_3fdk0",
+          "round": 0,
+          "matchNumber": 2,
+          "bracketSide": "winners",
+          "team1Id": "t_mrterzy5_4ifyz",
+          "team2Id": "t_mrteuf95_454c9",
+          "score1": 0,
+          "score2": 0,
+          "winnerId": null,
+          "status": "scheduled",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        },
+        {
+          "id": "t_mrteyffh_5a1c4",
+          "round": 0,
+          "matchNumber": 3,
+          "bracketSide": "winners",
+          "team1Id": "t_mrteunfr_0urqa",
+          "team2Id": "t_mrteuykb_465ls",
+          "score1": 0,
+          "score2": 0,
+          "winnerId": null,
+          "status": "scheduled",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        },
+        {
+          "id": "t_mrteyffh_s133l",
+          "round": 0,
+          "matchNumber": 4,
+          "bracketSide": "winners",
+          "team1Id": null,
+          "team2Id": null,
+          "score1": 0,
+          "score2": 0,
+          "winnerId": null,
+          "status": "bye",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        },
+        {
+          "id": "t_mrteyffh_fxf7w",
+          "round": 1,
+          "matchNumber": 5,
+          "bracketSide": "winners",
+          "team1Id": null,
+          "team2Id": null,
+          "score1": 0,
+          "score2": 0,
+          "winnerId": null,
+          "status": "pending",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        },
+        {
+          "id": "t_mrteyffh_c3jat",
+          "round": 1,
+          "matchNumber": 6,
+          "bracketSide": "winners",
+          "team1Id": null,
+          "team2Id": null,
+          "score1": 0,
+          "score2": 0,
+          "winnerId": null,
+          "status": "pending",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        },
+        {
+          "id": "t_mrteyffh_aeo7j",
+          "round": 2,
+          "matchNumber": 7,
+          "bracketSide": "finals",
+          "team1Id": null,
+          "team2Id": null,
+          "score1": 0,
+          "score2": 0,
+          "winnerId": null,
+          "status": "pending",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
         }
       ],
       "announcements": [],
       "createdAt": 1784555332592,
-      "updatedAt": 1784563211387
+      "updatedAt": 1784563373213
     }
   ],
   "activeTournamentId": "t_mrta638x_wlkyi"
