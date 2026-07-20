@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getEconomyOverrides, saveEconomyOverrides, getRateHistory, getExchangeRate } from '../../store/miningStore'
 import type { EconomyOverrides } from '../../store/miningStore'
 import { MINING_CONSTANTS, EXCHANGE_CONSTANTS, RIG_TIERS, NPC_MINERS } from '../../data/mining'
-import { getDashboardStats } from '../../server/miningServer'
-import type { User } from '../../data/mining'
+import type { User, UserRig, RigStatus } from '../../data/mining'
+import { getDashboardStats, adminUpdateMiningUser } from '../../server/miningServer'
 import { addLog } from '../../store/adminStore'
 
 interface Props { admin: string }
@@ -235,6 +235,500 @@ function Field({
           className={`w-24 text-right text-xs bg-white/5 border rounded-lg px-2 py-1 outline-none font-mono transition-colors ${isOverridden ? 'border-orange-500/30 text-orange-300 focus:border-orange-500/60' : 'border-white/10 text-white focus:border-[#00BFFF]/40'}`}
         />
       </div>
+    </div>
+  )
+}
+
+// ─── NPC Pool Manager ─────────────────────────────────────────────────────────
+
+const NPC_POOL_KEY = 'bn_admin_npc_pool'
+const NPC_EMOJIS = ['🤖','👾','🦾','⚡','💎','🔮','🌀','🧬','🔬','🛸','🎮','💻','⚙️','🔧','🌐']
+
+interface NpcEntry {
+  id: string
+  name: string
+  hashrate: number
+  rigTier: string
+  active: boolean
+  emoji: string
+  addedAt: number
+  onLeaderboard: boolean
+}
+
+const DEFAULT_NPC_POOL: NpcEntry[] = (NPC_MINERS as readonly { name: string; hashrate: number }[]).map((n, i) => ({
+  id: `npc_default_${i}`,
+  name: n.name,
+  hashrate: n.hashrate,
+  rigTier: 'pro',
+  active: true,
+  emoji: NPC_EMOJIS[i % NPC_EMOJIS.length],
+  addedAt: Date.now() - i * 86_400_000,
+  onLeaderboard: false,
+}))
+
+function NpcPoolManager({ blockReward, equalPct, hashratePct, blockIntervalMs, allUsers, admin: adminName }: {
+  blockReward: number; equalPct: number; hashratePct: number
+  blockIntervalMs: number; allUsers: Record<string, User>; admin: string
+}) {
+  const [pool, setPool]             = useState<NpcEntry[]>(() => safeGet<NpcEntry[]>(NPC_POOL_KEY) ?? DEFAULT_NPC_POOL)
+  const [editingId, setEditingId]   = useState<string | null>(null)
+  const [editName, setEditName]     = useState('')
+  const [editHashrate, setEditHashrate] = useState(10)
+  const [editEmoji, setEditEmoji]   = useState('🤖')
+  const [editTier, setEditTier]     = useState('pro')
+  const [showAdd, setShowAdd]       = useState(false)
+  const [newName, setNewName]       = useState('')
+  const [newHashrate, setNewHashrate] = useState(10)
+  const [newEmoji, setNewEmoji]     = useState('🤖')
+  const [newTier, setNewTier]       = useState('pro')
+  const [sort, setSort]             = useState<'hashrate' | 'name' | 'earnings'>('hashrate')
+  const [filter, setFilter]         = useState('')
+  const [lbWorking, setLbWorking]   = useState<string | null>(null)
+  const [showLb, setShowLb]         = useState(false)
+  const [npcToast, setNpcToast]     = useState<string | null>(null)
+  const toastRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function savePool(next: NpcEntry[]) { setPool(next); safeSet(NPC_POOL_KEY, next) }
+  function toast(msg: string) {
+    setNpcToast(msg)
+    if (toastRef.current) clearTimeout(toastRef.current)
+    toastRef.current = setTimeout(() => setNpcToast(null), 2800)
+  }
+
+  const activePool       = pool.filter(n => n.active)
+  const totalNpcHashrate = activePool.reduce((s, n) => s + n.hashrate, 0)
+  const blocksPerDay     = (24 * 60 * 60 * 1000) / blockIntervalMs
+
+  function npcEarnings(n: NpcEntry) {
+    if (!n.active || totalNpcHashrate === 0) return 0
+    const hs = (n.hashrate / totalNpcHashrate) * blockReward * hashratePct
+    const eq = activePool.length > 0 ? (blockReward * equalPct) / activePool.length : 0
+    return hs + eq
+  }
+  function npcBcDay(n: NpcEntry) { return npcEarnings(n) * blocksPerDay }
+
+  const displayed = [...pool]
+    .filter(n => n.name.toLowerCase().includes(filter.toLowerCase()))
+    .sort((a, b) => sort === 'name' ? a.name.localeCompare(b.name) : sort === 'earnings' ? npcBcDay(b) - npcBcDay(a) : b.hashrate - a.hashrate)
+
+  // Leaderboard mix: real users + NPCs ranked by simulated 7-day balance
+  const lbEntries = [
+    ...Object.values(allUsers).map(u => ({ name: u.username, balance: Math.floor(u.balance), isNpc: false, id: u.username })),
+    ...activePool.map(n => ({ name: n.emoji + ' ' + n.name, balance: Math.floor(npcBcDay(n) * 7), isNpc: true, id: n.id, onLb: n.onLeaderboard })),
+  ].sort((a, b) => b.balance - a.balance).map((e, i) => ({ ...e, rank: i + 1 }))
+
+  function startEdit(n: NpcEntry) { setEditingId(n.id); setEditName(n.name); setEditHashrate(n.hashrate); setEditEmoji(n.emoji); setEditTier(n.rigTier) }
+  function commitEdit() {
+    if (!editingId) return
+    savePool(pool.map(n => n.id === editingId ? { ...n, name: editName.trim() || n.name, hashrate: editHashrate, emoji: editEmoji, rigTier: editTier } : n))
+    setEditingId(null)
+    toast('NPC updated')
+  }
+  function addNpc() {
+    if (!newName.trim()) return
+    const entry: NpcEntry = { id: `npc_${Date.now()}`, name: newName.trim(), hashrate: newHashrate, rigTier: newTier, active: true, emoji: newEmoji, addedAt: Date.now(), onLeaderboard: false }
+    savePool([...pool, entry])
+    setNewName(''); setNewHashrate(10); setShowAdd(false)
+    toast(`${newEmoji} ${newName.trim()} added to the pool`)
+  }
+  function removeNpc(id: string) { savePool(pool.filter(n => n.id !== id)); toast('NPC removed') }
+  function toggleActive(id: string) { savePool(pool.map(n => n.id === id ? { ...n, active: !n.active } : n)) }
+
+  async function pushToLeaderboard(npc: NpcEntry) {
+    setLbWorking(npc.id)
+    try {
+      const tier = RIG_TIERS.find(t => t.id === npc.rigTier) ?? RIG_TIERS[2]
+      const rigCount = Math.max(1, Math.ceil(npc.hashrate / tier.hashrate))
+      const rigs: UserRig[] = Array.from({ length: rigCount }, (_, i) => ({
+        id: `npc_rig_${npc.id}_${i}`, tierId: tier.id, name: `${npc.name} Rig #${i + 1}`,
+        durability: 8000, status: 'mining' as RigStatus,
+        miningSince: Date.now() - 3_600_000, purchasedAt: npc.addedAt,
+      }))
+      const syntheticUser: User = {
+        username: npc.name, createdAt: npc.addedAt,
+        balance: Math.floor(npcBcDay(npc) * 7), gems: Math.floor(npcBcDay(npc) * 1.5),
+        rigs, rewardHistory: [], lastCheckedAt: Date.now(),
+        exchangeUsedToday: 0, exchangeResetAt: Date.now() + 86_400_000,
+        miningExpiresAt: null, miningRenewedAt: null,
+      }
+      await adminUpdateMiningUser({ data: { user: syntheticUser } })
+      savePool(pool.map(n => n.id === npc.id ? { ...n, onLeaderboard: true } : n))
+      addLog(`NPC "${npc.name}" injected into live leaderboard`, 'economy', adminName)
+      toast(`🏆 ${npc.name} is now on the live leaderboard`)
+    } catch {
+      toast('❌ Failed to add to leaderboard')
+    }
+    setLbWorking(null)
+  }
+
+  async function removeFromLeaderboard(npc: NpcEntry) {
+    setLbWorking(npc.id)
+    try {
+      // We mark them offline in the mining user record so they drop naturally
+      const tier = RIG_TIERS.find(t => t.id === npc.rigTier) ?? RIG_TIERS[2]
+      const syntheticUser: User = {
+        username: npc.name, createdAt: npc.addedAt,
+        balance: 0, gems: 0, rigs: [], rewardHistory: [],
+        lastCheckedAt: Date.now(), exchangeUsedToday: 0, exchangeResetAt: Date.now() + 86_400_000,
+        miningExpiresAt: null, miningRenewedAt: null,
+      }
+      await adminUpdateMiningUser({ data: { user: syntheticUser } })
+      savePool(pool.map(n => n.id === npc.id ? { ...n, onLeaderboard: false } : n))
+      addLog(`NPC "${npc.name}" removed from leaderboard`, 'economy', adminName)
+      toast(`${npc.name} removed from leaderboard`)
+    } catch {
+      toast('❌ Failed to remove from leaderboard')
+    }
+    setLbWorking(null)
+  }
+
+  const totalBcDay   = activePool.reduce((s, n) => s + npcBcDay(n), 0)
+  const dominance    = totalNpcHashrate > 0 && Object.values(allUsers).length > 0
+    ? (totalNpcHashrate / (totalNpcHashrate + Object.values(allUsers).reduce((s, u) => s + u.rigs.filter(r => r.status === 'mining').reduce((rs, r) => rs + (RIG_TIERS.find(t => t.id === r.tierId)?.hashrate ?? 0), 0), 0))) * 100
+    : 100
+  const strongest = activePool.length > 0 ? activePool.reduce((a, b) => a.hashrate > b.hashrate ? a : b) : null
+  const weakest   = activePool.length > 0 ? activePool.reduce((a, b) => a.hashrate < b.hashrate ? a : b) : null
+
+  return (
+    <div className="space-y-5">
+      {/* Toast */}
+      {npcToast && (
+        <div className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-xl border bg-purple-500/15 border-purple-500/30 text-purple-200 backdrop-blur-md">
+          {npcToast}
+        </div>
+      )}
+
+      {/* ── Stats header ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+        {[
+          { label: 'Total NPCs',    value: pool.length,              color: 'text-white',      icon: '🤖' },
+          { label: 'Active',        value: activePool.length,        color: 'text-green-400',  icon: '✅' },
+          { label: 'Pool GH/s',     value: fmt(totalNpcHashrate),   color: 'text-purple-400', icon: '⚡' },
+          { label: 'Est. BC/day',   value: fmtShort(totalBcDay),    color: 'text-amber-400',  icon: '💰' },
+          { label: 'Pool Dominance',value: `${dominance.toFixed(0)}%`, color: dominance > 50 ? 'text-red-400' : 'text-green-400', icon: '📊' },
+          { label: 'Avg GH/s',      value: activePool.length > 0 ? fmt(totalNpcHashrate / activePool.length, 1) : '0', color: 'text-[#00BFFF]', icon: '📈' },
+        ].map(s => (
+          <div key={s.label} className="glass rounded-xl border border-white/6 p-3 text-center">
+            <p className="text-lg mb-1">{s.icon}</p>
+            <p className={`font-['Space_Grotesk'] font-black text-xl ${s.color}`}>{s.value}</p>
+            <p className="text-[9px] text-gray-600 uppercase tracking-wide mt-0.5">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Pool hashrate bar ── */}
+      {activePool.length > 0 && (
+        <div className="glass rounded-2xl border border-white/6 p-4">
+          <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-3">Pool Hashrate Distribution</p>
+          <div className="flex h-5 rounded-full overflow-hidden gap-px">
+            {activePool.map((n, i) => {
+              const pct = totalNpcHashrate > 0 ? (n.hashrate / totalNpcHashrate) * 100 : 0
+              const hue = (i * 47) % 360
+              return (
+                <div key={n.id} title={`${n.emoji} ${n.name}: ${n.hashrate} GH/s (${pct.toFixed(1)}%)`}
+                  className="h-full transition-all duration-500 first:rounded-l-full last:rounded-r-full cursor-default"
+                  style={{ width: `${pct}%`, background: `hsl(${hue},70%,55%)`, opacity: 0.85 }} />
+              )
+            })}
+          </div>
+          <div className="flex flex-wrap gap-3 mt-3">
+            {activePool.map((n, i) => {
+              const hue = (i * 47) % 360
+              return (
+                <span key={n.id} className="flex items-center gap-1.5 text-[10px] text-gray-500">
+                  <span className="w-2 h-2 rounded-full" style={{ background: `hsl(${hue},70%,55%)` }} />
+                  {n.emoji} {n.name} <span className="text-gray-700">({n.hashrate} GH/s)</span>
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Strongest/Weakest callouts ── */}
+      {strongest && weakest && strongest.id !== weakest.id && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="glass rounded-xl border border-green-500/15 p-4 flex items-center gap-3">
+            <span className="text-2xl">{strongest.emoji}</span>
+            <div>
+              <p className="text-[9px] text-gray-600 uppercase tracking-widest">Strongest NPC</p>
+              <p className="text-white text-sm font-semibold">{strongest.name}</p>
+              <p className="text-green-400 text-xs font-bold">{strongest.hashrate} GH/s · {fmtShort(npcBcDay(strongest))} BC/day</p>
+            </div>
+          </div>
+          <div className="glass rounded-xl border border-red-500/15 p-4 flex items-center gap-3">
+            <span className="text-2xl">{weakest.emoji}</span>
+            <div>
+              <p className="text-[9px] text-gray-600 uppercase tracking-widest">Weakest NPC</p>
+              <p className="text-white text-sm font-semibold">{weakest.name}</p>
+              <p className="text-red-400 text-xs font-bold">{weakest.hashrate} GH/s · {fmtShort(npcBcDay(weakest))} BC/day</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Controls bar ── */}
+      <div className="flex flex-wrap items-center gap-2">
+        <input placeholder="Filter by name…" value={filter} onChange={e => setFilter(e.target.value)}
+          className="flex-1 min-w-32 px-3 py-2 rounded-xl bg-white/4 border border-white/8 text-white text-sm outline-none focus:border-purple-500/40 placeholder:text-gray-700" />
+        <select value={sort} onChange={e => setSort(e.target.value as typeof sort)}
+          className="px-3 py-2 rounded-xl bg-white/4 border border-white/8 text-white text-sm outline-none cursor-pointer">
+          <option value="hashrate">⬇ Hashrate</option>
+          <option value="earnings">⬇ Earnings</option>
+          <option value="name">A–Z Name</option>
+        </select>
+        <button onClick={() => savePool(pool.map(n => ({ ...n, active: true })))}
+          className="px-3 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-semibold hover:bg-green-500/15 transition-colors">
+          Activate All
+        </button>
+        <button onClick={() => savePool(pool.map(n => ({ ...n, active: false })))}
+          className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold hover:bg-red-500/15 transition-colors">
+          Disable All
+        </button>
+        <button onClick={() => setShowLb(v => !v)}
+          className={`px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${showLb ? 'bg-amber-500/15 border-amber-500/25 text-amber-300' : 'bg-white/4 border-white/8 text-gray-400 hover:text-white'}`}>
+          🏆 Leaderboard
+        </button>
+        <button onClick={() => setShowAdd(v => !v)}
+          className="px-4 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 text-sm font-semibold hover:bg-purple-500/22 transition-colors">
+          + Add NPC
+        </button>
+      </div>
+
+      {/* ── Add NPC form ── */}
+      {showAdd && (
+        <div className="glass rounded-2xl border border-purple-500/25 p-5 space-y-4">
+          <p className="text-sm font-semibold text-purple-300">➕ New NPC Miner</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs text-gray-500">Name</label>
+              <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. GhostMiner_X"
+                className="w-full px-3 py-2 rounded-xl bg-white/4 border border-white/10 text-white text-sm outline-none focus:border-purple-500/40"
+                onKeyDown={e => e.key === 'Enter' && addNpc()} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-gray-500">Avatar</label>
+              <div className="flex flex-wrap gap-1.5">
+                {NPC_EMOJIS.map(e => (
+                  <button key={e} onClick={() => setNewEmoji(e)}
+                    className={`w-8 h-8 rounded-lg text-base transition-all ${newEmoji === e ? 'bg-purple-500/25 border border-purple-500/45 scale-110' : 'bg-white/4 border border-white/8 hover:bg-white/8'}`}>
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-gray-500">Hashrate: <strong className="text-white">{newHashrate} GH/s</strong></label>
+              <input type="range" min={1} max={100} value={newHashrate} onChange={e => setNewHashrate(+e.target.value)} className="w-full accent-purple-500" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-gray-500">Rig Tier</label>
+              <div className="flex flex-wrap gap-2">
+                {RIG_TIERS.map(t => (
+                  <button key={t.id} onClick={() => setNewTier(t.id)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${newTier === t.id ? 'bg-[#00BFFF]/18 border border-[#00BFFF]/35 text-[#00BFFF]' : 'bg-white/4 border border-white/8 text-gray-500 hover:text-white'}`}>
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={addNpc} disabled={!newName.trim()}
+              className="px-4 py-2 rounded-xl bg-purple-500/20 border border-purple-500/35 text-purple-300 text-sm font-semibold hover:bg-purple-500/28 transition-colors disabled:opacity-40">
+              Add Miner
+            </button>
+            <button onClick={() => setShowAdd(false)}
+              className="px-4 py-2 rounded-xl bg-white/4 border border-white/8 text-gray-400 text-sm hover:text-white transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── NPC cards grid ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {displayed.map((n, cardIdx) => {
+          const isEditing = editingId === n.id
+          const share     = totalNpcHashrate > 0 ? (n.hashrate / totalNpcHashrate) * 100 : 0
+          const bcDay     = npcBcDay(n)
+          const tier      = RIG_TIERS.find(t => t.id === n.rigTier) ?? RIG_TIERS[2]
+          const hue       = (cardIdx * 47) % 360
+
+          return (
+            <div key={n.id} className={`glass rounded-2xl border p-4 transition-all duration-200 ${n.active ? 'border-purple-500/20' : 'border-white/5 opacity-55'}`}>
+
+              {/* Card header */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {isEditing ? (
+                    <select value={editEmoji} onChange={e => setEditEmoji(e.target.value)}
+                      className="w-11 h-10 rounded-xl bg-white/8 border border-white/12 text-xl outline-none cursor-pointer text-center">
+                      {NPC_EMOJIS.map(e => <option key={e} value={e}>{e}</option>)}
+                    </select>
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 border"
+                      style={{ background: `hsl(${hue},60%,35%,0.2)`, borderColor: `hsl(${hue},60%,55%,0.25)` }}>
+                      {n.emoji}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    {isEditing ? (
+                      <input value={editName} onChange={e => setEditName(e.target.value)}
+                        className="w-full px-2 py-1 rounded-lg bg-white/6 border border-white/15 text-white text-sm font-semibold outline-none focus:border-purple-500/50"
+                        onKeyDown={e => e.key === 'Enter' && commitEdit()} autoFocus />
+                    ) : (
+                      <p className="text-white text-sm font-semibold truncate">{n.name}</p>
+                    )}
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${n.active ? 'bg-green-500/12 text-green-400' : 'bg-red-500/12 text-red-400'}`}>
+                        {n.active ? '● ACTIVE' : '○ OFFLINE'}
+                      </span>
+                      {n.onLeaderboard && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/12 text-amber-400">🏆 LB</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0 ml-2">
+                  {isEditing ? (
+                    <>
+                      <button onClick={commitEdit} className="px-2.5 py-1 rounded-lg bg-green-500/15 border border-green-500/25 text-green-400 text-xs font-bold hover:bg-green-500/22 transition-colors">Save</button>
+                      <button onClick={() => setEditingId(null)} className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-500 text-xs hover:text-white transition-colors">✕</button>
+                    </>
+                  ) : (
+                    <button onClick={() => startEdit(n)} title="Edit"
+                      className="w-7 h-7 rounded-lg bg-white/5 border border-white/8 text-gray-600 hover:text-white hover:bg-white/10 transition-colors flex items-center justify-center text-sm">
+                      ✏️
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Hashrate */}
+              {isEditing ? (
+                <div className="mb-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-gray-600 uppercase tracking-wide">Hashrate</span>
+                    <span className="text-xs font-bold text-purple-300">{editHashrate} GH/s</span>
+                  </div>
+                  <input type="range" min={1} max={100} value={editHashrate} onChange={e => setEditHashrate(+e.target.value)} className="w-full accent-purple-500" />
+                </div>
+              ) : (
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] text-gray-600 uppercase tracking-wide">Hashrate</span>
+                    <span className="font-['Space_Grotesk'] font-black text-lg" style={{ color: `hsl(${hue},70%,65%)` }}>
+                      {n.hashrate} <span className="text-xs font-normal text-gray-600">GH/s</span>
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, n.hashrate)}%`, background: `hsl(${hue},65%,55%)` }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Rig tier */}
+              {isEditing ? (
+                <div className="mb-3 flex flex-wrap gap-1.5">
+                  {RIG_TIERS.map(t => (
+                    <button key={t.id} onClick={() => setEditTier(t.id)}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all ${editTier === t.id ? 'bg-[#00BFFF]/18 border border-[#00BFFF]/35 text-[#00BFFF]' : 'bg-white/4 border border-white/8 text-gray-600 hover:text-white'}`}>
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] text-gray-600 uppercase tracking-wide">Rig tier</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#00BFFF]/8 border border-[#00BFFF]/15 text-[#00BFFF]">{tier.name}</span>
+                </div>
+              )}
+
+              {/* Pool share bar */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] text-gray-600 uppercase tracking-wide">Pool share</span>
+                  <span className="text-[10px] font-bold text-white">{n.active ? `${share.toFixed(1)}%` : '—'}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-500" style={{ width: n.active ? `${share}%` : '0%', background: `hsl(${hue},65%,55%)` }} />
+                </div>
+              </div>
+
+              {/* Stats mini grid */}
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {[
+                  { v: n.active ? fmtShort(bcDay)             : '—', label: 'BC/day',   color: 'text-amber-400'   },
+                  { v: n.active ? fmtShort(npcEarnings(n))    : '—', label: 'BC/block', color: 'text-[#00BFFF]'   },
+                  { v: n.active ? `${share.toFixed(0)}%`       : '—', label: 'share',    color: 'text-purple-400'  },
+                ].map(s => (
+                  <div key={s.label} className="p-2 rounded-xl bg-white/3 border border-white/5 text-center">
+                    <p className={`font-['Space_Grotesk'] font-black text-sm ${s.color}`}>{s.v}</p>
+                    <p className="text-[9px] text-gray-700 uppercase tracking-wide mt-0.5">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action footer */}
+              <div className="flex gap-2 pt-2 border-t border-white/5">
+                <button onClick={() => toggleActive(n.id)}
+                  className={`flex-1 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${n.active ? 'bg-red-500/8 border-red-500/15 text-red-400 hover:bg-red-500/14' : 'bg-green-500/8 border-green-500/15 text-green-400 hover:bg-green-500/14'}`}>
+                  {n.active ? 'Disable' : 'Activate'}
+                </button>
+                {n.onLeaderboard ? (
+                  <button onClick={() => removeFromLeaderboard(n)} disabled={!!lbWorking}
+                    className="flex-1 py-1.5 rounded-xl text-xs font-semibold border bg-amber-500/8 border-amber-500/15 text-amber-400 hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400 transition-colors disabled:opacity-50">
+                    {lbWorking === n.id ? '…' : '🏆 Remove LB'}
+                  </button>
+                ) : (
+                  <button onClick={() => pushToLeaderboard(n)} disabled={!!lbWorking}
+                    className="flex-1 py-1.5 rounded-xl text-xs font-semibold border bg-white/5 border-white/10 text-gray-400 hover:text-amber-400 hover:border-amber-500/20 hover:bg-amber-500/6 transition-colors disabled:opacity-50">
+                    {lbWorking === n.id ? '…' : '🏆 Add to LB'}
+                  </button>
+                )}
+                <button onClick={() => removeNpc(n.id)}
+                  className="w-8 flex items-center justify-center rounded-xl bg-white/4 border border-white/8 text-gray-700 hover:text-red-400 hover:border-red-500/20 hover:bg-red-500/6 transition-colors">
+                  🗑
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ── Leaderboard preview panel ── */}
+      {showLb && (
+        <div className="glass rounded-2xl border border-amber-500/15 overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-white">🏆 Leaderboard Preview</p>
+              <p className="text-[10px] text-gray-600 mt-0.5">NPCs shown with simulated 7-day earnings · Real players show live balance</p>
+            </div>
+            <span className="text-[10px] px-2 py-1 rounded-lg bg-purple-500/10 border border-purple-500/15 text-purple-400">{lbEntries.length} total entries</span>
+          </div>
+          <div className="divide-y divide-white/4 max-h-96 overflow-y-auto">
+            {lbEntries.slice(0, 20).map(e => (
+              <div key={e.id} className={`flex items-center gap-3 px-5 py-2.5 hover:bg-white/2 transition-colors ${e.isNpc ? 'bg-purple-500/3' : ''}`}>
+                <span className={`w-7 text-center font-['Space_Grotesk'] font-black text-sm ${e.rank <= 3 ? 'text-amber-400' : 'text-gray-600'}`}>
+                  {e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : e.rank === 3 ? '🥉' : `#${e.rank}`}
+                </span>
+                <span className={`flex-1 text-sm font-semibold truncate ${e.isNpc ? 'text-purple-300' : 'text-white'}`}>{e.name}</span>
+                {e.isNpc && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/20 text-purple-400 shrink-0">NPC</span>
+                )}
+                {'onLb' in e && e.onLb && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/12 border border-amber-500/18 text-amber-400 shrink-0">LIVE</span>
+                )}
+                <span className={`font-['Space_Grotesk'] font-black text-sm shrink-0 ${e.isNpc ? 'text-amber-400' : 'text-[#00BFFF]'}`}>
+                  {fmtShort(e.balance)} BC
+                </span>
+              </div>
+            ))}
+          </div>
+          {lbEntries.length > 20 && (
+            <p className="text-center text-[10px] text-gray-700 py-2">+{lbEntries.length - 20} more entries</p>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -542,37 +1036,17 @@ export function EconomyManager({ admin }: Props) {
             </div>
           </div>
 
-          {/* NPC Pool */}
+          {/* NPC Pool — grand manager */}
           <div className="glass rounded-2xl border border-white/8 p-6">
             <SectionHeader icon="🤖" title="NPC Miner Pool" sub="Simulated miners that keep the network active" />
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-              {NPC_MINERS.map(n => {
-                const share = (n.hashrate / (npcHashrate + (userList.length > 0 ? 10 : 0))) * 100
-                return (
-                  <div key={n.name} className="p-3 rounded-xl bg-white/3 border border-white/5 text-center">
-                    <p className="text-[10px] text-gray-400 font-semibold truncate">{n.name}</p>
-                    <p className="font-['Space_Grotesk'] font-black text-lg text-[#00BFFF] mt-1">{n.hashrate}</p>
-                    <p className="text-gray-600 text-[9px]">GH/s</p>
-                  </div>
-                )
-              })}
-            </div>
-            <div className="flex items-center gap-6 p-4 rounded-xl bg-white/3 border border-white/5">
-              <div className="text-center">
-                <p className="font-['Space_Grotesk'] font-black text-2xl text-purple-400">{npcHashrate}</p>
-                <p className="text-gray-600 text-xs">NPC total GH/s</p>
-              </div>
-              <div className="flex-1 h-3 rounded-full bg-white/5 overflow-hidden flex">
-                <div className="h-full bg-gradient-to-r from-purple-500/60 to-purple-400 rounded-l-full transition-all"
-                  style={{ width: `${(npcHashrate / (npcHashrate + 100)) * 100}%` }} />
-                <div className="h-full bg-gradient-to-r from-[#00BFFF]/60 to-[#00BFFF] rounded-r-full transition-all"
-                  style={{ width: `${(100 / (npcHashrate + 100)) * 100}%` }} />
-              </div>
-              <div className="text-center text-xs text-gray-600">
-                <span className="text-purple-400">■</span> NPC pool &nbsp;
-                <span className="text-[#00BFFF]">■</span> user (100 GH/s example)
-              </div>
-            </div>
+            <NpcPoolManager
+              blockReward={blockReward}
+              equalPct={equalPct}
+              hashratePct={hashratePct}
+              blockIntervalMs={blockIntervalMs}
+              allUsers={users}
+              admin={admin}
+            />
           </div>
         </div>
       )}
