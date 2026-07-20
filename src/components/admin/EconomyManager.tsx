@@ -255,6 +255,7 @@ interface NpcEntry {
   onLeaderboard: boolean
 }
 
+// Default NPCs are "veterans" — 60-90 days of history so earnings are meaningful
 const DEFAULT_NPC_POOL: NpcEntry[] = (NPC_MINERS as readonly { name: string; hashrate: number }[]).map((n, i) => ({
   id: `npc_default_${i}`,
   name: n.name,
@@ -262,7 +263,7 @@ const DEFAULT_NPC_POOL: NpcEntry[] = (NPC_MINERS as readonly { name: string; has
   rigTier: 'pro',
   active: true,
   emoji: NPC_EMOJIS[i % NPC_EMOJIS.length],
-  addedAt: Date.now() - i * 86_400_000,
+  addedAt: Date.now() - (60 + i * 7) * 86_400_000, // 60/67/74/81/88 days ago
   onLeaderboard: false,
 }))
 
@@ -289,64 +290,29 @@ function NpcPoolManager({ blockReward, equalPct, hashratePct, blockIntervalMs, a
   const toastRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Auto-sync: push updated earnings for every on-leaderboard NPC silently ──
-  // Runs on mount and every 5 minutes while the panel is open.
-  const poolRef = useRef(pool)
+  // Uses a ref so the interval always sees the latest buildNpcUser + pool state.
+  const poolRef    = useRef(pool)
+  const syncFnRef  = useRef<(npc: NpcEntry) => Promise<void>>(async () => {})
   useEffect(() => { poolRef.current = pool }, [pool])
 
   useEffect(() => {
     async function autoSyncAll() {
       const live = poolRef.current.filter(n => n.onLeaderboard)
       for (const npc of live) {
-        try {
-          // buildNpcUser uses the current pool values via closure through poolRef
-          const tier      = RIG_TIERS.find(t => t.id === npc.rigTier) ?? RIG_TIERS[2]
-          const rigCount  = Math.max(1, Math.ceil(npc.hashrate / tier.hashrate))
-          const now       = Date.now()
-          const rigs: UserRig[] = Array.from({ length: rigCount }, (_, i) => ({
-            id: `npc_rig_${npc.id}_${i}`, tierId: tier.id, name: `${npc.name} Rig #${i + 1}`,
-            durability: 7500, status: npc.active ? ('mining' as RigStatus) : ('idle' as RigStatus),
-            miningSince: npc.active ? now - blockIntervalMs * 2 : null, purchasedAt: npc.addedAt,
-          }))
-          const currentPool    = poolRef.current.filter(n => n.active)
-          const totalHS        = currentPool.reduce((s, n) => s + n.hashrate, 0)
-          const perBlock       = totalHS > 0
-            ? (npc.hashrate / totalHS) * blockReward * hashratePct
-              + (currentPool.length > 0 ? (blockReward * equalPct) / currentPool.length : 0)
-            : 0
-          const msActive       = Math.max(0, now - npc.addedAt)
-          const blocksActive   = Math.floor(msActive / blockIntervalMs)
-          const historyCount   = Math.min(50, blocksActive)
-          const rewardHistory: MiningReward[] = Array.from({ length: historyCount }, (_, i) => {
-            const blocksAgo = historyCount - i
-            const seed      = (npc.id.charCodeAt(0) + i) % 100
-            const variance  = 0.85 + (seed / 100) * 0.30
-            return {
-              blockNumber: Math.max(1, blocksActive - blocksAgo + 1),
-              solvedAt:    now - blocksAgo * blockIntervalMs,
-              amount:      Math.round(perBlock * variance * 100) / 100,
-              type: (['hashrate_share', 'equal_split', 'equal_split', 'hashrate_share', 'finder'] as MiningReward['type'][])[i % 5],
-            }
-          })
-          const totalEarned  = blocksActive * perBlock
-          const exchangedBC  = Math.floor(totalEarned * 0.25)
-          await adminUpdateMiningUser({ data: { user: {
-            username: npc.name, createdAt: npc.addedAt,
-            balance: Math.floor(totalEarned - exchangedBC),
-            gems: Math.floor(exchangedBC * EXCHANGE_CONSTANTS.BASE_RATE * (1 - EXCHANGE_CONSTANTS.FEE_PCT)),
-            rigs, rewardHistory, lastCheckedAt: now,
-            exchangeUsedToday: 0, exchangeResetAt: now + 86_400_000,
-            miningExpiresAt: npc.active ? now + 12 * 3_600_000 : null,
-            miningRenewedAt: npc.active ? now - 3_600_000 : null,
-          } } })
-        } catch { /* silent — don't disrupt the panel */ }
+        try { await syncFnRef.current(npc) } catch { /* silent */ }
       }
     }
-
-    autoSyncAll()
-    const id = setInterval(autoSyncAll, 5 * 60 * 1000) // every 5 min
-    return () => clearInterval(id)
+    // 1.5 s delay so the router is fully settled before the first server call
+    const boot = setTimeout(() => {
+      autoSyncAll()
+      const id = setInterval(autoSyncAll, 5 * 60 * 1000)
+      timerRef.current = id
+    }, 1500)
+    return () => { clearTimeout(boot); clearInterval(timerRef.current ?? undefined) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // intentionally empty — runs once on mount, interval handles the rest
+  }, [])
+
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   function savePool(next: NpcEntry[]) { setPool(next); safeSet(NPC_POOL_KEY, next) }
   function toast(msg: string) {
@@ -411,8 +377,10 @@ function NpcPoolManager({ blockReward, equalPct, hashratePct, blockIntervalMs, a
       purchasedAt: npc.addedAt,
     }))
 
-    // How many blocks this NPC has participated in since they were created
-    const msActive    = Math.max(0, now - npc.addedAt)
+    // Enforce minimum 30-day history so newly-added NPCs still have meaningful earnings
+    const MIN_AGE_MS   = 30 * 24 * 60 * 60 * 1000
+    const effectiveAt  = Math.min(npc.addedAt, now - MIN_AGE_MS)
+    const msActive     = Math.max(0, now - effectiveAt)
     const blocksActive = Math.floor(msActive / blockIntervalMs)
     const perBlock    = npcEarnings(npc)
 
@@ -482,6 +450,9 @@ function NpcPoolManager({ blockReward, equalPct, hashratePct, blockIntervalMs, a
     }
     setLbWorking(null)
   }
+  // Keep the auto-sync interval pointed at the freshest version of syncEarnings
+  // (re-runs every render so closed-over state/props are never stale)
+  syncFnRef.current = syncEarnings
 
   async function removeFromLeaderboard(npc: NpcEntry) {
     setLbWorking(npc.id)
