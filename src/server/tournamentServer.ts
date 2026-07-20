@@ -559,6 +559,68 @@ export const deleteAnnouncement = createServerFn({ method: 'POST' })
     return { success: true }
   })
 
+// ─── POST: add team manually (admin bypass) ──────────────────────────────────
+
+export const addTeamManually = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    tournamentId: z.string().min(1),
+    teamName:     z.string().min(1).max(50),
+    captain:      z.string().min(1).max(50),
+    players:      z.array(z.string().min(1).max(50)).min(1).max(50),
+    status:       z.enum(['pending','approved','rejected','eliminated','disqualified']).default('approved'),
+    notes:        z.string().max(500).default(''),
+  }))
+  .handler(async ({ data }): Promise<{ success: boolean; team?: Team; error?: string }> => {
+    const file = readData()
+    const t    = findTournament(file, data.tournamentId)
+    if (!t) return { success: false, error: 'Tournament not found' }
+
+    const allPlayers = [data.captain, ...data.players.filter(p => p !== data.captain)]
+
+    const nameLower = data.teamName.toLowerCase()
+    if (t.teams.some(team => team.name.toLowerCase() === nameLower && team.status !== 'rejected')) {
+      return { success: false, error: 'A team with this name already exists' }
+    }
+
+    const now  = Date.now()
+    const team: Team = {
+      id:           uid(),
+      name:         data.teamName,
+      captain:      data.captain,
+      players:      allPlayers,
+      status:       data.status,
+      registeredAt: now,
+      notes:        data.notes,
+    }
+    t.teams.push(team)
+    t.updatedAt = now
+    writeData(file)
+    return { success: true, team }
+  })
+
+// ─── POST: bulk update team statuses (admin) ──────────────────────────────────
+
+export const bulkUpdateTeamStatus = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    tournamentId: z.string().min(1),
+    teamIds:      z.array(z.string().min(1)),
+    status:       z.enum(['pending','approved','rejected','eliminated','disqualified']),
+    notes:        z.string().max(500).default(''),
+  }))
+  .handler(async ({ data }): Promise<{ success: boolean; updated: number; error?: string }> => {
+    const file = readData()
+    const t    = findTournament(file, data.tournamentId)
+    if (!t) return { success: false, updated: 0, error: 'Tournament not found' }
+    let updated = 0
+    for (const teamId of data.teamIds) {
+      const team = t.teams.find(tm => tm.id === teamId)
+      if (team) { team.status = data.status; team.notes = data.notes; updated++ }
+    }
+    t.updatedAt = Date.now()
+    writeData(file)
+    return { success: true, updated }
+  })
+
 // ─── POST: duplicate tournament (admin) ──────────────────────────────────────
 
 export const duplicateTournament = createServerFn({ method: 'POST' })
