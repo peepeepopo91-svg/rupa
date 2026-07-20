@@ -126,7 +126,9 @@ function TournamentPage() {
                   ⚔️ Register Your Team
                   <span className="opacity-70">→</span>
                 </button>
-                <p className="text-gray-600 text-xs mt-2">Registrations are open — spots are limited</p>
+                <p className="text-gray-600 text-xs mt-2">
+                {active.status === 'registration_open' ? 'Registrations are open — spots are limited' : 'Tournament is live — register to compete'}
+              </p>
               </div>
             )
             if (active.status === 'upcoming') return (
