@@ -7,6 +7,7 @@ import { createServerFn }      from '@tanstack/react-start'
 import { z }                   from 'zod'
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'fs'
 import { resolve }             from 'path'
+import { load as yamlLoad }    from 'js-yaml'
 import { catchUpUser, buyRig, normalizeUser } from '../store/miningStore'
 import type { User, CommunityBlock } from '../data/mining'
 import { MINING_CONSTANTS, RIG_TIERS } from '../data/mining'
@@ -50,6 +51,19 @@ function atomicWrite(file: string, data: unknown) {
 
 function loadMiningUsers(): Record<string, User> {
   return readJson<Record<string, User>>('mining-users.json') ?? {}
+}
+
+/** Returns the set of lowercase usernames that have a real login credential. */
+function loadCredentialedUsernames(): Set<string> {
+  try {
+    const raw    = readFileSync(resolve(process.cwd(), 'credentials.yml'), 'utf8')
+    const parsed = yamlLoad(raw) as { users?: Array<{ username: string }> }
+    return new Set(
+      (parsed?.users ?? []).map(u => u.username.toLowerCase())
+    )
+  } catch {
+    return new Set()
+  }
 }
 
 function loadCommunityState(): CommunityBlock {
@@ -209,9 +223,16 @@ export const adminUpdateMiningUser = createServerFn({ method: 'POST' })
  */
 export const getLeaderboard = createServerFn({ method: 'GET' })
   .handler(async (): Promise<LeaderboardEntry[]> => {
-    const users = loadMiningUsers()
+    const users       = loadMiningUsers()
+    const credUsernames = loadCredentialedUsernames()
 
-    const entries: LeaderboardEntry[] = Object.values(users).map(user => {
+    // Only include users that have a real login credential — filters out any
+    // stale NPC/bot entries that were injected by the old NPC pool system.
+    const realUsers = Object.values(users).filter(
+      u => credUsernames.has(u.username.toLowerCase())
+    )
+
+    const entries: LeaderboardEntry[] = realUsers.map(user => {
       const activeRigs  = user.rigs.filter(r => r.status === 'mining')
       const miningPower = activeRigs.reduce((sum, r) => {
         const tier = RIG_TIERS.find(t => t.id === r.tierId)

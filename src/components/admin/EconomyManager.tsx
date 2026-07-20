@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { getEconomyOverrides, saveEconomyOverrides, getRateHistory, getExchangeRate } from '../../store/miningStore'
+import { useState, useEffect } from 'react'
+import { getEconomyOverrides, saveEconomyOverrides } from '../../store/miningStore'
 import type { EconomyOverrides } from '../../store/miningStore'
 import { MINING_CONSTANTS, EXCHANGE_CONSTANTS, RIG_TIERS } from '../../data/mining'
-import type { User, UserRig, RigStatus, MiningReward } from '../../data/mining'
+import type { User } from '../../data/mining'
 import { getDashboardStats } from '../../server/miningServer'
 import { addLog } from '../../store/adminStore'
 
