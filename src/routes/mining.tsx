@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Navbar } from '../components/Navbar'
 import { Footer } from '../components/Footer'
@@ -10,6 +11,8 @@ import { MiningToast } from '../components/mining/MiningToast'
 import { MiningLeaderboard } from '../components/mining/MiningLeaderboard'
 import { MiningProvider, useMining } from '../context/MiningContext'
 import { MiningRenewalBanner } from '../components/mining/MiningRenewalBanner'
+import { HardwareCatalogue } from '../components/mining/HardwareCatalogue'
+import { MiningSimulator } from '../components/mining/MiningSimulator'
 
 export const Route = createFileRoute('/mining')({
   component: () => (
@@ -108,8 +111,53 @@ function MiningPage() {
       {/* Global leaderboard — visible to all visitors */}
       <MiningLeaderboard currentUsername={user?.username ?? null} />
 
+      {/* Hardware & Simulator — visible to all visitors */}
+      <HardwareSimulatorSection />
+
       <Footer />
     </div>
+  )
+}
+
+function HardwareSimulatorSection() {
+  const [tab, setTab] = useState<'hardware' | 'simulator'>('hardware')
+
+  return (
+    <section className="px-4 pb-16 mt-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="border-t border-white/5 mb-10" />
+
+        {/* Section header + tabs */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 className="font-['Space_Grotesk'] font-bold text-xl text-white">
+              Mining <span className="text-gradient">Tools</span>
+            </h2>
+            <p className="text-gray-600 text-xs mt-0.5">
+              Browse hardware specs and simulate your earnings before buying
+            </p>
+          </div>
+          <div className="flex gap-2">
+            {([
+              { id: 'hardware',  label: '🖥️ Hardware' },
+              { id: 'simulator', label: '🧪 Simulator' },
+            ] as const).map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                  tab === t.id
+                    ? 'border-[#00BFFF]/40 bg-[#00BFFF]/10 text-[#00BFFF]'
+                    : 'border-white/8 text-gray-500 hover:text-white hover:border-white/20'
+                }`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {tab === 'hardware'  && <HardwareCatalogue />}
+        {tab === 'simulator' && <MiningSimulator />}
+      </div>
+    </section>
   )
 }
 

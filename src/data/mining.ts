@@ -108,15 +108,6 @@ export const EXCHANGE_CONSTANTS = {
 
 export type ExchangeDirection = 'bc-to-gems' | 'gems-to-bc'
 
-/** Simulated community miners that keep the pool active */
-export const NPC_MINERS = [
-  { name: 'Blue_Alpha',    hashrate: 5  },
-  { name: 'NetMaster_99',  hashrate: 12 },
-  { name: 'PixelHawk',     hashrate: 3  },
-  { name: 'DiamondCore',   hashrate: 25 },
-  { name: 'QubitX',        hashrate: 8  },
-] as const
-
 export type RigStatus = 'idle' | 'mining' | 'broken'
 
 export interface UserRig {

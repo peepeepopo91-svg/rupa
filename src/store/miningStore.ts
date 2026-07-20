@@ -3,7 +3,7 @@
 // function body with a fetch() call — the signatures stay identical.
 
 import type { User, CommunityBlock, UserRig, RigStatus, MiningReward } from '../data/mining'
-import { MINING_CONSTANTS, NPC_MINERS, RIG_TIERS, EXCHANGE_CONSTANTS } from '../data/mining'
+import { MINING_CONSTANTS, RIG_TIERS, EXCHANGE_CONSTANTS } from '../data/mining'
 import { markDirty } from './syncStore'
 
 const USERS_KEY         = 'bn_mining_users'
@@ -325,21 +325,14 @@ export function catchUpUser(
 
       for (let i = 0; i < blocksPassed; i++) {
         const blockNum = community.blockNumber + i
-        const allMiners: Array<{ name: string; hashrate: number }> = [
-          ...NPC_MINERS.map(n => ({ name: n.name, hashrate: n.hashrate })),
-          { name: user.username, hashrate: userHashrate },
-        ]
-        const totalHashrate = allMiners.reduce((s, m) => s + m.hashrate, 0)
-        const winner    = pickBlockWinner(allMiners, blockNum)
-        const isWinner  = winner === user.username
-        const amount    = computeUserBlockReward(userHashrate, totalHashrate, allMiners.length, isWinner)
+        const amount    = computeUserBlockReward(userHashrate, userHashrate, 1, true)
 
         balance += amount
         newRewards.push({
           blockNumber: blockNum,
           solvedAt: community.lastSolvedAt + (i + 1) * blockIntervalMs,
           amount,
-          type: isWinner ? 'finder' : userHashrate / totalHashrate > 0.3 ? 'hashrate_share' : 'equal_split',
+          type: 'finder',
         })
       }
     }
