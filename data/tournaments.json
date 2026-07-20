@@ -75,11 +75,36 @@
         "custom": []
       },
       "bracket": null,
-      "teams": [],
+      "teams": [
+        {
+          "id": "t_mrte6uy2_o0m1q",
+          "name": "fdfd",
+          "captain": "dsfsdfs",
+          "players": [
+            "dsfsdfs",
+            "sdfsdf"
+          ],
+          "status": "pending",
+          "registeredAt": 1784562086954,
+          "notes": ""
+        },
+        {
+          "id": "t_mrte71as_7p5ti",
+          "name": "sdfds",
+          "captain": "sdfsdfs",
+          "players": [
+            "sdfsdfs",
+            "dsfsdf"
+          ],
+          "status": "pending",
+          "registeredAt": 1784562095188,
+          "notes": ""
+        }
+      ],
       "matches": [],
       "announcements": [],
       "createdAt": 1784555332592,
-      "updatedAt": 1784561908565
+      "updatedAt": 1784562095188
     }
   ],
   "activeTournamentId": "t_mrta638x_wlkyi"
