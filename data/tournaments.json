@@ -106,8 +106,42 @@
             "sdfsdfs",
             "dsfsdf"
           ],
-          "status": "rejected",
+          "status": "approved",
           "registeredAt": 1784562095188,
+          "notes": ""
+        },
+        {
+          "id": "t_mrteqxmq_wkz3x",
+          "name": "dffgdfg",
+          "captain": "dfgdfg",
+          "players": [
+            "dfgdfg"
+          ],
+          "status": "approved",
+          "registeredAt": 1784563023554,
+          "notes": ""
+        },
+        {
+          "id": "t_mrterzy5_4ifyz",
+          "name": "dfgfd",
+          "captain": "dfgdfg",
+          "players": [
+            "dfgdfg",
+            "dgfdfg"
+          ],
+          "status": "rejected",
+          "registeredAt": 1784563073213,
+          "notes": ""
+        },
+        {
+          "id": "t_mrtespi4_a6v9d",
+          "name": "dfgdfg",
+          "captain": "dfgdfg",
+          "players": [
+            "dfgdfg"
+          ],
+          "status": "approved",
+          "registeredAt": 1784563106332,
           "notes": ""
         }
       ],
@@ -134,7 +168,7 @@
       ],
       "announcements": [],
       "createdAt": 1784555332592,
-      "updatedAt": 1784562384772
+      "updatedAt": 1784563113023
     }
   ],
   "activeTournamentId": "t_mrta638x_wlkyi"
