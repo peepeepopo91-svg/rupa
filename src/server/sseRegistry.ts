@@ -52,6 +52,19 @@ export function broadcastShopUpdate(): void {
   }
 }
 
+/** Push a `tournament_updated` event to every connected SSE client. */
+export function broadcastTournamentUpdate(): void {
+  const msg     = 'event: tournament_updated\ndata: 1\n\n'
+  const clients = getClients()
+  for (const write of clients) {
+    try {
+      write(msg)
+    } catch {
+      clients.delete(write)
+    }
+  }
+}
+
 export function getSSEClientCount(): number {
   return getClients().size
 }

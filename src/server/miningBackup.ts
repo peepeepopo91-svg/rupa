@@ -21,6 +21,10 @@ const MINING_FILES = [
   { local: 'shop-items.json',       repo: 'data/shop-items.json'       },
 ]
 
+const TOURNAMENT_FILES = [
+  { local: 'tournaments.json', repo: 'data/tournaments.json' },
+]
+
 // ─── Module-level state ───────────────────────────────────────────────────────
 
 let debounceMs:        number  = 45_000   // configurable; 5 s – 30 min
@@ -115,6 +119,31 @@ async function runBackup(): Promise<void> {
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
+
+// ─── Tournament backup (separate debounce timer) ──────────────────────────────
+
+let tournamentDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
+async function runTournamentBackup(): Promise<void> {
+  const files = TOURNAMENT_FILES
+    .map(f => ({ path: f.repo, content: readFile(f.local) }))
+    .filter(f => f.content.length > 0)
+  if (files.length === 0) return
+  try {
+    await commitFiles(files, `[auto] Tournament data backup ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`)
+    syncLocalHead()
+  } catch { /* non-blocking */ }
+}
+
+/** Called after every tournament data write. Debounces before pushing. */
+export function scheduleTournamentBackup(): void {
+  if (!backupEnabled) return
+  if (tournamentDebounceTimer) clearTimeout(tournamentDebounceTimer)
+  tournamentDebounceTimer = setTimeout(async () => {
+    tournamentDebounceTimer = null
+    await runTournamentBackup()
+  }, debounceMs)
+}
 
 /** Called after every mining data write. Debounces before pushing. */
 export function scheduleBackup(): void {

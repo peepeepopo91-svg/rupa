@@ -86,8 +86,8 @@ serve({
   fetch: async (req) => {
     const url = new URL(req.url)
 
-    // ── SSE endpoint ────────────────────────────────────────────────────────
-    if (url.pathname === '/api/mining-events' && req.method === 'GET') {
+    // ── SSE endpoints ───────────────────────────────────────────────────────
+    if ((url.pathname === '/api/mining-events' || url.pathname === '/api/tournament-events') && req.method === 'GET') {
       return handleSSE(req)
     }
 

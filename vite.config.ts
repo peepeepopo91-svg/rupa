@@ -6,36 +6,32 @@ import tailwindcss from '@tailwindcss/vite'
 import type { Plugin } from 'vite'
 
 // ─── Dev SSE middleware ────────────────────────────────────────────────────────
-// Serves /api/mining-events as a Server-Sent Events endpoint in dev mode.
+// Serves /api/mining-events and /api/tournament-events as SSE endpoints in dev.
 // Uses globalThis.__miningSSEClients (same registry as server functions).
-function miningSSEPlugin(): Plugin {
+
+function makeSseHandler(path: string): Plugin {
   return {
-    name: 'mining-sse',
+    name: `sse-${path.replace(/\W/g, '-')}`,
     configureServer(server) {
-      server.middlewares.use('/api/mining-events', (req, res) => {
+      server.middlewares.use(path, (req, res) => {
         res.writeHead(200, {
           'Content-Type':      'text/event-stream; charset=utf-8',
           'Cache-Control':     'no-cache, no-transform',
           'Connection':        'keep-alive',
           'X-Accel-Buffering': 'no',
         })
-
-        // Initial ping so the client knows it's connected
         res.write(': connected\n\n')
 
-        // Register this client in the shared global set
         if (!globalThis.__miningSSEClients) {
           globalThis.__miningSSEClients = new Set()
         }
         const write = (data: string) => res.write(data)
         globalThis.__miningSSEClients.add(write)
 
-        // Keepalive every 25 s
         const heartbeat = setInterval(() => {
           try { res.write(': ping\n\n') } catch { clearInterval(heartbeat) }
         }, 25_000)
 
-        // Cleanup on disconnect
         req.on('close', () => {
           clearInterval(heartbeat)
           globalThis.__miningSSEClients?.delete(write)
@@ -45,6 +41,9 @@ function miningSSEPlugin(): Plugin {
     },
   }
 }
+
+function miningSSEPlugin():     Plugin { return makeSseHandler('/api/mining-events')     }
+function tournamentSSEPlugin(): Plugin { return makeSseHandler('/api/tournament-events') }
 
 const config = defineConfig({
   server: {
@@ -59,6 +58,7 @@ const config = defineConfig({
   },
   plugins: [
     miningSSEPlugin(),
+    tournamentSSEPlugin(),
     viteTsConfigPaths({
       projects: ['./tsconfig.json'],
     }),

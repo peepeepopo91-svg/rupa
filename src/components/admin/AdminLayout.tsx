@@ -12,8 +12,9 @@ import { EventManager }    from './EventManager'
 import { ActivityLogs }    from './ActivityLogs'
 import { GitHubSyncCenter } from './GitHubSyncCenter'
 import { RepoHistoryManager } from './RepoHistoryManager'
-import { ShopManager }     from './ShopManager'
-import { CredentialsManager } from './CredentialsManager'
+import { ShopManager }         from './ShopManager'
+import { CredentialsManager }  from './CredentialsManager'
+import { TournamentManager }   from './TournamentManager'
 import { useSyncState }    from '../../store/syncStore'
 
 interface Props {
@@ -32,8 +33,9 @@ const NAV_ITEMS: { id: AdminSection; label: string; icon: string; desc: string }
   { id: 'users',       label: 'Users',         icon: '👥', desc: 'Manage accounts' },
   { id: 'content',     label: 'Content',       icon: '📝', desc: 'Edit site text' },
   { id: 'events',      label: 'Events',        icon: '🎉', desc: 'Manage events' },
-  { id: 'shop-mgmt',   label: 'Shop',          icon: '🛒', desc: 'Manage purchases' },
-  { id: 'logs',        label: 'Activity Logs', icon: '📊', desc: 'Audit trail' },
+  { id: 'shop-mgmt',      label: 'Shop',          icon: '🛒', desc: 'Manage purchases'  },
+  { id: 'tournament-mgmt', label: 'Tournaments',  icon: '🏆', desc: 'Manage tournaments' },
+  { id: 'logs',            label: 'Activity Logs', icon: '📊', desc: 'Audit trail'        },
   { id: 'repo-history', label: 'Repo History',  icon: '🕓', desc: 'Reset history' },
   { id: 'credentials',  label: 'Credentials',   icon: '🔐', desc: 'Manage admin auth' },
   { id: 'github-sync',  label: 'GitHub Sync',   icon: '☁️',  desc: 'Sync Center' },
@@ -48,8 +50,9 @@ const SECTION_TITLES: Record<AdminSection, { title: string; subtitle: string }> 
   'users':       { title: 'User Manager',       subtitle: 'Full player management — accounts, profiles, and mining data' },
   'content':     { title: 'Content Manager',    subtitle: 'Edit homepage, footer, and site text' },
   'events':      { title: 'Event Manager',      subtitle: 'Configure event banners and countdowns' },
-  'shop-mgmt':   { title: 'Shop Management',    subtitle: 'Manage purchases, prices, refunds, and delivery' },
-  'logs':        { title: 'Activity Logs',      subtitle: 'Full audit trail of all admin actions' },
+  'shop-mgmt':       { title: 'Shop Management',       subtitle: 'Manage purchases, prices, refunds, and delivery' },
+  'tournament-mgmt': { title: 'Tournament Management', subtitle: 'Create tournaments, manage teams, brackets, matches, prizes and announcements' },
+  'logs':            { title: 'Activity Logs',         subtitle: 'Full audit trail of all admin actions' },
   'github-sync':  { title: 'GitHub Sync Center',         subtitle: 'Professional synchronization dashboard — push, validate, rollback' },
   'repo-history': { title: 'Repository History Management', subtitle: 'Reset commit history while preserving all project files' },
   'credentials':  { title: 'Credentials Manager',        subtitle: 'Manage admin username and dual-password authentication' },
@@ -65,8 +68,9 @@ function SectionContent({ section, admin, setSection }: { section: AdminSection;
     case 'users':       return <UserManager admin={admin} />
     case 'content':     return <ContentManager admin={admin} />
     case 'events':      return <EventManager admin={admin} />
-    case 'shop-mgmt':   return <ShopManager admin={admin} />
-    case 'logs':        return <ActivityLogs admin={admin} />
+    case 'shop-mgmt':       return <ShopManager admin={admin} />
+    case 'tournament-mgmt': return <TournamentManager admin={admin} />
+    case 'logs':            return <ActivityLogs admin={admin} />
     case 'github-sync':  return <GitHubSyncCenter admin={admin} />
     case 'repo-history': return <RepoHistoryManager admin={admin} />
     case 'credentials':  return <CredentialsManager admin={admin} />

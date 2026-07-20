@@ -14,11 +14,12 @@ export function Navbar() {
   }, [])
 
   const navLinks = [
-    { to: '/',         label: 'Home' },
-    { to: '/rankings', label: 'Rankings' },
-    { to: '/mining',   label: 'Mining',   badge: '⛏️' },
-    { to: '/exchange', label: 'Exchange', badge: '◈' },
-    { to: '/shop',     label: 'Shop',     badge: '🛒' },
+    { to: '/',           label: 'Home' },
+    { to: '/rankings',   label: 'Rankings' },
+    { to: '/tournament', label: 'Tournament', badge: '🏆' },
+    { to: '/mining',     label: 'Mining',     badge: '⛏️' },
+    { to: '/exchange',   label: 'Exchange',   badge: '◈' },
+    { to: '/shop',       label: 'Shop',       badge: '🛒' },
   ]
 
   const isActive = (to: string) => location.pathname === to

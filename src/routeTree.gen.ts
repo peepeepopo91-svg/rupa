@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TournamentRouteImport } from './routes/tournament'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as RankingsRouteImport } from './routes/rankings'
 import { Route as MiningRouteImport } from './routes/mining'
@@ -16,6 +17,11 @@ import { Route as ExchangeRouteImport } from './routes/exchange'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TournamentRoute = TournamentRouteImport.update({
+  id: '/tournament',
+  path: '/tournament',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
   path: '/shop',
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/mining': typeof MiningRoute
   '/rankings': typeof RankingsRoute
   '/shop': typeof ShopRoute
+  '/tournament': typeof TournamentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/mining': typeof MiningRoute
   '/rankings': typeof RankingsRoute
   '/shop': typeof ShopRoute
+  '/tournament': typeof TournamentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,12 +79,27 @@ export interface FileRoutesById {
   '/mining': typeof MiningRoute
   '/rankings': typeof RankingsRoute
   '/shop': typeof ShopRoute
+  '/tournament': typeof TournamentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/exchange' | '/mining' | '/rankings' | '/shop'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/exchange'
+    | '/mining'
+    | '/rankings'
+    | '/shop'
+    | '/tournament'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/exchange' | '/mining' | '/rankings' | '/shop'
+  to:
+    | '/'
+    | '/admin'
+    | '/exchange'
+    | '/mining'
+    | '/rankings'
+    | '/shop'
+    | '/tournament'
   id:
     | '__root__'
     | '/'
@@ -85,6 +108,7 @@ export interface FileRouteTypes {
     | '/mining'
     | '/rankings'
     | '/shop'
+    | '/tournament'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -94,10 +118,18 @@ export interface RootRouteChildren {
   MiningRoute: typeof MiningRoute
   RankingsRoute: typeof RankingsRoute
   ShopRoute: typeof ShopRoute
+  TournamentRoute: typeof TournamentRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tournament': {
+      id: '/tournament'
+      path: '/tournament'
+      fullPath: '/tournament'
+      preLoaderRoute: typeof TournamentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shop': {
       id: '/shop'
       path: '/shop'
@@ -150,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   MiningRoute: MiningRoute,
   RankingsRoute: RankingsRoute,
   ShopRoute: ShopRoute,
+  TournamentRoute: TournamentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
