@@ -74,7 +74,17 @@
         "staffDecisions": "All staff decisions are final. Any disputes must be raised within 24 hours via Discord.",
         "custom": []
       },
-      "bracket": null,
+      "bracket": {
+        "type": "single_elimination",
+        "rounds": [
+          {
+            "name": "Finals",
+            "matchIds": [
+              "t_mrtecqiu_r8on7"
+            ]
+          }
+        ]
+      },
       "teams": [
         {
           "id": "t_mrte6uy2_o0m1q",
@@ -84,7 +94,7 @@
             "dsfsdfs",
             "sdfsdf"
           ],
-          "status": "pending",
+          "status": "rejected",
           "registeredAt": 1784562086954,
           "notes": ""
         },
@@ -96,15 +106,35 @@
             "sdfsdfs",
             "dsfsdf"
           ],
-          "status": "pending",
+          "status": "rejected",
           "registeredAt": 1784562095188,
           "notes": ""
         }
       ],
-      "matches": [],
+      "matches": [
+        {
+          "id": "t_mrtecqiu_r8on7",
+          "round": 0,
+          "matchNumber": 1,
+          "bracketSide": "finals",
+          "team1Id": "t_mrte71as_7p5ti",
+          "team2Id": "t_mrte6uy2_o0m1q",
+          "score1": 0,
+          "score2": 0,
+          "winnerId": null,
+          "status": "scheduled",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        }
+      ],
       "announcements": [],
       "createdAt": 1784555332592,
-      "updatedAt": 1784562095188
+      "updatedAt": 1784562384772
     }
   ],
   "activeTournamentId": "t_mrta638x_wlkyi"
