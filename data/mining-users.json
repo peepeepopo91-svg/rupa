@@ -145,7 +145,7 @@
   "zolup": {
     "username": "zolup",
     "createdAt": 1784399298355,
-    "lastCheckedAt": 1784551184211,
+    "lastCheckedAt": 1784551205188,
     "balance": 1061,
     "gems": 7361000,
     "rigs": [
@@ -153,7 +153,7 @@
         "id": "starter_mrrmcik0_lp20",
         "tierId": "starter",
         "name": "Starter Pack",
-        "durability": 8936.25917508427,
+        "durability": 8935.817739899085,
         "status": "mining",
         "miningSince": 1784543658727,
         "purchasedAt": 1784454855408
