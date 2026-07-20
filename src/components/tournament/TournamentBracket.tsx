@@ -143,23 +143,25 @@ function RoundColumn({ name, matches, teams, onSelect, rtl = false, colH }: {
   return (
     <div style={{ flexShrink:0 }}>
       <div style={{ position:'relative', width:CARD_W, height: colH + LABEL_H + LABEL_MB, marginTop:0 }}>
-        {/* Round label — pinned to top of column */}
-        <div style={{
-          position:'absolute',
-          top: 0,
-          left:0, right:0,
-          display:'flex', justifyContent:'center',
-        }}>
+        {/* Round label — pinned to top of column; hidden for "Round of X" rounds */}
+        {!name.toLowerCase().includes('round of') && (
           <div style={{
-            padding:'2px 10px', height:LABEL_H,
-            display:'flex', alignItems:'center',
-            background:'rgba(0,191,255,.07)', border:'1px solid rgba(0,191,255,.18)',
-            borderRadius:20, fontSize:8, fontWeight:700, letterSpacing:'0.13em',
-            color:'#00BFFF', textTransform:'uppercase', whiteSpace:'nowrap',
+            position:'absolute',
+            top: 0,
+            left:0, right:0,
+            display:'flex', justifyContent:'center',
           }}>
-            {name}
+            <div style={{
+              padding:'2px 10px', height:LABEL_H,
+              display:'flex', alignItems:'center',
+              background:'rgba(0,191,255,.07)', border:'1px solid rgba(0,191,255,.18)',
+              borderRadius:20, fontSize:8, fontWeight:700, letterSpacing:'0.13em',
+              color:'#00BFFF', textTransform:'uppercase', whiteSpace:'nowrap',
+            }}>
+              {name}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Match cards */}
         {matches.map((m, i) => (
@@ -344,7 +346,6 @@ export function TournamentBracket({ tournament }: Props) {
   // ── Split rounds ──────────────────────────────────────────────────────────
   const finalsRound   = rounds[rounds.length - 1]
   const bracketRounds = rounds.slice(0, rounds.length - 1)
-    .filter(r => !r.name.toLowerCase().includes('round of'))
   const finalsMatch   = getMs(finalsRound.matchIds)[0]
 
   // each round → split matches in half: left = first half, right = second half
