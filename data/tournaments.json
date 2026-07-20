@@ -1,0 +1,86 @@
+{
+  "tournaments": [
+    {
+      "id": "t_mrta638x_wlkyi",
+      "name": "blue is dlue",
+      "description": "",
+      "banner": "",
+      "status": "live",
+      "gamemode": "Cpvp, sword",
+      "serverIp": "fsdsdds",
+      "maxTeamSize": 2,
+      "minTeamSize": 2,
+      "registrationDeadline": null,
+      "startDate": null,
+      "prizePool": "talees lac",
+      "prizes": [
+        {
+          "placement": 1,
+          "label": "🥇 First Place",
+          "rewards": [
+            {
+              "type": "coins",
+              "label": "BlueCoin",
+              "amount": "10,000"
+            }
+          ]
+        },
+        {
+          "placement": 2,
+          "label": "🥈 Second Place",
+          "rewards": [
+            {
+              "type": "coins",
+              "label": "BlueCoin",
+              "amount": "5,000"
+            }
+          ]
+        },
+        {
+          "placement": 3,
+          "label": "🥉 Third Place",
+          "rewards": [
+            {
+              "type": "coins",
+              "label": "BlueCoin",
+              "amount": "2,500"
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "allowedMods": [
+          "OptiFine",
+          "Lunar Client",
+          "Badlion Client",
+          "Labymod"
+        ],
+        "allowedClients": [
+          "Vanilla",
+          "Forge",
+          "Fabric",
+          "Lunar",
+          "Badlion",
+          "Labymod"
+        ],
+        "bannedMods": [
+          "Reach mods",
+          "Kill aura",
+          "AutoClicker",
+          "X-Ray"
+        ],
+        "replayRequirements": "All players must record their POV. Replays must be submitted within 24 hours of the match.",
+        "disconnectRules": "A team will be given 5 minutes to reconnect. If unable, the match will be forfeited.",
+        "staffDecisions": "All staff decisions are final. Any disputes must be raised within 24 hours via Discord.",
+        "custom": []
+      },
+      "bracket": null,
+      "teams": [],
+      "matches": [],
+      "announcements": [],
+      "createdAt": 1784555332592,
+      "updatedAt": 1784555332592
+    }
+  ],
+  "activeTournamentId": "t_mrta638x_wlkyi"
+}
