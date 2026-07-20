@@ -158,7 +158,7 @@ export function MiningLeaderboard({ currentUsername }: MiningLeaderboardProps) {
   const flashClass = flashTs > 0 ? 'animate-pulse-once' : ''
 
   return (
-    <section className="px-4 pb-10">
+    <section className="px-4 pb-10 mt-16">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}

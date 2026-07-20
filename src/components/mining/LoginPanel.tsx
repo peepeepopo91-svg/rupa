@@ -133,21 +133,21 @@ export function LoginPanel() {
 
               {showNewUser && (
                 <div className="mt-2 p-4 rounded-xl border border-[#5865F2]/20 bg-[#5865F2]/5 space-y-3">
-                  <p className="text-gray-300 text-xs font-semibold flex items-center gap-2">
-                    <span>💬</span> Get your mining credentials via Discord
+                  <p className="text-gray-300 text-xs font-semibold flex items-center gap-1.5">
+                    <span>💬</span> How to get your mining credentials
                   </p>
-                  <ol className="space-y-2 text-gray-500 text-xs list-none">
-                    <li className="flex gap-2">
-                      <span className="text-[#5865F2] font-bold shrink-0">1.</span>
-                      Join the Blue Network Discord server using the button below.
+                  <ol className="space-y-1.5 text-gray-500 text-xs">
+                    <li className="flex gap-2 leading-relaxed">
+                      <span className="text-[#5865F2] font-bold shrink-0 mt-px">1.</span>
+                      <span>Join the Blue Network Discord using the button below.</span>
                     </li>
-                    <li className="flex gap-2">
-                      <span className="text-[#5865F2] font-bold shrink-0">2.</span>
-                      Go to the <span className="text-white font-semibold">#mining</span> section of the server.
+                    <li className="flex gap-2 leading-relaxed">
+                      <span className="text-[#5865F2] font-bold shrink-0 mt-px">2.</span>
+                      <span>Head to the <span className="text-gray-300 font-semibold">#mining</span> section of the server.</span>
                     </li>
-                    <li className="flex gap-2">
-                      <span className="text-[#5865F2] font-bold shrink-0">3.</span>
-                      Open a <span className="text-white font-semibold">request-credential</span> ticket and a staff member will set up your account.
+                    <li className="flex gap-2 leading-relaxed">
+                      <span className="text-[#5865F2] font-bold shrink-0 mt-px">3.</span>
+                      <span>Open a <span className="text-gray-300 font-semibold">request-credential</span> ticket — a staff member will create your account.</span>
                     </li>
                   </ol>
                   <a
