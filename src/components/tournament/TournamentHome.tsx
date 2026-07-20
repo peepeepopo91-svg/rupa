@@ -105,24 +105,16 @@ export function TournamentHome({ active, onRegisterClick }: Props) {
           )}
 
           {/* CTAs */}
-          <div className="flex flex-wrap gap-3 justify-center pt-2">
-            {canRegister && onRegisterClick && (
-              <button
-                onClick={onRegisterClick}
-                className="px-8 py-3 rounded-xl bg-[#00BFFF] hover:bg-[#00BFFF]/85 text-black font-bold text-sm transition-all shadow-lg shadow-[#00BFFF]/20 hover:scale-105"
-              >
-                ⚔️ Register Your Team →
-              </button>
-            )}
-            {active.serverIp && (
+          {active.serverIp && (
+            <div className="flex flex-wrap gap-3 justify-center pt-2">
               <button
                 onClick={() => navigator.clipboard.writeText(active.serverIp)}
                 className="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/8 border border-white/10 text-white text-sm font-medium transition-all font-mono"
               >
                 📋 {active.serverIp}
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
