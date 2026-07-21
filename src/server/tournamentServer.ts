@@ -425,7 +425,6 @@ export const updateBracketSlot = createServerFn({ method: 'POST' })
       match.score1   = 0
       match.score2   = 0
       match.winnerId = null
-      if (match.status === 'bye') match.status = 'scheduled'
     }
 
     // Auto-update status
@@ -450,7 +449,7 @@ export const updateMatch = createServerFn({ method: 'POST' })
     score1:       z.number().int().min(0).default(0),
     score2:       z.number().int().min(0).default(0),
     winnerId:     z.string().nullable().default(null),
-    status:       z.enum(['pending','scheduled','live','completed','bye']),
+    status:       z.enum(['pending','scheduled','live','completed']),
     scheduledAt:  z.number().nullable().default(null),
     arena:        z.string().max(100).default(''),
     gamemode:     z.string().max(50).default(''),
