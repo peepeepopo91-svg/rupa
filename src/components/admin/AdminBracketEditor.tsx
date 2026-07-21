@@ -12,6 +12,18 @@ const THEME_OPTIONS: { id: BracketThemeId; name: string; icon: string; accent: s
   { id: 'minimal',      name: 'Minimal',      icon: '◻',  accent: '#58a6ff' },
 ]
 
+// Minimal color lookup for the bracket preview (connector + container colors per theme).
+// Admin highlight/selection colors remain amber regardless of theme — that's intentional.
+const BRACKET_THEME_COLORS: Record<BracketThemeId, {
+  containerBg: string; containerBorder: string; connColor: string; connDot: string
+}> = {
+  esports:      { containerBg: 'radial-gradient(ellipse 70% 55% at 50% 50%,rgba(245,158,11,.04) 0%,rgba(14,21,34,.9) 60%,rgba(9,13,21,.95) 100%)', containerBorder: 'rgba(245,158,11,.07)', connColor: 'rgba(245,158,11,.35)', connDot: 'rgba(245,158,11,.55)' },
+  blue:         { containerBg: 'radial-gradient(ellipse 70% 55% at 50% 50%,rgba(0,191,255,.05) 0%,rgba(11,15,23,.92) 55%,rgba(7,10,17,.97) 100%)',  containerBorder: 'rgba(0,191,255,.1)',    connColor: 'rgba(0,191,255,.35)',    connDot: 'rgba(0,191,255,.65)'    },
+  neon:         { containerBg: 'linear-gradient(180deg,rgba(5,6,10,.99) 0%,rgba(3,4,8,1) 100%)',                                                      containerBorder: 'rgba(0,255,200,.08)',   connColor: 'rgba(0,255,200,.42)',    connDot: 'rgba(0,255,200,.75)'    },
+  championship: { containerBg: 'radial-gradient(ellipse 70% 55% at 50% 50%,rgba(212,175,55,.04) 0%,rgba(10,9,6,.93) 55%,rgba(7,6,3,.98) 100%)',      containerBorder: 'rgba(212,175,55,.1)',   connColor: 'rgba(212,175,55,.4)',    connDot: 'rgba(212,175,55,.65)'   },
+  minimal:      { containerBg: '#0d1117',                                                                                                              containerBorder: '#21262d',              connColor: '#30363d',               connDot: '#58a6ff'                },
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 type F = (msg: string, ok?: boolean) => void
 type R = () => void
@@ -34,6 +46,30 @@ const matchTop    = (i: number, total: number, colH: number) => (colH / total) *
 function AdminCard({ match, teams, selected, onClick, rtl = false }: {
   match: Match; teams: Team[]; selected: boolean; onClick: () => void; rtl?: boolean
 }) {
+  // Bye match — slim auto-advance card (not editable)
+  if (match.status === 'bye') {
+    const advancer = teams.find(t => t.id === match.winnerId)
+    return (
+      <div style={{
+        width: CARD_W, height: CARD_H,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+        background: 'rgba(255,255,255,.02)',
+        border: '1px dashed rgba(245,158,11,.25)',
+        borderRadius: 9,
+      }}>
+        <span style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: '0.1em',
+          color: 'rgba(245,158,11,.5)', textTransform: 'uppercase' }}>Auto Bye →</span>
+        {advancer && (
+          <span style={{ fontSize: 10, fontWeight: 700, color: '#86efac',
+            fontFamily: "'Space Grotesk',sans-serif",
+            maxWidth: CARD_W - 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {advancer.name}
+          </span>
+        )}
+      </div>
+    )
+  }
+
   const t1 = teams.find(t => t.id === match.team1Id)
   const t2 = teams.find(t => t.id === match.team2Id)
   const live = match.status === 'live'
@@ -121,16 +157,7 @@ function RoundCol({ name, matches, teams, selectedId, onSelect, rtl = false, col
   return (
     <div style={{ flexShrink: 0 }}>
       <div style={{ position: 'relative', width: CARD_W, height: colH + LABEL_H + LABEL_MB }}>
-        {!name.toLowerCase().includes('round of') && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
-            <div style={{ padding: '2px 10px', height: LABEL_H, display: 'flex', alignItems: 'center',
-              background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)',
-              borderRadius: 20, fontSize: 8, fontWeight: 700, letterSpacing: '0.13em',
-              color: 'rgba(245,158,11,.8)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-              {name}
-            </div>
-          </div>
-        )}
+        {/* Round labels removed — Finals column has its own GRAND FINAL label */}
         {matches.map((m, i) => (
           <div key={m.id} style={{ position: 'absolute', top: matchTop(i, matches.length, colH) + LABEL_H + LABEL_MB, left: 0 }}>
             <AdminCard match={m} teams={teams} selected={selectedId === m.id} onClick={() => onSelect(m)} rtl={rtl} />
@@ -173,8 +200,9 @@ function FinalsCol({ match, teams, selectedId, onSelect, colH }: {
 }
 
 // ─── Connector ────────────────────────────────────────────────────────────────
-function Connector({ leftCount, rightCount, colH, offsetTop }: {
+function Connector({ leftCount, rightCount, colH, offsetTop, connColor, connDot }: {
   leftCount: number; rightCount: number; colH: number; offsetTop: number
+  connColor: string; connDot: string
 }) {
   if (!leftCount || !rightCount) return null
   const W   = CONN_W
@@ -185,42 +213,42 @@ function Connector({ leftCount, rightCount, colH, offsetTop }: {
   if (leftCount === rightCount) {
     for (let i = 0; i < leftCount; i++) segs.push(
       <g key={i} filter="url(#acg)">
-        <line x1={0} y1={lCY(i)} x2={W} y2={rCY(i)} stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-        <circle cx={0} cy={lCY(i)} r={1.6} fill="rgba(245,158,11,.4)" />
-        <circle cx={W} cy={rCY(i)} r={1.6} fill="rgba(245,158,11,.4)" />
+        <line x1={0} y1={lCY(i)} x2={W} y2={rCY(i)} stroke={connColor} strokeWidth="1.3" />
+        <circle cx={0} cy={lCY(i)} r={1.6} fill={connDot} />
+        <circle cx={W} cy={rCY(i)} r={1.6} fill={connDot} />
       </g>
     )
   } else if (leftCount > rightCount) {
     for (let ri = 0; ri < rightCount; ri++) {
       const li1 = ri * 2, li2 = ri * 2 + 1
-      if (li2 >= leftCount) { segs.push(<line key={`s${ri}`} x1={0} y1={lCY(li1)} x2={W} y2={rCY(ri)} stroke="rgba(245,158,11,.3)" strokeWidth="1.3" />); continue }
+      if (li2 >= leftCount) { segs.push(<line key={`s${ri}`} x1={0} y1={lCY(li1)} x2={W} y2={rCY(ri)} stroke={connColor} strokeWidth="1.3" />); continue }
       const midX = W / 2, midY = (lCY(li1) + lCY(li2)) / 2
       segs.push(
         <g key={ri} filter="url(#acg)">
-          <line x1={0}    y1={lCY(li1)} x2={midX} y2={lCY(li1)} stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <line x1={0}    y1={lCY(li2)} x2={midX} y2={lCY(li2)} stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <line x1={midX} y1={lCY(li1)} x2={midX} y2={lCY(li2)} stroke="rgba(245,158,11,.2)"  strokeWidth="1.3" />
-          <line x1={midX} y1={midY}     x2={W}    y2={rCY(ri)}  stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <circle cx={midX} cy={midY}   r={2.1} fill="rgba(245,158,11,.55)" />
-          <circle cx={0}    cy={lCY(li1)} r={1.4} fill="rgba(245,158,11,.35)" />
-          <circle cx={0}    cy={lCY(li2)} r={1.4} fill="rgba(245,158,11,.35)" />
+          <line x1={0}    y1={lCY(li1)} x2={midX} y2={lCY(li1)} stroke={connColor} strokeWidth="1.3" />
+          <line x1={0}    y1={lCY(li2)} x2={midX} y2={lCY(li2)} stroke={connColor} strokeWidth="1.3" />
+          <line x1={midX} y1={lCY(li1)} x2={midX} y2={lCY(li2)} stroke={connColor} strokeWidth="1.3" style={{opacity:.6}} />
+          <line x1={midX} y1={midY}     x2={W}    y2={rCY(ri)}  stroke={connColor} strokeWidth="1.3" />
+          <circle cx={midX} cy={midY}   r={2.1} fill={connDot} />
+          <circle cx={0}    cy={lCY(li1)} r={1.4} fill={connDot} style={{opacity:.6}} />
+          <circle cx={0}    cy={lCY(li2)} r={1.4} fill={connDot} style={{opacity:.6}} />
         </g>
       )
     }
   } else {
     for (let li = 0; li < leftCount; li++) {
       const ri1 = li * 2, ri2 = li * 2 + 1
-      if (ri2 >= rightCount) { segs.push(<line key={`s${li}`} x1={0} y1={lCY(li)} x2={W} y2={rCY(ri1)} stroke="rgba(245,158,11,.3)" strokeWidth="1.3" />); continue }
+      if (ri2 >= rightCount) { segs.push(<line key={`s${li}`} x1={0} y1={lCY(li)} x2={W} y2={rCY(ri1)} stroke={connColor} strokeWidth="1.3" />); continue }
       const midX = W / 2, midY = (rCY(ri1) + rCY(ri2)) / 2
       segs.push(
         <g key={li} filter="url(#acg)">
-          <line x1={W}    y1={rCY(ri1)} x2={midX} y2={rCY(ri1)} stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <line x1={W}    y1={rCY(ri2)} x2={midX} y2={rCY(ri2)} stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <line x1={midX} y1={rCY(ri1)} x2={midX} y2={rCY(ri2)} stroke="rgba(245,158,11,.2)"  strokeWidth="1.3" />
-          <line x1={midX} y1={midY}     x2={0}    y2={lCY(li)}  stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <circle cx={midX} cy={midY}   r={2.1} fill="rgba(245,158,11,.55)" />
-          <circle cx={W}    cy={rCY(ri1)} r={1.4} fill="rgba(245,158,11,.35)" />
-          <circle cx={W}    cy={rCY(ri2)} r={1.4} fill="rgba(245,158,11,.35)" />
+          <line x1={W}    y1={rCY(ri1)} x2={midX} y2={rCY(ri1)} stroke={connColor} strokeWidth="1.3" />
+          <line x1={W}    y1={rCY(ri2)} x2={midX} y2={rCY(ri2)} stroke={connColor} strokeWidth="1.3" />
+          <line x1={midX} y1={rCY(ri1)} x2={midX} y2={rCY(ri2)} stroke={connColor} strokeWidth="1.3" style={{opacity:.6}} />
+          <line x1={midX} y1={midY}     x2={0}    y2={lCY(li)}  stroke={connColor} strokeWidth="1.3" />
+          <circle cx={midX} cy={midY}   r={2.1} fill={connDot} />
+          <circle cx={W}    cy={rCY(ri1)} r={1.4} fill={connDot} style={{opacity:.6}} />
+          <circle cx={W}    cy={rCY(ri2)} r={1.4} fill={connDot} style={{opacity:.6}} />
         </g>
       )
     }
@@ -550,7 +578,7 @@ export function AdminBracketEditor({ active, flash, reload }: Props) {
   const bracketRounds = rounds.slice(0, rounds.length - 1)
 
   const getMs = (ids: string[]) =>
-    ids.map(id => active.matches.find(m => m.id === id)).filter((m): m is Match => !!m && m.status !== 'bye')
+    ids.map(id => active.matches.find(m => m.id === id)).filter((m): m is Match => !!m && (m.status !== 'bye' || m.winnerId !== null))
 
   const leftCols = bracketRounds.map(r => ({ name: r.name, matches: getMs(r.matchIds).slice(0, Math.ceil(getMs(r.matchIds).length / 2)) }))
   const rightColsOuter = bracketRounds.map(r => ({ name: r.name, matches: getMs(r.matchIds).slice(Math.ceil(getMs(r.matchIds).length / 2)) }))
@@ -563,6 +591,9 @@ export function AdminBracketEditor({ active, flash, reload }: Props) {
 
   // Keep selectedMatch fresh after reload
   const freshSelected = selectedMatch ? active.matches.find(m => m.id === selectedMatch.id) ?? null : null
+
+  // Theme colors for the bracket preview container and connectors
+  const tc = BRACKET_THEME_COLORS[dispTheme]
 
   // Find round name for selected match
   const selectedRoundName = freshSelected
@@ -718,8 +749,9 @@ export function AdminBracketEditor({ active, flash, reload }: Props) {
 
           {/* The bracket */}
           <div style={{ borderRadius: 14, padding: '14px 12px',
-            background: 'radial-gradient(ellipse 70% 55% at 50% 50%,rgba(245,158,11,.04) 0%,rgba(14,21,34,.9) 60%,rgba(9,13,21,.95) 100%)',
-            border: '1px solid rgba(245,158,11,.07)', overflowX: 'auto', overflowY: 'hidden' }}>
+            background: tc.containerBg,
+            border: `1px solid ${tc.containerBorder}`, overflowX: 'auto', overflowY: 'hidden',
+            transition: 'background .3s, border-color .3s' }}>
             <div style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 0, minWidth: 'max-content' }}>
 
               {/* LEFT */}
@@ -730,7 +762,8 @@ export function AdminBracketEditor({ active, flash, reload }: Props) {
                     <RoundCol name={col.name} matches={col.matches} teams={active.teams}
                       selectedId={freshSelected?.id ?? null} onSelect={selectMatch}
                       rtl={false} colH={colH} />
-                    <Connector leftCount={col.matches.length} rightCount={nextCount} colH={colH} offsetTop={connOffsetTop} />
+                    <Connector leftCount={col.matches.length} rightCount={nextCount} colH={colH} offsetTop={connOffsetTop}
+                      connColor={tc.connColor} connDot={tc.connDot} />
                   </div>
                 )
               })}
@@ -749,7 +782,8 @@ export function AdminBracketEditor({ active, flash, reload }: Props) {
                 const leftCount = ci === 0 ? 1 : rightCols[ci - 1].matches.length
                 return (
                   <div key={`r${ci}`} style={{ display: 'flex', alignItems: 'flex-start' }}>
-                    <Connector leftCount={leftCount} rightCount={col.matches.length} colH={colH} offsetTop={connOffsetTop} />
+                    <Connector leftCount={leftCount} rightCount={col.matches.length} colH={colH} offsetTop={connOffsetTop}
+                      connColor={tc.connColor} connDot={tc.connDot} />
                     <RoundCol name={col.name} matches={col.matches} teams={active.teams}
                       selectedId={freshSelected?.id ?? null} onSelect={selectMatch}
                       rtl={true} colH={colH} />

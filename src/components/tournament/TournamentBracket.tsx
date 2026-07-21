@@ -244,6 +244,32 @@ function MatchCard({ match, teams, onClick, rtl = false, theme, matchNum }: {
   theme: BracketTheme; matchNum: number
 }) {
   const [hover, setHover] = useState(false)
+
+  // Bye match — slim auto-advance card
+  if (match.status === 'bye') {
+    const advancer = teams.find(t => t.id === match.winnerId)
+    return (
+      <div style={{
+        width: CARD_W, height: CARD_H,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+        background: 'rgba(255,255,255,.02)',
+        border: `1px dashed ${theme.connColor}`,
+        borderRadius: theme.cardRadius,
+      }}>
+        <span style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: '0.1em', color: theme.connDot, textTransform: 'uppercase' }}>
+          Auto Bye →
+        </span>
+        {advancer && (
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: theme.winnerColor,
+            fontFamily: "'Space Grotesk',sans-serif",
+            maxWidth: CARD_W - 20, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {advancer.name}
+          </span>
+        )}
+      </div>
+    )
+  }
+
   const t1   = teams.find(t => t.id === match.team1Id)
   const t2   = teams.find(t => t.id === match.team2Id)
   const live = match.status === 'live'
@@ -523,7 +549,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
 
   const getMs = (ids: string[]) =>
     ids.map(id => matches.find(m => m.id === id))
-      .filter((m): m is Match => !!m && m.status !== 'bye')
+      .filter((m): m is Match => !!m && (m.status !== 'bye' || m.winnerId !== null))
 
   const finalsRound   = rounds[rounds.length - 1]
   const bracketRounds = rounds.slice(0, rounds.length - 1)
@@ -547,7 +573,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
   const leftW   = leftCols.length * (CARD_W + CONN_W)
   const rightW  = rightCols.length * (CONN_W + CARD_W)
   const finalsW = CARD_W + 20
-  const naturalW = leftW + finalsW + rightW
+  const naturalW = leftW + finalsW + rightW + OUTER_PAD * 2
 
   const naturalH = colH + LABEL_H + LABEL_MB + 16 // 16px top/bottom padding in bracket
 
@@ -639,12 +665,11 @@ function BracketView({ tournament }: { tournament: Tournament }) {
               {/* LEFT SIDE */}
               {leftCols.map((col, ci) => {
                 const nextCount = ci < leftCols.length - 1 ? leftCols[ci + 1].matches.length : 1
-                const showLabel = !col.name.toLowerCase().startsWith('round of')
                 return (
                   <div key={`l${ci}`} style={{ display: 'flex', alignItems: 'flex-start' }}>
                     <RoundColumn name={col.name} matches={col.matches} teams={teams}
                       onSelect={setSelected} rtl={false} colH={colH}
-                      theme={theme} showLabel={showLabel} />
+                      theme={theme} showLabel={false} />
                     <Connector leftCount={col.matches.length} rightCount={nextCount}
                       colH={colH} offsetTop={connOffTop} theme={theme} connId={`l${ci}`} />
                   </div>
@@ -663,14 +688,13 @@ function BracketView({ tournament }: { tournament: Tournament }) {
               {/* RIGHT SIDE */}
               {rightCols.map((col, ci) => {
                 const leftCount = ci === 0 ? 1 : rightCols[ci - 1].matches.length
-                const showLabel = !col.name.toLowerCase().startsWith('round of')
                 return (
                   <div key={`r${ci}`} style={{ display: 'flex', alignItems: 'flex-start' }}>
                     <Connector leftCount={leftCount} rightCount={col.matches.length}
                       colH={colH} offsetTop={connOffTop} theme={theme} connId={`r${ci}`} />
                     <RoundColumn name={col.name} matches={col.matches} teams={teams}
                       onSelect={setSelected} rtl={true} colH={colH}
-                      theme={theme} showLabel={showLabel} />
+                      theme={theme} showLabel={false} />
                   </div>
                 )
               })}
