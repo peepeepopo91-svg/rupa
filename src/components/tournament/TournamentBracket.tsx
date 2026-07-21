@@ -239,9 +239,9 @@ function TeamRow({ team, score, winner, rtl, theme }: {
 }
 
 // ─── Match card ───────────────────────────────────────────────────────────────
-function MatchCard({ match, teams, onClick, rtl = false, theme, matchNum }: {
+function MatchCard({ match, teams, onClick, rtl = false, theme }: {
   match: Match; teams: Team[]; onClick: () => void; rtl?: boolean
-  theme: BracketTheme; matchNum: number
+  theme: BracketTheme
 }) {
   const [hover, setHover] = useState(false)
 
@@ -255,13 +255,6 @@ function MatchCard({ match, teams, onClick, rtl = false, theme, matchNum }: {
     live ? theme.cardShadowLive : '',
     hover ? `0 4px 20px rgba(0,0,0,.4)` : '',
   ].filter(Boolean).join(', ')
-
-  // Extra info line: show gamemode/arena/scheduled
-  const extraInfo = match.gamemode || match.arena
-    ? [match.gamemode, match.arena].filter(Boolean).join(' · ')
-    : match.scheduledAt && !done
-    ? `🕐 ${new Date(match.scheduledAt).toLocaleDateString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}`
-    : ''
 
   return (
     <button
@@ -285,32 +278,18 @@ function MatchCard({ match, teams, onClick, rtl = false, theme, matchNum }: {
           animation: 'bt-pbar 2s ease-in-out infinite' }} />
       )}
 
-      {/* Match number badge */}
-      <div style={{ position: 'absolute', top: 5, right: 7,
-        fontSize: 7.5, fontWeight: 700, color: live ? theme.statusLive : theme.statusPending,
-        letterSpacing: '0.06em', opacity: .8 }}>
-        M{matchNum}
-      </div>
-
       <TeamRow team={t1} score={match.score1} winner={match.winnerId !== null && match.winnerId === match.team1Id} rtl={rtl} theme={theme} />
 
       <div style={{ height: 1, background: theme.dividerColor, margin: '5px 0' }} />
 
       <TeamRow team={t2} score={match.score2} winner={match.winnerId !== null && match.winnerId === match.team2Id} rtl={rtl} theme={theme} />
 
-      {/* Bottom info row */}
-      <div style={{ marginTop: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
-        <span style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: '0.07em', flexShrink: 0,
+      {/* Status row */}
+      <div style={{ marginTop: 5, display: 'flex', alignItems: 'center' }}>
+        <span style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: '0.07em',
           color: live ? theme.statusLive : done ? theme.statusDone : theme.statusPending }}>
           {live ? '● LIVE' : MATCH_STATUS_LABEL[match.status].toUpperCase()}
         </span>
-        {extraInfo && (
-          <span style={{ fontSize: 7, color: theme.statusPending, overflow: 'hidden',
-            textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, textAlign: 'right',
-            letterSpacing: '0.04em' }}>
-            {extraInfo}
-          </span>
-        )}
       </div>
     </button>
   )
@@ -338,7 +317,7 @@ function RoundColumn({ name, matches, teams, onSelect, rtl = false, colH, theme,
           <div key={m.id} style={{ position: 'absolute',
             top: matchTop(i, matches.length, colH) + LABEL_H + LABEL_MB, left: 0 }}>
             <MatchCard match={m} teams={teams} onClick={() => onSelect(m)}
-              rtl={rtl} theme={theme} matchNum={m.matchNumber} />
+              rtl={rtl} theme={theme} />
           </div>
         ))}
       </div>
@@ -458,7 +437,7 @@ function FinalsColumn({ match, teams, onSelect, colH, theme }: {
 
         {/* Card */}
         <div style={{ position: 'absolute', top: cardTop + LABEL_H + LABEL_MB, left: 8 }}>
-          <MatchCard match={match} teams={teams} onClick={onSelect} theme={theme} matchNum={match.matchNumber} />
+          <MatchCard match={match} teams={teams} onClick={onSelect} theme={theme} />
         </div>
       </div>
     </div>
@@ -661,60 +640,49 @@ function BracketView({ tournament }: { tournament: Tournament }) {
               })}
 
             </div>
+            <div style={{ textAlign: 'center', paddingTop: 10 }}>
+              <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
+                {matches.length} MATCHES
+              </span>
+            </div>
           </div>
         )
 
         if (scaleMode === 'auto') {
           // ── Auto mode: shrink-to-fit via CSS transform, no scrollbar ──
           return (
-            <>
-              <div ref={containerRef} style={{ width: '100%', overflow: 'hidden' }}>
-                <div style={{
-                  width: naturalW,
-                  height: naturalH,
-                  transformOrigin: 'top center',
-                  transform: `scale(${autoScale})`,
-                  marginBottom: `${(autoScale - 1) * naturalH}px`,
-                  marginLeft: `max(0px, calc(50% - ${naturalW / 2}px))`,
-                }}>
-                  {bracketContent}
-                </div>
+            <div ref={containerRef} style={{ width: '100%', overflow: 'hidden' }}>
+              <div style={{
+                width: naturalW,
+                transformOrigin: 'top center',
+                transform: `scale(${autoScale})`,
+                marginBottom: `${(autoScale - 1) * naturalH}px`,
+                marginLeft: `max(0px, calc(50% - ${naturalW / 2}px))`,
+              }}>
+                {bracketContent}
               </div>
-              <div style={{ textAlign: 'center', marginTop: 10 }}>
-                <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
-                  {matches.length} MATCHES
-                </span>
-              </div>
-            </>
+            </div>
           )
         } else {
           // ── Manual mode: fixed scale set by admin, horizontal scroll if wider than viewport ──
           return (
-            <>
-              <div style={{ width: '100%', overflowX: 'auto', overflowY: 'hidden' }}>
-                {/* Spacer sized to the scaled dimensions so the scrollbar knows the full width */}
+            <div style={{ width: '100%', overflowX: 'auto', overflowY: 'hidden' }}>
+              <div style={{
+                width: naturalW * manualScale,
+                height: naturalH * manualScale,
+                position: 'relative',
+                flexShrink: 0,
+              }}>
                 <div style={{
-                  width: naturalW * manualScale,
-                  height: naturalH * manualScale,
-                  position: 'relative',
-                  flexShrink: 0,
+                  position: 'absolute', top: 0, left: 0,
+                  transformOrigin: 'top left',
+                  transform: `scale(${manualScale})`,
+                  width: naturalW,
                 }}>
-                  <div style={{
-                    position: 'absolute', top: 0, left: 0,
-                    transformOrigin: 'top left',
-                    transform: `scale(${manualScale})`,
-                    width: naturalW,
-                  }}>
-                    {bracketContent}
-                  </div>
+                  {bracketContent}
                 </div>
               </div>
-              <div style={{ textAlign: 'center', marginTop: 10 }}>
-                <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
-                  {matches.length} MATCHES
-                </span>
-              </div>
-            </>
+            </div>
           )
         }
       })()}
