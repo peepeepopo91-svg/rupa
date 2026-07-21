@@ -76,7 +76,7 @@ function getResponse() {
 }
 var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 async function getStartManifest(matchedRoutes) {
-  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-J7z0DPgi.js");
+  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-DtqgYDI0.js");
   const startManifest = tsrStartManifest();
   const rootRoute = startManifest.routes[rootRouteId] = startManifest.routes[rootRouteId] || {};
   rootRoute.assets = rootRoute.assets || [];
@@ -233,6 +233,90 @@ const manifest = {
     functionName: "triggerBackupNow_createServerFn_handler",
     importer: () => import("./assets/dataFiles-DpwGOTSd.js")
   },
+  "9f3c31e88fa1dee173ea06b9582248fd7ee4180a9a0b7963633607284a9e0d9f": {
+    functionName: "getTournamentData_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "dbced905a634ef7c5bb2a83b2634a776cca737f979e54211edd66306e2568768": {
+    functionName: "createTournament_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "121f9159a4d0e4bfcabdfc34526c81d2267baf979f42ff893cc77d96685c5450": {
+    functionName: "updateTournament_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "bc8e2f55893ff25b7a20ffb276b5353f2f509f03e7951ad10b9ac3a760e7067f": {
+    functionName: "deleteTournament_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "8bde410c414b4bdd05289d750f4a36586b78a106a52e17079ca6db8772ff081e": {
+    functionName: "setActiveTournament_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "cfef4f6f62c7ffd16bec0f981079bd01e4e58a67cf057297a6d296085a12dc3b": {
+    functionName: "archiveTournament_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "0945cb194bd5b5e925113942c2b7d3ed8fae8117a84c35d407c21835be8da21d": {
+    functionName: "registerTeam_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "f9e96b9a78bbbfcc1a4ed07f2eba5da3f735e1b70a2d1ea221b4c58dbdb3797c": {
+    functionName: "updateTeamStatus_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "1a36faa8c7def6c71b5dad9a54f35ad328430bc15d8e4aca601503882a15687b": {
+    functionName: "editTeam_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "afda6fd326aea53beacfb00c64a2b9bdc14a7bb746d3e4f80be750669e2d99f8": {
+    functionName: "removeTeam_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "c646772e903b0407b4dcf204f01727e0e0397269ed3db5dccfcff50d62fccea1": {
+    functionName: "generateBracket_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "ec7de07a550e8200978e62a7ce4ad1ce08e46d47ff16a43af5b8c9d15545d2e6": {
+    functionName: "updateBracketSlot_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "d075749bf4618bcaacc0b4ac11770dc6eb95dbfda90f3452bbdff782e2d04b0c": {
+    functionName: "updateMatch_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "4e7af7ac57eea41a6b1e106318978ab1f1892e6fd452adcd0e9bf904835f9191": {
+    functionName: "updatePrizes_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "01ea8263bb9459ad19b5cf0ab1ddad64bc72d0c40bfd096d921c5fd5193acb85": {
+    functionName: "updateRules_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "a8a8e23241efb177deb2aba1bf9731779101003bcbbbb7eb9b128aa87053603d": {
+    functionName: "addAnnouncement_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "1c5e5efbd37fd52be1153577b0bc84b56e1aadeaaa601d4f3595b4959d434c11": {
+    functionName: "deleteAnnouncement_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "46b286e4121041827fc40d3932de1ba673080275db62fb867e894f445293b167": {
+    functionName: "addTeamManually_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "253cfb485fcf38e4b64688a9536fa7551fe3288c55ccf22c137d68f2a7ab25de": {
+    functionName: "bulkUpdateTeamStatus_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "456bc51f6eac31f5f053da10c44d76ebf164ee4d1f2aa17e88b8fa4a1a837a9f": {
+    functionName: "updateBracketDisplay_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
+  "446a7969c758ce6a016dbd6cd9017c550127a4cec446e100a8dc380f723ebc00": {
+    functionName: "duplicateTournament_createServerFn_handler",
+    importer: () => import("./assets/tournamentServer-CQMLeYPw.js")
+  },
   "1cd5592b008228410e370e8fdc87f51b9cbd66cb105cb8bbc964ab8ddb0ce73d": {
     functionName: "validateAdminCredentials_createServerFn_handler",
     importer: () => import("./assets/adminAuth-BctiYdmc.js")
@@ -261,181 +345,101 @@ const manifest = {
     functionName: "checkAdminToken_createServerFn_handler",
     importer: () => import("./assets/adminAuth-BctiYdmc.js")
   },
-  "9f3c31e88fa1dee173ea06b9582248fd7ee4180a9a0b7963633607284a9e0d9f": {
-    functionName: "getTournamentData_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
+  "62bb95e491f70187696af701a08661091cd73ae081ddd6e137bc93b3795769bd": {
+    functionName: "getShopItems_createServerFn_handler",
+    importer: () => import("./assets/shopServer-B5naJkon.js")
   },
-  "dbced905a634ef7c5bb2a83b2634a776cca737f979e54211edd66306e2568768": {
-    functionName: "createTournament_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
+  "ec026d36d4ffcb51ac6d6e7a02f5d1118db749d23ae9d41aa9e810d1e639d6d0": {
+    functionName: "purchaseItem_createServerFn_handler",
+    importer: () => import("./assets/shopServer-B5naJkon.js")
   },
-  "121f9159a4d0e4bfcabdfc34526c81d2267baf979f42ff893cc77d96685c5450": {
-    functionName: "updateTournament_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
+  "59b03fa8204d5c21025a37a43302a6d23470656a41f93cc4c007688c5327b67b": {
+    functionName: "getMyPurchases_createServerFn_handler",
+    importer: () => import("./assets/shopServer-B5naJkon.js")
   },
-  "bc8e2f55893ff25b7a20ffb276b5353f2f509f03e7951ad10b9ac3a760e7067f": {
-    functionName: "deleteTournament_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
+  "69f2ce1e7c6571bdd7a19ee26738a2ae2fbba51ad19bdf612c2529bf7a56c68f": {
+    functionName: "adminGetAllPurchases_createServerFn_handler",
+    importer: () => import("./assets/shopServer-B5naJkon.js")
   },
-  "8bde410c414b4bdd05289d750f4a36586b78a106a52e17079ca6db8772ff081e": {
-    functionName: "setActiveTournament_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
+  "53ec1b36518c94a244d87a9692c1b6cb1944d6a5eff3b7b69e7216d04b7c5883": {
+    functionName: "adminUpdatePurchase_createServerFn_handler",
+    importer: () => import("./assets/shopServer-B5naJkon.js")
   },
-  "cfef4f6f62c7ffd16bec0f981079bd01e4e58a67cf057297a6d296085a12dc3b": {
-    functionName: "archiveTournament_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
+  "ff23368b6f4fcee6548aab800aec16a97e7734b0dc8d2714034e5b260202fe56": {
+    functionName: "adminGetShopItems_createServerFn_handler",
+    importer: () => import("./assets/shopServer-B5naJkon.js")
   },
-  "0945cb194bd5b5e925113942c2b7d3ed8fae8117a84c35d407c21835be8da21d": {
-    functionName: "registerTeam_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
+  "f9be758d9b42678d51decbe54fe1fd07045e4803ea4ce96286e8884d8315aec0": {
+    functionName: "adminUpdateShopItem_createServerFn_handler",
+    importer: () => import("./assets/shopServer-B5naJkon.js")
   },
-  "f9e96b9a78bbbfcc1a4ed07f2eba5da3f735e1b70a2d1ea221b4c58dbdb3797c": {
-    functionName: "updateTeamStatus_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
+  "635af3f2c52461751a47a6e7f5805fb8fb68776cedf3e6be49ddea69249f08a5": {
+    functionName: "adminAddShopItem_createServerFn_handler",
+    importer: () => import("./assets/shopServer-B5naJkon.js")
   },
-  "1a36faa8c7def6c71b5dad9a54f35ad328430bc15d8e4aca601503882a15687b": {
-    functionName: "editTeam_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
+  "3be3696d67cafcd1287434777f69c2da8eaf6a606c0dc566e20e220c1794c05f": {
+    functionName: "adminDeleteShopItem_createServerFn_handler",
+    importer: () => import("./assets/shopServer-B5naJkon.js")
   },
-  "afda6fd326aea53beacfb00c64a2b9bdc14a7bb746d3e4f80be750669e2d99f8": {
-    functionName: "removeTeam_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
-  },
-  "c646772e903b0407b4dcf204f01727e0e0397269ed3db5dccfcff50d62fccea1": {
-    functionName: "generateBracket_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
-  },
-  "ec7de07a550e8200978e62a7ce4ad1ce08e46d47ff16a43af5b8c9d15545d2e6": {
-    functionName: "updateBracketSlot_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
-  },
-  "d075749bf4618bcaacc0b4ac11770dc6eb95dbfda90f3452bbdff782e2d04b0c": {
-    functionName: "updateMatch_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
-  },
-  "4e7af7ac57eea41a6b1e106318978ab1f1892e6fd452adcd0e9bf904835f9191": {
-    functionName: "updatePrizes_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
-  },
-  "01ea8263bb9459ad19b5cf0ab1ddad64bc72d0c40bfd096d921c5fd5193acb85": {
-    functionName: "updateRules_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
-  },
-  "a8a8e23241efb177deb2aba1bf9731779101003bcbbbb7eb9b128aa87053603d": {
-    functionName: "addAnnouncement_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
-  },
-  "1c5e5efbd37fd52be1153577b0bc84b56e1aadeaaa601d4f3595b4959d434c11": {
-    functionName: "deleteAnnouncement_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
-  },
-  "46b286e4121041827fc40d3932de1ba673080275db62fb867e894f445293b167": {
-    functionName: "addTeamManually_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
-  },
-  "253cfb485fcf38e4b64688a9536fa7551fe3288c55ccf22c137d68f2a7ab25de": {
-    functionName: "bulkUpdateTeamStatus_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
-  },
-  "446a7969c758ce6a016dbd6cd9017c550127a4cec446e100a8dc380f723ebc00": {
-    functionName: "duplicateTournament_createServerFn_handler",
-    importer: () => import("./assets/tournamentServer-CkIOvAgr.js")
+  "379bd47bb2ec7133dfe6837534062a9ac9f2fe7576ce4a638ebe43f05546b4ff": {
+    functionName: "adminGetShopStats_createServerFn_handler",
+    importer: () => import("./assets/shopServer-B5naJkon.js")
   },
   "9c403a0b1baaa9eb01522526a02467b0bbe7366ce94755351c706515263f9ab1": {
     functionName: "getServerNow_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "ccdb6274a919b4e64faac8870a35fdd9f2379e43902fbc073e763702f8e0edb1": {
     functionName: "serverCatchUp_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "8de7a5ffa64cbe7de66496bd09cd405c8c5bbd016fc0db22792f19363f0ae2c2": {
     functionName: "saveMiningUser_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "14b07c567f9b8c57ebeb2b5013958353bbec125f63a72006a299b990f8a3e5cc": {
     functionName: "purchaseRigServer_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "c20eeae52f63782258860f6bf9cdedb36bd505958dfd8199abe8bbed955e893c": {
     functionName: "getDashboardStats_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "450e0a26a740dcd825927e9bc6d268f76e8a10fd98c7ba9b681fe818d0b5015b": {
     functionName: "getAllMiningUsers_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "8e3d970b0a3780ca5ee670f87b0ba84cb45748760c3b1b1be58131158580b660": {
     functionName: "adminUpdateMiningUser_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "7fa8b3cbd5fc8f402a586f9817e3556e666bae0870bfdf16a35ee35117771bb1": {
     functionName: "getLeaderboard_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "2a08d77084734e5724f0b7c889d954a908a3bb05d5c0b96eecc2c94776f3daa7": {
     functionName: "adminDeleteMiningUser_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "6628a45ae47f2a27610f23af9286c0955b21bcb8e8625b097bfda5976b23544c": {
     functionName: "renewMiningSession_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "5fed49ccff1da12a3cf2c454c8f9abb2c8689d155564610245c1506d3223ee3c": {
     functionName: "adminRenewMining_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "2aaed4fef1df9d23420ad780edcf7203ac4c445653015df9af9b0178f0277ddc": {
     functionName: "adminAdjustRenewal_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "8d5f143a680dcec8b626745cb47685992d8086e2e59ff3b07c97174e40abdbd4": {
     functionName: "adminResetRenewal_createServerFn_handler",
-    importer: () => import("./assets/miningServer-vFVt_ula.js")
+    importer: () => import("./assets/miningServer-Cb_bGdgU.js")
   },
   "8ebbe34d9c3cf8d74d5c419c61649060ec2211be4f88f412177da3ea729967ce": {
     functionName: "validateCredentials_createServerFn_handler",
     importer: () => import("./assets/auth-7I7WVozf.js")
-  },
-  "62bb95e491f70187696af701a08661091cd73ae081ddd6e137bc93b3795769bd": {
-    functionName: "getShopItems_createServerFn_handler",
-    importer: () => import("./assets/shopServer-vzLTHB0X.js")
-  },
-  "ec026d36d4ffcb51ac6d6e7a02f5d1118db749d23ae9d41aa9e810d1e639d6d0": {
-    functionName: "purchaseItem_createServerFn_handler",
-    importer: () => import("./assets/shopServer-vzLTHB0X.js")
-  },
-  "59b03fa8204d5c21025a37a43302a6d23470656a41f93cc4c007688c5327b67b": {
-    functionName: "getMyPurchases_createServerFn_handler",
-    importer: () => import("./assets/shopServer-vzLTHB0X.js")
-  },
-  "69f2ce1e7c6571bdd7a19ee26738a2ae2fbba51ad19bdf612c2529bf7a56c68f": {
-    functionName: "adminGetAllPurchases_createServerFn_handler",
-    importer: () => import("./assets/shopServer-vzLTHB0X.js")
-  },
-  "53ec1b36518c94a244d87a9692c1b6cb1944d6a5eff3b7b69e7216d04b7c5883": {
-    functionName: "adminUpdatePurchase_createServerFn_handler",
-    importer: () => import("./assets/shopServer-vzLTHB0X.js")
-  },
-  "ff23368b6f4fcee6548aab800aec16a97e7734b0dc8d2714034e5b260202fe56": {
-    functionName: "adminGetShopItems_createServerFn_handler",
-    importer: () => import("./assets/shopServer-vzLTHB0X.js")
-  },
-  "f9be758d9b42678d51decbe54fe1fd07045e4803ea4ce96286e8884d8315aec0": {
-    functionName: "adminUpdateShopItem_createServerFn_handler",
-    importer: () => import("./assets/shopServer-vzLTHB0X.js")
-  },
-  "635af3f2c52461751a47a6e7f5805fb8fb68776cedf3e6be49ddea69249f08a5": {
-    functionName: "adminAddShopItem_createServerFn_handler",
-    importer: () => import("./assets/shopServer-vzLTHB0X.js")
-  },
-  "3be3696d67cafcd1287434777f69c2da8eaf6a606c0dc566e20e220c1794c05f": {
-    functionName: "adminDeleteShopItem_createServerFn_handler",
-    importer: () => import("./assets/shopServer-vzLTHB0X.js")
-  },
-  "379bd47bb2ec7133dfe6837534062a9ac9f2fe7576ce4a638ebe43f05546b4ff": {
-    functionName: "adminGetShopStats_createServerFn_handler",
-    importer: () => import("./assets/shopServer-vzLTHB0X.js")
   },
   "c6db069f27f7f8f7aa788b0f630ee3e9cdc9b10047ec1783d1514b41bdd96316": {
     functionName: "getRepoInfo_createServerFn_handler",
@@ -1202,7 +1206,7 @@ var baseManifestPromise;
 var cachedFinalManifestPromise;
 async function loadEntries() {
   const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-    import("./assets/router-rI-2RV5_.js").then((n) => n.I),
+    import("./assets/router-BrvM1E3B.js").then((n) => n.I),
     import("./assets/start-HYkvq4Ni.js"),
     import("./assets/__23tanstack-start-plugin-adapters-Cwee5PKy.js")
   ]);

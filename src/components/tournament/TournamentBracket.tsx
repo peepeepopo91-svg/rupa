@@ -429,36 +429,35 @@ function FinalsColumn({ match, teams, onSelect, colH, theme }: {
 }) {
   const cardTop = matchTop(0, 1, colH)
   const lblTop  = cardTop - LABEL_H - LABEL_MB - 4
-  const emblTop = lblTop - 52 - 6
+  const emblTop = lblTop - 48 - 6
   const wrapH   = colH + LABEL_H + LABEL_MB
 
   return (
     <div style={{ flexShrink: 0 }}>
-      <div style={{ position: 'relative', width: CARD_W + 20, height: wrapH }}>
+      <div style={{ position: 'relative', width: CARD_W + 16, height: wrapH }}>
         {/* Trophy emblem */}
         <div style={{ position: 'absolute', top: emblTop + LABEL_H + LABEL_MB,
           left: '50%', transform: 'translateX(-50%)',
-          width: 48, height: 48, borderRadius: '50%',
-          background: theme.finalsRingBg, border: `1.5px solid ${theme.finalsRingBorder}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-          boxShadow: `0 0 30px ${theme.connDot}22` }}>
+          width: 44, height: 44, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(245,158,11,.14) 0%, transparent 100%)',
+          border: '1px solid rgba(245,158,11,.25)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
           🏆
         </div>
 
         {/* Finals label */}
         <div style={{ position: 'absolute', top: lblTop + LABEL_H + LABEL_MB + 4,
           left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
-          <div style={{ padding: '3px 14px', height: LABEL_H, display: 'flex', alignItems: 'center',
-            background: theme.labelBg, border: `1px solid ${theme.labelBorder}`,
-            borderRadius: 20, fontSize: 8.5, fontWeight: 800, letterSpacing: '0.14em',
-            color: theme.labelColor, textTransform: 'uppercase',
-            boxShadow: `0 0 16px ${theme.connDot}22` }}>
-            GRAND FINAL
+          <div style={{ padding: '2px 10px', height: LABEL_H, display: 'flex', alignItems: 'center',
+            background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)',
+            borderRadius: 20, fontSize: 8, fontWeight: 700, letterSpacing: '0.13em',
+            color: 'rgba(245,158,11,.8)', textTransform: 'uppercase' }}>
+            Finals
           </div>
         </div>
 
         {/* Card */}
-        <div style={{ position: 'absolute', top: cardTop + LABEL_H + LABEL_MB, left: 10 }}>
+        <div style={{ position: 'absolute', top: cardTop + LABEL_H + LABEL_MB, left: 8 }}>
           <MatchCard match={match} teams={teams} onClick={onSelect} theme={theme} matchNum={match.matchNumber} />
         </div>
       </div>
@@ -547,7 +546,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
   // Natural width: each left col + connector, finals col, each right col + connector
   const leftW   = leftCols.length * (CARD_W + CONN_W)
   const rightW  = rightCols.length * (CONN_W + CARD_W)
-  const finalsW = CARD_W + 20
+  const finalsW = CARD_W + 16
   const naturalW = leftW + finalsW + rightW + OUTER_PAD * 2
 
   const naturalH = colH + LABEL_H + LABEL_MB + 16 // 16px top/bottom padding in bracket
@@ -628,7 +627,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
         const bracketContent = (
           <div
             ref={bracketRef}
-            style={{ borderRadius: 14, padding: '14px 0',
+            style={{ borderRadius: 14, padding: '14px 12px',
               background: theme.containerBg,
               border: `1px solid ${theme.containerBorder}`,
               transition: 'background .3s, border-color .3s',
@@ -655,7 +654,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
               {finalsMatch
                 ? <FinalsColumn match={finalsMatch} teams={teams}
                     onSelect={() => setSelected(finalsMatch)} colH={colH} theme={theme} />
-                : <div style={{ width: CARD_W + 20, height: colH + LABEL_H + LABEL_MB,
+                : <div style={{ width: CARD_W + 16, height: colH + LABEL_H + LABEL_MB,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     color: 'rgba(255,255,255,.12)', fontSize: 11 }}>Finals TBD</div>
               }

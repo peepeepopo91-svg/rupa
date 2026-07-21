@@ -160,7 +160,7 @@ function FinalsCol({ match, teams, selectedId, onSelect, colH }: {
           width: 44, height: 44, borderRadius: '50%',
           background: 'radial-gradient(circle,rgba(245,158,11,.14) 0%,transparent 100%)',
           border: '1px solid rgba(245,158,11,.25)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>⚔️</div>
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🏆</div>
         <div style={{ position: 'absolute', top: lblTop + LABEL_H + LABEL_MB, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
           <div style={{ padding: '2px 10px', height: LABEL_H, display: 'flex', alignItems: 'center',
             background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)',
