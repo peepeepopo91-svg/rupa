@@ -1,7 +1,16 @@
 import { useState, useMemo } from 'react'
-import type { Tournament, Match, Team, MatchStatus } from '../../data/tournament'
+import type { Tournament, Match, Team, MatchStatus, BracketThemeId } from '../../data/tournament'
 import { MATCH_STATUS_LABEL } from '../../data/tournament'
-import { generateBracket, updateMatch, updateBracketSlot } from '../../server/tournamentServer'
+import { generateBracket, updateMatch, updateBracketSlot, updateBracketDisplay } from '../../server/tournamentServer'
+
+// ─── Display settings constants ───────────────────────────────────────────────
+const THEME_OPTIONS: { id: BracketThemeId; name: string; icon: string; accent: string }[] = [
+  { id: 'esports',      name: 'Esports',      icon: '⚔️', accent: 'rgba(245,158,11,.8)' },
+  { id: 'blue',         name: 'Blue Network', icon: '🌐', accent: '#00bfff' },
+  { id: 'neon',         name: 'Neon',         icon: '⚡', accent: 'rgba(0,255,200,.9)' },
+  { id: 'championship', name: 'Championship', icon: '🏆', accent: 'rgba(212,175,55,.9)' },
+  { id: 'minimal',      name: 'Minimal',      icon: '◻',  accent: '#58a6ff' },
+]
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type F = (msg: string, ok?: boolean) => void
@@ -471,6 +480,12 @@ export function AdminBracketEditor({ active, flash, reload }: Props) {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null)
   const [saving, setSaving]         = useState(false)
 
+  // ── Display settings state (seeded from tournament data) ──
+  const [dispTheme, setDispTheme]         = useState<BracketThemeId>(active?.bracketDisplay?.theme ?? 'esports')
+  const [dispScaleMode, setDispScaleMode] = useState<'auto' | 'manual'>(active?.bracketDisplay?.scaleMode ?? 'auto')
+  const [dispManualScale, setDispManualScale] = useState<number>(active?.bracketDisplay?.manualScale ?? 1)
+  const [dispSaving, setDispSaving]       = useState(false)
+
   if (!active) return (
     <div className="text-center py-16 text-gray-600">
       <div className="text-5xl mb-4 opacity-20">⚔️</div>
@@ -479,6 +494,18 @@ export function AdminBracketEditor({ active, flash, reload }: Props) {
   )
 
   const approvedTeams = active.teams.filter(t => t.status === 'approved')
+
+  // ── Save display settings ──
+  async function saveDisplay() {
+    setDispSaving(true)
+    try {
+      const res = await updateBracketDisplay({
+        data: { tournamentId: active!.id, theme: dispTheme, scaleMode: dispScaleMode, manualScale: dispManualScale },
+      })
+      if (res.success) { flash('Display settings saved ✓'); reload() }
+      else flash(res.error ?? 'Failed to save', false)
+    } finally { setDispSaving(false) }
+  }
 
   // ── Generate ──
   async function generate() {
@@ -549,6 +576,97 @@ export function AdminBracketEditor({ active, flash, reload }: Props) {
   return (
     <div className="space-y-5">
       <style>{`@keyframes ab-pbar{0%,100%{opacity:.4}50%{opacity:1}}`}</style>
+
+      {/* ── Display Settings panel ── */}
+      <div className="bg-[#0a0e18] border border-white/5 rounded-2xl p-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#00BFFF]/10 border border-[#00BFFF]/20 flex items-center justify-center text-base flex-shrink-0">🎨</div>
+          <div>
+            <p className="text-white font-bold text-sm">Bracket Display Settings</p>
+            <p className="text-gray-500 text-xs">Controls how all visitors see the bracket — theme, scale, and scroll behaviour</p>
+          </div>
+        </div>
+
+        {/* Theme picker */}
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">Theme</p>
+          <div className="flex gap-2 flex-wrap">
+            {THEME_OPTIONS.map(t => {
+              const active_ = t.id === dispTheme
+              return (
+                <button key={t.id} onClick={() => setDispTheme(t.id)}
+                  style={{
+                    padding: '5px 12px', borderRadius: 20, fontSize: 11, fontWeight: active_ ? 700 : 500,
+                    cursor: 'pointer', transition: 'all .15s',
+                    background: active_ ? `${t.accent}22` : 'rgba(255,255,255,.04)',
+                    border: `1px solid ${active_ ? t.accent + '66' : 'rgba(255,255,255,.08)'}`,
+                    color: active_ ? t.accent : 'rgba(255,255,255,.4)',
+                    whiteSpace: 'nowrap' as const,
+                  }}>
+                  <span style={{ marginRight: 5 }}>{t.icon}</span>{t.name}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Scale mode */}
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">Scale Mode</p>
+          <div className="flex gap-2">
+            {(['auto', 'manual'] as const).map(mode => (
+              <button key={mode} onClick={() => setDispScaleMode(mode)}
+                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  dispScaleMode === mode
+                    ? 'bg-[#00BFFF]/15 text-[#00BFFF] border border-[#00BFFF]/30'
+                    : 'text-gray-500 border border-white/8 hover:text-gray-300'
+                }`}>
+                {mode === 'auto' ? '⚡ Auto (shrink-to-fit)' : '🔧 Manual (set exact scale)'}
+              </button>
+            ))}
+          </div>
+          {dispScaleMode === 'auto' && (
+            <p className="text-[10px] text-gray-600 mt-1.5">
+              Bracket automatically shrinks to fit any screen. No scroll bar shown.
+            </p>
+          )}
+        </div>
+
+        {/* Manual scale slider — only visible in manual mode */}
+        {dispScaleMode === 'manual' && (
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-2 font-semibold">
+              Scale — <span className="text-white font-bold">{Math.round(dispManualScale * 100)}%</span>
+              <span className="text-gray-600 ml-2 normal-case font-normal">(if bracket is wider than the screen, a scroll bar will appear)</span>
+            </p>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={30} max={150} step={5}
+                value={Math.round(dispManualScale * 100)}
+                onChange={e => setDispManualScale(Number(e.target.value) / 100)}
+                className="flex-1 accent-[#00BFFF]"
+              />
+              <input
+                type="number"
+                min={30} max={150} step={5}
+                value={Math.round(dispManualScale * 100)}
+                onChange={e => setDispManualScale(Math.max(0.3, Math.min(1.5, Number(e.target.value) / 100)))}
+                className="w-16 bg-[#070b12] border border-white/10 rounded-xl px-2 py-1.5 text-white text-xs text-center focus:outline-none focus:border-[#00BFFF]/40"
+              />
+              <span className="text-gray-600 text-xs">%</span>
+            </div>
+          </div>
+        )}
+
+        <button onClick={saveDisplay} disabled={dispSaving}
+          className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-[#00BFFF]/80 to-[#00BFFF] text-black font-bold text-xs hover:from-[#00BFFF] hover:to-[#00BFFF]/90 disabled:opacity-40 transition-all shadow-lg shadow-[#00BFFF]/15">
+          {dispSaving
+            ? <><span className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" />Saving…</>
+            : '✓ Save Display Settings'
+          }
+        </button>
+      </div>
 
       {/* ── Generator panel ── */}
       <div className="bg-[#0a0e18] border border-white/5 rounded-2xl p-5 space-y-4">

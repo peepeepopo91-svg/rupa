@@ -689,6 +689,25 @@ export const bulkUpdateTeamStatus = createServerFn({ method: 'POST' })
     return { success: true, updated }
   })
 
+// ─── POST: update bracket display settings (admin) ───────────────────────────
+
+export const updateBracketDisplay = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    tournamentId: z.string().min(1),
+    theme:        z.enum(['esports', 'blue', 'neon', 'championship', 'minimal']),
+    scaleMode:    z.enum(['auto', 'manual']),
+    manualScale:  z.number().min(0.3).max(2.0),
+  }))
+  .handler(async ({ data }): Promise<{ success: boolean; error?: string }> => {
+    const file = readData()
+    const t    = findTournament(file, data.tournamentId)
+    if (!t) return { success: false, error: 'Tournament not found' }
+    t.bracketDisplay = { theme: data.theme, scaleMode: data.scaleMode, manualScale: data.manualScale }
+    t.updatedAt = Date.now()
+    writeData(file)
+    return { success: true }
+  })
+
 // ─── POST: duplicate tournament (admin) ──────────────────────────────────────
 
 export const duplicateTournament = createServerFn({ method: 'POST' })

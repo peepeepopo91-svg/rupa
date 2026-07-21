@@ -86,6 +86,14 @@ export interface Announcement {
   createdAt: number
 }
 
+export type BracketThemeId = 'esports' | 'blue' | 'neon' | 'championship' | 'minimal'
+
+export interface BracketDisplaySettings {
+  theme: BracketThemeId
+  scaleMode: 'auto' | 'manual'
+  manualScale: number  // 0.3 – 2.0; used when scaleMode === 'manual'
+}
+
 export interface Tournament {
   id: string
   name: string
@@ -106,6 +114,7 @@ export interface Tournament {
   teams: Team[]
   matches: Match[]
   announcements: Announcement[]
+  bracketDisplay?: BracketDisplaySettings
   createdAt: number
   updatedAt: number
 }

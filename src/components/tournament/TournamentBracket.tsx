@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { Tournament, Match, Team } from '../../data/tournament'
+import type { Tournament, Match, Team, BracketThemeId } from '../../data/tournament'
 import { MATCH_STATUS_LABEL } from '../../data/tournament'
 import { MatchDetailModal } from './MatchDetailModal'
 import { toPng, toJpeg } from 'html-to-image'
@@ -20,7 +20,7 @@ const matchCY   = (i: number, total: number, colH: number) => (colH / total) * i
 const matchTop  = (i: number, total: number, colH: number) => (colH / total) * i + ((colH / total) - CARD_H) / 2
 
 // ─── Theme system ─────────────────────────────────────────────────────────────
-type ThemeId = 'esports' | 'blue' | 'neon' | 'championship' | 'minimal'
+type ThemeId = BracketThemeId
 
 interface BracketTheme {
   id: ThemeId
@@ -507,18 +507,16 @@ export function TournamentBracket({ tournament }: Props) {
 // ─── Inner bracket view — all hooks live here ─────────────────────────────────
 function BracketView({ tournament }: { tournament: Tournament }) {
   const [selected, setSelected]   = useState<Match | null>(null)
-  const [themeId, setThemeId]     = useState<ThemeId>(() => {
-    try { return (localStorage.getItem('bt-bracket-theme') as ThemeId) ?? 'esports' } catch { return 'esports' }
-  })
   const [exporting, setExporting] = useState(false)
   const bracketRef                = useRef<HTMLDivElement>(null)
 
-  const theme = getTheme(themeId)
+  // Read display settings saved by admin (public viewers never see controls)
+  const display     = tournament.bracketDisplay
+  const themeId: ThemeId = display?.theme ?? 'esports'
+  const scaleMode   = display?.scaleMode ?? 'auto'
+  const manualScale = Math.max(0.3, Math.min(2, display?.manualScale ?? 1))
 
-  function handleThemeChange(id: ThemeId) {
-    setThemeId(id)
-    try { localStorage.setItem('bt-bracket-theme', id) } catch { /* ignore */ }
-  }
+  const theme = getTheme(themeId)
 
   const { bracket, matches, teams } = tournament
   const rounds = bracket!.rounds
@@ -553,7 +551,8 @@ function BracketView({ tournament }: { tournament: Tournament }) {
 
   const naturalH = colH + LABEL_H + LABEL_MB + 16 // 16px top/bottom padding in bracket
 
-  const { containerRef, scale } = useAutoScale(naturalW)
+  // Always call the hook (Rules of Hooks) — only used when scaleMode === 'auto'
+  const { containerRef, scale: autoScale } = useAutoScale(naturalW)
 
   // Export as PNG
   const handleExport = useCallback(async (fmt: 'png' | 'jpg') => {
@@ -584,7 +583,20 @@ function BracketView({ tournament }: { tournament: Tournament }) {
       {/* ── Toolbar ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
-        <ThemeSelector current={themeId} onChange={handleThemeChange} />
+
+        {/* Theme badge — read-only, set by admin */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.22)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            Theme
+          </span>
+          <span style={{
+            padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+            background: theme.pillActive, border: `1px solid ${theme.pillText}44`,
+            color: theme.pillText, whiteSpace: 'nowrap',
+          }}>
+            {THEMES.find(t => t.id === themeId)?.icon} {THEMES.find(t => t.id === themeId)?.name}
+          </span>
+        </div>
 
         {/* Export buttons */}
         <div style={{ display: 'flex', gap: 6 }}>
@@ -610,19 +622,9 @@ function BracketView({ tournament }: { tournament: Tournament }) {
         </div>
       </div>
 
-      {/* ── Bracket container with auto-scale ── */}
-      <div ref={containerRef} style={{ width: '100%', overflow: 'hidden' }}>
-        {/* Scale wrapper — collapses vertical whitespace by negating the leftover space */}
-        <div style={{
-          width: naturalW,
-          height: naturalH,
-          transformOrigin: 'top center',
-          transform: `scale(${scale})`,
-          // Collapse the empty space below when scaled down
-          marginBottom: `${(scale - 1) * naturalH}px`,
-          // Center horizontally
-          marginLeft: `max(0px, calc(50% - ${naturalW / 2}px))`,
-        }}>
+      {/* ── Bracket inner content (shared between auto/manual rendering) ── */}
+      {(() => {
+        const bracketContent = (
           <div
             ref={bracketRef}
             style={{ borderRadius: 14, padding: '14px 0',
@@ -675,18 +677,67 @@ function BracketView({ tournament }: { tournament: Tournament }) {
 
             </div>
           </div>
-        </div>
-      </div>
+        )
 
-      {/* Scale indicator */}
-      {scale < 0.99 && (
-        <div style={{ textAlign: 'center', marginTop: 10 }}>
-          <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
-            SCALED TO {Math.round(scale * 100)}% · {leftCols.length + 1 + rightCols.length} ROUNDS ·{' '}
-            {matches.filter(m => m.status !== 'bye').length} MATCHES
-          </span>
-        </div>
-      )}
+        if (scaleMode === 'auto') {
+          // ── Auto mode: shrink-to-fit via CSS transform, no scrollbar ──
+          return (
+            <>
+              <div ref={containerRef} style={{ width: '100%', overflow: 'hidden' }}>
+                <div style={{
+                  width: naturalW,
+                  height: naturalH,
+                  transformOrigin: 'top center',
+                  transform: `scale(${autoScale})`,
+                  marginBottom: `${(autoScale - 1) * naturalH}px`,
+                  marginLeft: `max(0px, calc(50% - ${naturalW / 2}px))`,
+                }}>
+                  {bracketContent}
+                </div>
+              </div>
+              {autoScale < 0.99 && (
+                <div style={{ textAlign: 'center', marginTop: 10 }}>
+                  <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
+                    AUTO-SCALED TO {Math.round(autoScale * 100)}% · {leftCols.length + 1 + rightCols.length} ROUNDS ·{' '}
+                    {matches.filter(m => m.status !== 'bye').length} MATCHES
+                  </span>
+                </div>
+              )}
+            </>
+          )
+        } else {
+          // ── Manual mode: fixed scale set by admin, horizontal scroll if wider than viewport ──
+          return (
+            <>
+              <div style={{ width: '100%', overflowX: 'auto', overflowY: 'hidden' }}>
+                {/* Spacer sized to the scaled dimensions so the scrollbar knows the full width */}
+                <div style={{
+                  width: naturalW * manualScale,
+                  height: naturalH * manualScale,
+                  position: 'relative',
+                  flexShrink: 0,
+                }}>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0,
+                    transformOrigin: 'top left',
+                    transform: `scale(${manualScale})`,
+                    width: naturalW,
+                  }}>
+                    {bracketContent}
+                  </div>
+                </div>
+              </div>
+              <div style={{ textAlign: 'center', marginTop: 10 }}>
+                <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
+                  MANUAL SCALE {Math.round(manualScale * 100)}% · {leftCols.length + 1 + rightCols.length} ROUNDS ·{' '}
+                  {matches.filter(m => m.status !== 'bye').length} MATCHES
+                  {naturalW * manualScale > 900 && ' · SCROLL →'}
+                </span>
+              </div>
+            </>
+          )
+        }
+      })()}
 
       {/* Match detail modal */}
       {selected && (
