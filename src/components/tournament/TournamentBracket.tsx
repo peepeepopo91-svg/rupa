@@ -584,19 +584,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
 
-        {/* Theme badge — read-only, set by admin */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.22)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            Theme
-          </span>
-          <span style={{
-            padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 700,
-            background: theme.pillActive, border: `1px solid ${theme.pillText}44`,
-            color: theme.pillText, whiteSpace: 'nowrap',
-          }}>
-            {THEMES.find(t => t.id === themeId)?.icon} {THEMES.find(t => t.id === themeId)?.name}
-          </span>
-        </div>
+        <div />
 
         {/* Export buttons */}
         <div style={{ display: 'flex', gap: 6 }}>
