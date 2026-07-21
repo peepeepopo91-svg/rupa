@@ -1,109 +1,343 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Tournament, Match, Team } from '../../data/tournament'
 import { MATCH_STATUS_LABEL } from '../../data/tournament'
 import { MatchDetailModal } from './MatchDetailModal'
+import { toPng, toJpeg } from 'html-to-image'
 
 interface Props { tournament: Tournament | null }
 
-// ─── Layout constants (identical to AdminBracketEditor) ───────────────────────
-const CARD_W   = 162
-const CARD_H   = 72
-const CONN_W   = 32
-const SLOT_H   = 88
-const LABEL_H  = 22
-const LABEL_MB = 6
+// ─── Layout constants ─────────────────────────────────────────────────────────
+const CARD_W   = 172
+const CARD_H   = 86
+const CONN_W   = 40
+const SLOT_H   = 108
+const LABEL_H  = 24
+const LABEL_MB = 8
+const OUTER_PAD = 24
 
 const colHeight = (n: number) => n * SLOT_H
 const matchCY   = (i: number, total: number, colH: number) => (colH / total) * i + (colH / total) / 2
 const matchTop  = (i: number, total: number, colH: number) => (colH / total) * i + ((colH / total) - CARD_H) / 2
 
-// ─── Team row (identical to AdminTeamRow) ────────────────────────────────────
-function TeamRow({ team, score, winner, rtl }: { team?: Team; score: number; winner: boolean; rtl: boolean }) {
+// ─── Theme system ─────────────────────────────────────────────────────────────
+type ThemeId = 'esports' | 'blue' | 'neon' | 'championship' | 'minimal'
+
+interface BracketTheme {
+  id: ThemeId
+  name: string
+  icon: string
+  // Container
+  containerBg: string
+  containerBorder: string
+  // Card
+  cardBg: string
+  cardBgLive: string
+  cardBorderNormal: string
+  cardBorderLive: string
+  cardBorderDone: string
+  cardShadowLive: string
+  cardRadius: number
+  // Teams
+  winnerColor: string
+  loserColor: string
+  tbdColor: string
+  winnerScoreColor: string
+  loserScoreColor: string
+  // Divider
+  dividerColor: string
+  // Status
+  statusLive: string
+  statusDone: string
+  statusPending: string
+  liveBarGrad: string
+  // Connectors
+  connColor: string
+  connColorFaint: string
+  connDot: string
+  // Round labels
+  labelBg: string
+  labelBorder: string
+  labelColor: string
+  // Finals emblem
+  finalsRingBg: string
+  finalsRingBorder: string
+  // Theme pill selector
+  pillActive: string
+  pillText: string
+}
+
+const THEMES: BracketTheme[] = [
+  {
+    id: 'esports', name: 'Esports', icon: '⚔️',
+    containerBg: 'radial-gradient(ellipse 70% 55% at 50% 50%, rgba(245,158,11,.05) 0%, rgba(14,21,34,.92) 55%, rgba(9,13,21,.97) 100%)',
+    containerBorder: 'rgba(245,158,11,.08)',
+    cardBg: 'linear-gradient(135deg,rgba(14,21,34,.97),rgba(9,13,21,.99))',
+    cardBgLive: 'linear-gradient(135deg,rgba(30,8,8,.97),rgba(18,5,5,.99))',
+    cardBorderNormal: 'rgba(255,255,255,.08)',
+    cardBorderLive: 'rgba(239,68,68,.45)',
+    cardBorderDone: 'rgba(34,197,94,.25)',
+    cardShadowLive: '0 0 18px rgba(239,68,68,.18)',
+    cardRadius: 10,
+    winnerColor: '#86efac', loserColor: 'rgba(255,255,255,.5)', tbdColor: 'rgba(255,255,255,.2)',
+    winnerScoreColor: '#4ade80', loserScoreColor: 'rgba(255,255,255,.18)',
+    dividerColor: 'rgba(255,255,255,.05)',
+    statusLive: '#ef4444', statusDone: 'rgba(34,197,94,.75)', statusPending: 'rgba(255,255,255,.18)',
+    liveBarGrad: 'linear-gradient(90deg,transparent,#ef4444,transparent)',
+    connColor: 'rgba(245,158,11,.38)', connColorFaint: 'rgba(245,158,11,.18)', connDot: 'rgba(245,158,11,.6)',
+    labelBg: 'rgba(245,158,11,.08)', labelBorder: 'rgba(245,158,11,.22)', labelColor: 'rgba(245,158,11,.85)',
+    finalsRingBg: 'radial-gradient(circle,rgba(245,158,11,.14) 0%,transparent 100%)',
+    finalsRingBorder: 'rgba(245,158,11,.28)',
+    pillActive: 'rgba(245,158,11,.18)', pillText: 'rgba(245,158,11,.9)',
+  },
+  {
+    id: 'blue', name: 'Blue Network', icon: '🌐',
+    containerBg: 'radial-gradient(ellipse 70% 55% at 50% 50%, rgba(0,191,255,.05) 0%, rgba(11,15,23,.92) 55%, rgba(7,10,17,.97) 100%)',
+    containerBorder: 'rgba(0,191,255,.1)',
+    cardBg: 'linear-gradient(135deg,rgba(11,18,30,.97),rgba(7,11,20,.99))',
+    cardBgLive: 'linear-gradient(135deg,rgba(28,8,8,.97),rgba(18,5,5,.99))',
+    cardBorderNormal: 'rgba(0,191,255,.1)',
+    cardBorderLive: 'rgba(239,68,68,.45)',
+    cardBorderDone: 'rgba(34,197,94,.25)',
+    cardShadowLive: '0 0 18px rgba(239,68,68,.18)',
+    cardRadius: 10,
+    winnerColor: '#7dd3fc', loserColor: 'rgba(255,255,255,.5)', tbdColor: 'rgba(255,255,255,.2)',
+    winnerScoreColor: '#00bfff', loserScoreColor: 'rgba(255,255,255,.18)',
+    dividerColor: 'rgba(0,191,255,.06)',
+    statusLive: '#ef4444', statusDone: 'rgba(34,197,94,.75)', statusPending: 'rgba(255,255,255,.18)',
+    liveBarGrad: 'linear-gradient(90deg,transparent,#ef4444,transparent)',
+    connColor: 'rgba(0,191,255,.35)', connColorFaint: 'rgba(0,191,255,.12)', connDot: 'rgba(0,191,255,.65)',
+    labelBg: 'rgba(0,191,255,.07)', labelBorder: 'rgba(0,191,255,.2)', labelColor: 'rgba(0,191,255,.85)',
+    finalsRingBg: 'radial-gradient(circle,rgba(0,191,255,.12) 0%,transparent 100%)',
+    finalsRingBorder: 'rgba(0,191,255,.3)',
+    pillActive: 'rgba(0,191,255,.15)', pillText: '#00bfff',
+  },
+  {
+    id: 'neon', name: 'Neon', icon: '⚡',
+    containerBg: 'linear-gradient(180deg,rgba(5,6,10,.99) 0%,rgba(3,4,8,1) 100%)',
+    containerBorder: 'rgba(0,255,200,.08)',
+    cardBg: 'linear-gradient(135deg,rgba(5,12,25,.98),rgba(3,8,18,.99))',
+    cardBgLive: 'linear-gradient(135deg,rgba(18,3,28,.97),rgba(12,2,20,.99))',
+    cardBorderNormal: 'rgba(0,255,200,.14)',
+    cardBorderLive: 'rgba(255,50,180,.55)',
+    cardBorderDone: 'rgba(0,255,120,.3)',
+    cardShadowLive: '0 0 20px rgba(255,50,180,.2)',
+    cardRadius: 8,
+    winnerColor: '#00ff88', loserColor: 'rgba(200,220,255,.5)', tbdColor: 'rgba(100,150,200,.22)',
+    winnerScoreColor: '#00ff88', loserScoreColor: 'rgba(100,150,200,.18)',
+    dividerColor: 'rgba(0,255,200,.06)',
+    statusLive: '#ff32b4', statusDone: 'rgba(0,255,120,.75)', statusPending: 'rgba(100,150,200,.25)',
+    liveBarGrad: 'linear-gradient(90deg,transparent,#ff32b4,transparent)',
+    connColor: 'rgba(0,255,200,.42)', connColorFaint: 'rgba(0,255,200,.15)', connDot: 'rgba(0,255,200,.75)',
+    labelBg: 'rgba(0,255,200,.06)', labelBorder: 'rgba(0,255,200,.22)', labelColor: 'rgba(0,255,200,.9)',
+    finalsRingBg: 'radial-gradient(circle,rgba(0,255,200,.1) 0%,transparent 100%)',
+    finalsRingBorder: 'rgba(0,255,200,.3)',
+    pillActive: 'rgba(0,255,200,.12)', pillText: 'rgba(0,255,200,.95)',
+  },
+  {
+    id: 'championship', name: 'Championship', icon: '🏆',
+    containerBg: 'radial-gradient(ellipse 70% 55% at 50% 50%, rgba(212,175,55,.04) 0%, rgba(10,9,6,.93) 55%, rgba(7,6,3,.98) 100%)',
+    containerBorder: 'rgba(212,175,55,.1)',
+    cardBg: 'linear-gradient(135deg,rgba(20,16,8,.97),rgba(13,10,4,.99))',
+    cardBgLive: 'linear-gradient(135deg,rgba(30,8,6,.97),rgba(20,5,4,.99))',
+    cardBorderNormal: 'rgba(212,175,55,.12)',
+    cardBorderLive: 'rgba(239,68,68,.4)',
+    cardBorderDone: 'rgba(212,175,55,.35)',
+    cardShadowLive: '0 0 18px rgba(239,68,68,.18)',
+    cardRadius: 6,
+    winnerColor: '#ffd700', loserColor: 'rgba(212,175,55,.55)', tbdColor: 'rgba(212,175,55,.2)',
+    winnerScoreColor: '#ffd700', loserScoreColor: 'rgba(212,175,55,.18)',
+    dividerColor: 'rgba(212,175,55,.07)',
+    statusLive: '#ef4444', statusDone: 'rgba(212,175,55,.8)', statusPending: 'rgba(212,175,55,.22)',
+    liveBarGrad: 'linear-gradient(90deg,transparent,#ef4444,transparent)',
+    connColor: 'rgba(212,175,55,.4)', connColorFaint: 'rgba(212,175,55,.15)', connDot: 'rgba(212,175,55,.65)',
+    labelBg: 'rgba(212,175,55,.08)', labelBorder: 'rgba(212,175,55,.25)', labelColor: 'rgba(212,175,55,.88)',
+    finalsRingBg: 'radial-gradient(circle,rgba(212,175,55,.14) 0%,transparent 100%)',
+    finalsRingBorder: 'rgba(212,175,55,.3)',
+    pillActive: 'rgba(212,175,55,.15)', pillText: 'rgba(212,175,55,.9)',
+  },
+  {
+    id: 'minimal', name: 'Minimal', icon: '◻',
+    containerBg: '#0d1117',
+    containerBorder: '#21262d',
+    cardBg: '#161b22',
+    cardBgLive: '#1c1014',
+    cardBorderNormal: '#30363d',
+    cardBorderLive: 'rgba(239,68,68,.5)',
+    cardBorderDone: 'rgba(63,185,80,.4)',
+    cardShadowLive: '0 0 12px rgba(239,68,68,.12)',
+    cardRadius: 8,
+    winnerColor: '#3fb950', loserColor: '#8b949e', tbdColor: '#484f58',
+    winnerScoreColor: '#3fb950', loserScoreColor: '#484f58',
+    dividerColor: '#21262d',
+    statusLive: '#f85149', statusDone: '#3fb950', statusPending: '#484f58',
+    liveBarGrad: 'linear-gradient(90deg,transparent,#f85149,transparent)',
+    connColor: '#30363d', connColorFaint: '#21262d', connDot: '#58a6ff',
+    labelBg: 'rgba(88,166,255,.07)', labelBorder: 'rgba(88,166,255,.2)', labelColor: '#58a6ff',
+    finalsRingBg: 'radial-gradient(circle,rgba(88,166,255,.1) 0%,transparent 100%)',
+    finalsRingBorder: 'rgba(88,166,255,.3)',
+    pillActive: 'rgba(88,166,255,.15)', pillText: '#58a6ff',
+  },
+]
+
+function getTheme(id: ThemeId): BracketTheme { return THEMES.find(t => t.id === id) ?? THEMES[0] }
+
+// ─── Auto-scale hook ──────────────────────────────────────────────────────────
+function useAutoScale(naturalW: number) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerW, setContainerW] = useState(9999)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const update = () => setContainerW(el.clientWidth)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const scale = naturalW > 0 ? Math.min(1, (containerW - OUTER_PAD * 2) / naturalW) : 1
+  return { containerRef, scale, containerW }
+}
+
+// ─── Team row ─────────────────────────────────────────────────────────────────
+function TeamRow({ team, score, winner, rtl, theme }: {
+  team?: Team; score: number; winner: boolean; rtl: boolean; theme: BracketTheme
+}) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 5,
       flexDirection: rtl ? 'row-reverse' : 'row', justifyContent: 'space-between' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, flex: 1, minWidth: 0,
         flexDirection: rtl ? 'row-reverse' : 'row' }}>
-        <img src={`https://mc-heads.net/avatar/${team?.captain ?? 'Steve'}/14`} alt=""
-          onError={e => { (e.target as HTMLImageElement).style.opacity = '0.15' }}
-          style={{ width: 13, height: 13, borderRadius: 3, flexShrink: 0,
-            filter: winner ? 'drop-shadow(0 0 3px rgba(34,197,94,.7))' : 'grayscale(1) opacity(.4)' }} />
-        <span style={{ fontSize: 10.5, fontWeight: winner ? 700 : 500, whiteSpace: 'nowrap',
-          overflow: 'hidden', textOverflow: 'ellipsis',
-          maxWidth: team ? 82 : 110,
-          color: winner ? '#86efac' : team ? 'rgba(255,255,255,.5)' : 'rgba(255,255,255,.22)',
+        <img
+          src={`https://mc-heads.net/avatar/${team?.captain ?? 'Steve'}/14`}
+          alt=""
+          onError={e => { (e.target as HTMLImageElement).style.opacity = '0.1' }}
+          style={{ width: 14, height: 14, borderRadius: 3, flexShrink: 0,
+            filter: winner
+              ? 'drop-shadow(0 0 4px rgba(34,197,94,.6))'
+              : 'grayscale(1) opacity(.35)' }}
+        />
+        <span style={{ fontSize: 10.5, fontWeight: winner ? 700 : 500,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          maxWidth: team ? 88 : 112,
+          color: winner ? theme.winnerColor : team ? theme.loserColor : theme.tbdColor,
           fontStyle: !team ? 'italic' : 'normal',
-          fontFamily: "'Space Grotesk',sans-serif" }}>
+          fontFamily: "'Space Grotesk',sans-serif",
+          letterSpacing: winner ? '0.01em' : 0,
+        }}>
           {winner ? '👑 ' : ''}{team?.name ?? 'TBD'}
         </span>
       </div>
-      <span style={{ fontSize: 13, fontWeight: 900, flexShrink: 0,
-        color: winner ? '#4ade80' : 'rgba(255,255,255,.2)',
-        fontFamily: "'Space Grotesk',sans-serif" }}>{score}</span>
+      <span style={{ fontSize: 14, fontWeight: 900, flexShrink: 0, minWidth: 18, textAlign: 'right',
+        color: winner ? theme.winnerScoreColor : theme.loserScoreColor,
+        fontFamily: "'Space Grotesk',sans-serif",
+        textShadow: winner ? `0 0 10px ${theme.winnerScoreColor}55` : 'none',
+      }}>{score}</span>
     </div>
   )
 }
 
-// ─── Match card (identical to AdminCard, without edit indicators) ─────────────
-function MatchCard({ match, teams, onClick, rtl = false }: {
+// ─── Match card ───────────────────────────────────────────────────────────────
+function MatchCard({ match, teams, onClick, rtl = false, theme, matchNum }: {
   match: Match; teams: Team[]; onClick: () => void; rtl?: boolean
+  theme: BracketTheme; matchNum: number
 }) {
+  const [hover, setHover] = useState(false)
   const t1   = teams.find(t => t.id === match.team1Id)
   const t2   = teams.find(t => t.id === match.team2Id)
   const live = match.status === 'live'
   const done = match.status === 'completed'
 
-  const borderColor = live ? 'rgba(239,68,68,.4)' : done ? 'rgba(34,197,94,.22)' : 'rgba(255,255,255,.08)'
-  const shadow      = live ? '0 0 16px rgba(239,68,68,.15)' : 'inset 0 1px 0 rgba(255,255,255,.03)'
+  const borderColor = live ? theme.cardBorderLive : done ? theme.cardBorderDone : theme.cardBorderNormal
+  const shadow = [
+    live ? theme.cardShadowLive : '',
+    hover ? `0 4px 20px rgba(0,0,0,.4)` : '',
+  ].filter(Boolean).join(', ')
+
+  // Extra info line: show gamemode/arena/scheduled
+  const extraInfo = match.gamemode || match.arena
+    ? [match.gamemode, match.arena].filter(Boolean).join(' · ')
+    : match.scheduledAt && !done
+    ? `🕐 ${new Date(match.scheduledAt).toLocaleDateString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}`
+    : ''
 
   return (
-    <button onClick={onClick} style={{
-      width: CARD_W, display: 'block', textAlign: 'left', cursor: 'pointer',
-      background: live
-        ? 'linear-gradient(135deg,rgba(28,8,8,.97),rgba(18,6,6,.99))'
-        : 'linear-gradient(135deg,rgba(14,21,34,.97),rgba(9,13,21,.99))',
-      border: `1.5px solid ${borderColor}`,
-      borderRadius: 9, padding: '6px 8px',
-      boxShadow: shadow, transition: 'all .15s', position: 'relative', overflow: 'hidden',
-    }}>
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        width: CARD_W, display: 'block', textAlign: 'left', cursor: 'pointer',
+        background: live ? theme.cardBgLive : theme.cardBg,
+        border: `1.5px solid ${hover ? borderColor.replace(/[\d.]+\)$/, s => String(Math.min(1, parseFloat(s) * 2) + ')')) : borderColor}`,
+        borderRadius: theme.cardRadius, padding: '7px 9px',
+        boxShadow: shadow, transition: 'all .18s ease',
+        position: 'relative', overflow: 'hidden',
+        transform: hover ? 'translateY(-1px)' : 'none',
+      }}
+    >
+      {/* Live top bar */}
       {live && (
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-          background: 'linear-gradient(90deg,transparent,#ef4444,transparent)',
-          animation: 'ab-pbar 2s ease-in-out infinite' }} />
+          background: theme.liveBarGrad,
+          animation: 'bt-pbar 2s ease-in-out infinite' }} />
       )}
-      <TeamRow team={t1} score={match.score1} winner={match.winnerId === match.team1Id} rtl={rtl} />
-      <div style={{ height: 1, background: 'rgba(255,255,255,.05)', margin: '4px 0' }} />
-      <TeamRow team={t2} score={match.score2} winner={match.winnerId === match.team2Id} rtl={rtl} />
-      <div style={{ marginTop: 3, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-        <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.07em',
-          color: live ? '#ef4444' : done ? 'rgba(34,197,94,.7)' : 'rgba(255,255,255,.2)' }}>
-          {live ? '● LIVE' : MATCH_STATUS_LABEL[match.status]}
+
+      {/* Match number badge */}
+      <div style={{ position: 'absolute', top: 5, right: 7,
+        fontSize: 7.5, fontWeight: 700, color: live ? theme.statusLive : theme.statusPending,
+        letterSpacing: '0.06em', opacity: .8 }}>
+        M{matchNum}
+      </div>
+
+      <TeamRow team={t1} score={match.score1} winner={match.winnerId === match.team1Id} rtl={rtl} theme={theme} />
+
+      <div style={{ height: 1, background: theme.dividerColor, margin: '5px 0' }} />
+
+      <TeamRow team={t2} score={match.score2} winner={match.winnerId === match.team2Id} rtl={rtl} theme={theme} />
+
+      {/* Bottom info row */}
+      <div style={{ marginTop: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
+        <span style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: '0.07em', flexShrink: 0,
+          color: live ? theme.statusLive : done ? theme.statusDone : theme.statusPending }}>
+          {live ? '● LIVE' : MATCH_STATUS_LABEL[match.status].toUpperCase()}
         </span>
+        {extraInfo && (
+          <span style={{ fontSize: 7, color: theme.statusPending, overflow: 'hidden',
+            textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, textAlign: 'right',
+            letterSpacing: '0.04em' }}>
+            {extraInfo}
+          </span>
+        )}
       </div>
     </button>
   )
 }
 
-// ─── Round column (identical to admin RoundCol) ───────────────────────────────
-function RoundColumn({ name, matches, teams, onSelect, rtl = false, colH }: {
-  name: string; matches: Match[]; teams: Team[]; onSelect: (m: Match) => void; rtl?: boolean; colH: number
+// ─── Round column ─────────────────────────────────────────────────────────────
+function RoundColumn({ name, matches, teams, onSelect, rtl = false, colH, theme, showLabel }: {
+  name: string; matches: Match[]; teams: Team[]; onSelect: (m: Match) => void
+  rtl?: boolean; colH: number; theme: BracketTheme; showLabel: boolean
 }) {
   return (
     <div style={{ flexShrink: 0 }}>
       <div style={{ position: 'relative', width: CARD_W, height: colH + LABEL_H + LABEL_MB }}>
-        {!name.toLowerCase().includes('round of') && (
+        {showLabel && (
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
             <div style={{ padding: '2px 10px', height: LABEL_H, display: 'flex', alignItems: 'center',
-              background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)',
-              borderRadius: 20, fontSize: 8, fontWeight: 700, letterSpacing: '0.13em',
-              color: 'rgba(245,158,11,.8)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+              background: theme.labelBg, border: `1px solid ${theme.labelBorder}`,
+              borderRadius: 20, fontSize: 8, fontWeight: 700, letterSpacing: '0.12em',
+              color: theme.labelColor, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
               {name}
             </div>
           </div>
         )}
         {matches.map((m, i) => (
-          <div key={m.id} style={{ position: 'absolute', top: matchTop(i, matches.length, colH) + LABEL_H + LABEL_MB, left: 0 }}>
-            <MatchCard match={m} teams={teams} onClick={() => onSelect(m)} rtl={rtl} />
+          <div key={m.id} style={{ position: 'absolute',
+            top: matchTop(i, matches.length, colH) + LABEL_H + LABEL_MB, left: 0 }}>
+            <MatchCard match={m} teams={teams} onClick={() => onSelect(m)}
+              rtl={rtl} theme={theme} matchNum={m.matchNumber} />
           </div>
         ))}
       </div>
@@ -111,55 +345,65 @@ function RoundColumn({ name, matches, teams, onSelect, rtl = false, colH }: {
   )
 }
 
-// ─── Connector SVG (identical to admin Connector) ─────────────────────────────
-function Connector({ leftCount, rightCount, colH, offsetTop }: {
+// ─── Connector SVG ────────────────────────────────────────────────────────────
+function Connector({ leftCount, rightCount, colH, offsetTop, theme, connId }: {
   leftCount: number; rightCount: number; colH: number; offsetTop: number
+  theme: BracketTheme; connId: string
 }) {
   if (!leftCount || !rightCount) return null
   const W   = CONN_W
   const lCY = (i: number) => matchCY(i, leftCount, colH)
   const rCY = (i: number) => matchCY(i, rightCount, colH)
+  const filterId = `bt-glow-${connId}`
   const segs: React.ReactNode[] = []
 
   if (leftCount === rightCount) {
     for (let i = 0; i < leftCount; i++) segs.push(
-      <g key={i} filter="url(#acg)">
-        <line x1={0} y1={lCY(i)} x2={W} y2={rCY(i)} stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-        <circle cx={0} cy={lCY(i)} r={1.6} fill="rgba(245,158,11,.4)" />
-        <circle cx={W} cy={rCY(i)} r={1.6} fill="rgba(245,158,11,.4)" />
+      <g key={i}>
+        <line x1={0} y1={lCY(i)} x2={W} y2={rCY(i)} stroke={theme.connColor} strokeWidth="1.4" />
+        <circle cx={0} cy={lCY(i)} r={2} fill={theme.connDot} />
+        <circle cx={W} cy={rCY(i)} r={2} fill={theme.connDot} />
       </g>
     )
   } else if (leftCount > rightCount) {
     for (let ri = 0; ri < rightCount; ri++) {
       const li1 = ri * 2, li2 = ri * 2 + 1
-      if (li2 >= leftCount) { segs.push(<line key={`s${ri}`} x1={0} y1={lCY(li1)} x2={W} y2={rCY(ri)} stroke="rgba(245,158,11,.3)" strokeWidth="1.3" />); continue }
-      const midX = W / 2, midY = (lCY(li1) + lCY(li2)) / 2
+      if (li2 >= leftCount) {
+        segs.push(<line key={`s${ri}`} x1={0} y1={lCY(li1)} x2={W} y2={rCY(ri)}
+          stroke={theme.connColor} strokeWidth="1.4" />)
+        continue
+      }
+      const midX = W * 0.55, midY = (lCY(li1) + lCY(li2)) / 2
       segs.push(
-        <g key={ri} filter="url(#acg)">
-          <line x1={0}    y1={lCY(li1)} x2={midX} y2={lCY(li1)} stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <line x1={0}    y1={lCY(li2)} x2={midX} y2={lCY(li2)} stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <line x1={midX} y1={lCY(li1)} x2={midX} y2={lCY(li2)} stroke="rgba(245,158,11,.2)"  strokeWidth="1.3" />
-          <line x1={midX} y1={midY}     x2={W}    y2={rCY(ri)}  stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <circle cx={midX} cy={midY}   r={2.1} fill="rgba(245,158,11,.55)" />
-          <circle cx={0}    cy={lCY(li1)} r={1.4} fill="rgba(245,158,11,.35)" />
-          <circle cx={0}    cy={lCY(li2)} r={1.4} fill="rgba(245,158,11,.35)" />
+        <g key={ri}>
+          <line x1={0}    y1={lCY(li1)} x2={midX} y2={lCY(li1)} stroke={theme.connColor} strokeWidth="1.4" />
+          <line x1={0}    y1={lCY(li2)} x2={midX} y2={lCY(li2)} stroke={theme.connColor} strokeWidth="1.4" />
+          <line x1={midX} y1={lCY(li1)} x2={midX} y2={lCY(li2)} stroke={theme.connColorFaint} strokeWidth="1.4" />
+          <line x1={midX} y1={midY}     x2={W}    y2={rCY(ri)}   stroke={theme.connColor} strokeWidth="1.4" />
+          <circle cx={midX} cy={midY}   r={2.5} fill={theme.connDot} />
+          <circle cx={0}    cy={lCY(li1)} r={1.6} fill={theme.connDot} style={{opacity:.6}} />
+          <circle cx={0}    cy={lCY(li2)} r={1.6} fill={theme.connDot} style={{opacity:.6}} />
         </g>
       )
     }
   } else {
     for (let li = 0; li < leftCount; li++) {
       const ri1 = li * 2, ri2 = li * 2 + 1
-      if (ri2 >= rightCount) { segs.push(<line key={`s${li}`} x1={0} y1={lCY(li)} x2={W} y2={rCY(ri1)} stroke="rgba(245,158,11,.3)" strokeWidth="1.3" />); continue }
-      const midX = W / 2, midY = (rCY(ri1) + rCY(ri2)) / 2
+      if (ri2 >= rightCount) {
+        segs.push(<line key={`s${li}`} x1={0} y1={lCY(li)} x2={W} y2={rCY(ri1)}
+          stroke={theme.connColor} strokeWidth="1.4" />)
+        continue
+      }
+      const midX = W * 0.45, midY = (rCY(ri1) + rCY(ri2)) / 2
       segs.push(
-        <g key={li} filter="url(#acg)">
-          <line x1={W}    y1={rCY(ri1)} x2={midX} y2={rCY(ri1)} stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <line x1={W}    y1={rCY(ri2)} x2={midX} y2={rCY(ri2)} stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <line x1={midX} y1={rCY(ri1)} x2={midX} y2={rCY(ri2)} stroke="rgba(245,158,11,.2)"  strokeWidth="1.3" />
-          <line x1={midX} y1={midY}     x2={0}    y2={lCY(li)}  stroke="rgba(245,158,11,.35)" strokeWidth="1.3" />
-          <circle cx={midX} cy={midY}   r={2.1} fill="rgba(245,158,11,.55)" />
-          <circle cx={W}    cy={rCY(ri1)} r={1.4} fill="rgba(245,158,11,.35)" />
-          <circle cx={W}    cy={rCY(ri2)} r={1.4} fill="rgba(245,158,11,.35)" />
+        <g key={li}>
+          <line x1={W}    y1={rCY(ri1)} x2={midX} y2={rCY(ri1)} stroke={theme.connColor} strokeWidth="1.4" />
+          <line x1={W}    y1={rCY(ri2)} x2={midX} y2={rCY(ri2)} stroke={theme.connColor} strokeWidth="1.4" />
+          <line x1={midX} y1={rCY(ri1)} x2={midX} y2={rCY(ri2)} stroke={theme.connColorFaint} strokeWidth="1.4" />
+          <line x1={midX} y1={midY}     x2={0}    y2={lCY(li)}  stroke={theme.connColor} strokeWidth="1.4" />
+          <circle cx={midX} cy={midY}   r={2.5} fill={theme.connDot} />
+          <circle cx={W}    cy={rCY(ri1)} r={1.6} fill={theme.connDot} style={{opacity:.6}} />
+          <circle cx={W}    cy={rCY(ri2)} r={1.6} fill={theme.connDot} style={{opacity:.6}} />
         </g>
       )
     }
@@ -168,60 +412,120 @@ function Connector({ leftCount, rightCount, colH, offsetTop }: {
   return (
     <svg width={W} height={colH} style={{ flexShrink: 0, overflow: 'visible', marginTop: offsetTop }}>
       <defs>
-        <filter id="acg" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="1.4" result="b" />
+        <filter id={filterId} x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="1.8" result="b" />
           <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
       </defs>
-      {segs}
+      <g filter={`url(#${filterId})`}>{segs}</g>
     </svg>
   )
 }
 
-// ─── Finals column (identical to admin FinalsCol) ─────────────────────────────
-function FinalsColumn({ match, teams, onSelect, colH }: {
-  match: Match; teams: Team[]; onSelect: () => void; colH: number
+// ─── Finals column ────────────────────────────────────────────────────────────
+function FinalsColumn({ match, teams, onSelect, colH, theme }: {
+  match: Match; teams: Team[]; onSelect: () => void; colH: number; theme: BracketTheme
 }) {
   const cardTop = matchTop(0, 1, colH)
-  const lblTop  = cardTop - LABEL_H - LABEL_MB
-  const emblTop = lblTop - 48 - 6
+  const lblTop  = cardTop - LABEL_H - LABEL_MB - 4
+  const emblTop = lblTop - 52 - 6
   const wrapH   = colH + LABEL_H + LABEL_MB
+
   return (
     <div style={{ flexShrink: 0 }}>
-      <div style={{ position: 'relative', width: CARD_W + 16, height: wrapH }}>
+      <div style={{ position: 'relative', width: CARD_W + 20, height: wrapH }}>
+        {/* Trophy emblem */}
         <div style={{ position: 'absolute', top: emblTop + LABEL_H + LABEL_MB,
           left: '50%', transform: 'translateX(-50%)',
-          width: 44, height: 44, borderRadius: '50%',
-          background: 'radial-gradient(circle,rgba(245,158,11,.14) 0%,transparent 100%)',
-          border: '1px solid rgba(245,158,11,.25)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>⚔️</div>
-        <div style={{ position: 'absolute', top: lblTop + LABEL_H + LABEL_MB, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
-          <div style={{ padding: '2px 10px', height: LABEL_H, display: 'flex', alignItems: 'center',
-            background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)',
-            borderRadius: 20, fontSize: 8, fontWeight: 700, letterSpacing: '0.13em',
-            color: 'rgba(245,158,11,.8)', textTransform: 'uppercase' }}>Finals</div>
+          width: 48, height: 48, borderRadius: '50%',
+          background: theme.finalsRingBg, border: `1.5px solid ${theme.finalsRingBorder}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+          boxShadow: `0 0 30px ${theme.connDot}22` }}>
+          🏆
         </div>
-        <div style={{ position: 'absolute', top: cardTop + LABEL_H + LABEL_MB, left: 8 }}>
-          <MatchCard match={match} teams={teams} onClick={onSelect} />
+
+        {/* Finals label */}
+        <div style={{ position: 'absolute', top: lblTop + LABEL_H + LABEL_MB + 4,
+          left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
+          <div style={{ padding: '3px 14px', height: LABEL_H, display: 'flex', alignItems: 'center',
+            background: theme.labelBg, border: `1px solid ${theme.labelBorder}`,
+            borderRadius: 20, fontSize: 8.5, fontWeight: 800, letterSpacing: '0.14em',
+            color: theme.labelColor, textTransform: 'uppercase',
+            boxShadow: `0 0 16px ${theme.connDot}22` }}>
+            GRAND FINAL
+          </div>
+        </div>
+
+        {/* Card */}
+        <div style={{ position: 'absolute', top: cardTop + LABEL_H + LABEL_MB, left: 10 }}>
+          <MatchCard match={match} teams={teams} onClick={onSelect} theme={theme} matchNum={match.matchNumber} />
         </div>
       </div>
     </div>
   )
 }
 
-// ─── Main bracket ─────────────────────────────────────────────────────────────
-export function TournamentBracket({ tournament }: Props) {
-  const [selected, setSelected] = useState<Match | null>(null)
+// ─── Theme selector ───────────────────────────────────────────────────────────
+function ThemeSelector({ current, onChange }: { current: ThemeId; onChange: (t: ThemeId) => void }) {
+  return (
+    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+      {THEMES.map(t => {
+        const active = t.id === current
+        return (
+          <button
+            key={t.id}
+            onClick={() => onChange(t.id)}
+            title={t.name}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px',
+              borderRadius: 20, fontSize: 10, fontWeight: active ? 700 : 500,
+              cursor: 'pointer', transition: 'all .15s',
+              background: active ? getTheme(t.id).pillActive : 'rgba(255,255,255,.04)',
+              border: `1px solid ${active ? getTheme(t.id).pillText + '55' : 'rgba(255,255,255,.08)'}`,
+              color: active ? getTheme(t.id).pillText : 'rgba(255,255,255,.4)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span style={{ fontSize: 11 }}>{t.icon}</span>
+            {t.name}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
-  if (!tournament)          return <EmptyState msg="No active tournament." />
-  if (!tournament.bracket)  return <EmptyState msg="Bracket has not been generated yet." />
+// ─── Main bracket (guard layer) ───────────────────────────────────────────────
+export function TournamentBracket({ tournament }: Props) {
+  if (!tournament)         return <EmptyState msg="No active tournament." />
+  if (!tournament.bracket) return <EmptyState msg="Bracket has not been generated yet." />
+  const rounds = tournament.bracket.rounds
+  if (!rounds.length)      return <EmptyState msg="Bracket has no rounds." />
+  return <BracketView tournament={tournament} />
+}
+
+// ─── Inner bracket view — all hooks live here ─────────────────────────────────
+function BracketView({ tournament }: { tournament: Tournament }) {
+  const [selected, setSelected]   = useState<Match | null>(null)
+  const [themeId, setThemeId]     = useState<ThemeId>(() => {
+    try { return (localStorage.getItem('bt-bracket-theme') as ThemeId) ?? 'esports' } catch { return 'esports' }
+  })
+  const [exporting, setExporting] = useState(false)
+  const bracketRef                = useRef<HTMLDivElement>(null)
+
+  const theme = getTheme(themeId)
+
+  function handleThemeChange(id: ThemeId) {
+    setThemeId(id)
+    try { localStorage.setItem('bt-bracket-theme', id) } catch { /* ignore */ }
+  }
 
   const { bracket, matches, teams } = tournament
-  const rounds = bracket.rounds
-  if (!rounds.length) return <EmptyState msg="Bracket has no rounds yet." />
+  const rounds = bracket!.rounds
 
   const getMs = (ids: string[]) =>
-    ids.map(id => matches.find(m => m.id === id)).filter((m): m is Match => !!m && m.status !== 'bye')
+    ids.map(id => matches.find(m => m.id === id))
+      .filter((m): m is Match => !!m && m.status !== 'bye')
 
   const finalsRound   = rounds[rounds.length - 1]
   const bracketRounds = rounds.slice(0, rounds.length - 1)
@@ -237,59 +541,154 @@ export function TournamentBracket({ tournament }: Props) {
   })
   const rightCols = [...rightColsOuter].reverse()
 
-  const maxMatches = Math.max(
-    ...leftCols.map(c => c.matches.length),
-    ...rightCols.map(c => c.matches.length),
-    1
-  )
-  const colH          = colHeight(maxMatches)
-  const connOffsetTop = LABEL_H + LABEL_MB
+  const maxMatches  = Math.max(...leftCols.map(c => c.matches.length), ...rightCols.map(c => c.matches.length), 1)
+  const colH        = colHeight(maxMatches)
+  const connOffTop  = LABEL_H + LABEL_MB
+
+  // Natural width: each left col + connector, finals col, each right col + connector
+  const leftW   = leftCols.length * (CARD_W + CONN_W)
+  const rightW  = rightCols.length * (CONN_W + CARD_W)
+  const finalsW = CARD_W + 20
+  const naturalW = leftW + finalsW + rightW
+
+  const naturalH = colH + LABEL_H + LABEL_MB + 16 // 16px top/bottom padding in bracket
+
+  const { containerRef, scale } = useAutoScale(naturalW)
+
+  // Export as PNG
+  const handleExport = useCallback(async (fmt: 'png' | 'jpg') => {
+    if (!bracketRef.current) return
+    setExporting(true)
+    try {
+      const fn = fmt === 'png' ? toPng : toJpeg
+      const dataUrl = await fn(bracketRef.current, {
+        backgroundColor: '#0B0F17',
+        pixelRatio: 2,
+        style: { transform: 'none' }, // export at natural size
+      })
+      const link = document.createElement('a')
+      link.download = `bracket-${tournament?.name?.replace(/\s+/g,'_') ?? 'export'}.${fmt}`
+      link.href = dataUrl
+      link.click()
+    } catch (e) {
+      console.error('Export failed', e)
+    } finally {
+      setExporting(false)
+    }
+  }, [tournament?.name])
 
   return (
     <>
       <style>{KEYFRAMES}</style>
 
-      {/* ── Bracket arena (identical background to admin) ── */}
-      <div style={{ borderRadius: 14, padding: '14px 12px',
-        background: 'radial-gradient(ellipse 70% 55% at 50% 50%,rgba(245,158,11,.04) 0%,rgba(14,21,34,.9) 60%,rgba(9,13,21,.95) 100%)',
-        border: '1px solid rgba(245,158,11,.07)', overflowX: 'auto', overflowY: 'hidden' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 0, minWidth: 'max-content' }}>
+      {/* ── Toolbar ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+        <ThemeSelector current={themeId} onChange={handleThemeChange} />
 
-          {/* LEFT */}
-          {leftCols.map((col, ci) => {
-            const nextCount = ci < leftCols.length - 1 ? leftCols[ci + 1].matches.length : 1
-            return (
-              <div key={`l${ci}`} style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <RoundColumn name={col.name} matches={col.matches} teams={teams}
-                  onSelect={setSelected} rtl={false} colH={colH} />
-                <Connector leftCount={col.matches.length} rightCount={nextCount} colH={colH} offsetTop={connOffsetTop} />
-              </div>
-            )
-          })}
-
-          {/* FINALS */}
-          {finalsMatch
-            ? <FinalsColumn match={finalsMatch} teams={teams} onSelect={() => setSelected(finalsMatch)} colH={colH} />
-            : <div style={{ width: CARD_W + 16, height: colH + LABEL_H + LABEL_MB,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'rgba(255,255,255,.15)', fontSize: 11 }}>Finals TBD</div>
-          }
-
-          {/* RIGHT */}
-          {rightCols.map((col, ci) => {
-            const leftCount = ci === 0 ? 1 : rightCols[ci - 1].matches.length
-            return (
-              <div key={`r${ci}`} style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <Connector leftCount={leftCount} rightCount={col.matches.length} colH={colH} offsetTop={connOffsetTop} />
-                <RoundColumn name={col.name} matches={col.matches} teams={teams}
-                  onSelect={setSelected} rtl={true} colH={colH} />
-              </div>
-            )
-          })}
-
+        {/* Export buttons */}
+        <div style={{ display: 'flex', gap: 6 }}>
+          {[
+            { label: 'PNG', fmt: 'png' as const },
+            { label: 'JPG', fmt: 'jpg' as const },
+          ].map(({ label, fmt }) => (
+            <button
+              key={fmt}
+              onClick={() => handleExport(fmt)}
+              disabled={exporting}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5, padding: '4px 12px',
+                borderRadius: 20, fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.1)',
+                color: exporting ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.55)',
+                transition: 'all .15s', whiteSpace: 'nowrap',
+              }}
+            >
+              📸 Export {label}
+            </button>
+          ))}
         </div>
       </div>
 
+      {/* ── Bracket container with auto-scale ── */}
+      <div ref={containerRef} style={{ width: '100%', overflow: 'hidden' }}>
+        {/* Scale wrapper — collapses vertical whitespace by negating the leftover space */}
+        <div style={{
+          width: naturalW,
+          height: naturalH,
+          transformOrigin: 'top center',
+          transform: `scale(${scale})`,
+          // Collapse the empty space below when scaled down
+          marginBottom: `${(scale - 1) * naturalH}px`,
+          // Center horizontally
+          marginLeft: `max(0px, calc(50% - ${naturalW / 2}px))`,
+        }}>
+          <div
+            ref={bracketRef}
+            style={{ borderRadius: 14, padding: '14px 0',
+              background: theme.containerBg,
+              border: `1px solid ${theme.containerBorder}`,
+              transition: 'background .3s, border-color .3s',
+            }}
+          >
+            <div style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 0,
+              paddingLeft: OUTER_PAD, paddingRight: OUTER_PAD }}>
+
+              {/* LEFT SIDE */}
+              {leftCols.map((col, ci) => {
+                const nextCount = ci < leftCols.length - 1 ? leftCols[ci + 1].matches.length : 1
+                const showLabel = !col.name.toLowerCase().startsWith('round of')
+                return (
+                  <div key={`l${ci}`} style={{ display: 'flex', alignItems: 'flex-start' }}>
+                    <RoundColumn name={col.name} matches={col.matches} teams={teams}
+                      onSelect={setSelected} rtl={false} colH={colH}
+                      theme={theme} showLabel={showLabel} />
+                    <Connector leftCount={col.matches.length} rightCount={nextCount}
+                      colH={colH} offsetTop={connOffTop} theme={theme} connId={`l${ci}`} />
+                  </div>
+                )
+              })}
+
+              {/* FINALS */}
+              {finalsMatch
+                ? <FinalsColumn match={finalsMatch} teams={teams}
+                    onSelect={() => setSelected(finalsMatch)} colH={colH} theme={theme} />
+                : <div style={{ width: CARD_W + 20, height: colH + LABEL_H + LABEL_MB,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'rgba(255,255,255,.12)', fontSize: 11 }}>Finals TBD</div>
+              }
+
+              {/* RIGHT SIDE */}
+              {rightCols.map((col, ci) => {
+                const leftCount = ci === 0 ? 1 : rightCols[ci - 1].matches.length
+                const showLabel = !col.name.toLowerCase().startsWith('round of')
+                return (
+                  <div key={`r${ci}`} style={{ display: 'flex', alignItems: 'flex-start' }}>
+                    <Connector leftCount={leftCount} rightCount={col.matches.length}
+                      colH={colH} offsetTop={connOffTop} theme={theme} connId={`r${ci}`} />
+                    <RoundColumn name={col.name} matches={col.matches} teams={teams}
+                      onSelect={setSelected} rtl={true} colH={colH}
+                      theme={theme} showLabel={showLabel} />
+                  </div>
+                )
+              })}
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scale indicator */}
+      {scale < 0.99 && (
+        <div style={{ textAlign: 'center', marginTop: 10 }}>
+          <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
+            SCALED TO {Math.round(scale * 100)}% · {leftCols.length + 1 + rightCols.length} ROUNDS ·{' '}
+            {matches.filter(m => m.status !== 'bye').length} MATCHES
+          </span>
+        </div>
+      )}
+
+      {/* Match detail modal */}
       {selected && (
         <MatchDetailModal match={selected} teams={tournament.teams} onClose={() => setSelected(null)} />
       )}
@@ -301,14 +700,14 @@ export function TournamentBracket({ tournament }: Props) {
 function EmptyState({ msg }: { msg: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', padding: '60px 0', textAlign: 'center' }}>
-      <div style={{ fontSize: 48, marginBottom: 12, opacity: .15 }}>⚔️</div>
-      <p style={{ color: 'rgba(255,255,255,.3)', margin: 0 }}>{msg}</p>
+      justifyContent: 'center', padding: '80px 0', textAlign: 'center' }}>
+      <div style={{ fontSize: 52, marginBottom: 14, opacity: .1 }}>⚔️</div>
+      <p style={{ color: 'rgba(255,255,255,.28)', margin: 0, fontSize: 14 }}>{msg}</p>
     </div>
   )
 }
 
-// ─── Keyframes (identical to admin) ──────────────────────────────────────────
+// ─── Keyframes ────────────────────────────────────────────────────────────────
 const KEYFRAMES = `
-@keyframes ab-pbar { 0%,100%{opacity:.4} 50%{opacity:1} }
+@keyframes bt-pbar { 0%,100%{opacity:.35} 50%{opacity:1} }
 `
