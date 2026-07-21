@@ -640,11 +640,6 @@ function BracketView({ tournament }: { tournament: Tournament }) {
               })}
 
             </div>
-            <div style={{ textAlign: 'center', paddingTop: 10 }}>
-              <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
-                {matches.length} MATCHES
-              </span>
-            </div>
           </div>
         )
 
