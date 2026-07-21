@@ -80,36 +80,36 @@
           {
             "name": "Round of 16",
             "matchIds": [
-              "t_mruxd36m_e97kz",
-              "t_mruxd36m_r324n",
-              "t_mruxd36m_fdj09",
-              "t_mruxd36m_lchid",
-              "t_mruxd36m_tjym9",
-              "t_mruxd36m_lbb4r",
-              "t_mruxd36m_ss3fe",
-              "t_mruxd36m_tzic9"
+              "t_mruxkkyw_ylwi7",
+              "t_mruxkkyw_qgsi1",
+              "t_mruxkkyw_w0c4j",
+              "t_mruxkkyw_a315h",
+              "t_mruxkkyw_rj92t",
+              "t_mruxkkyw_6t5oa",
+              "t_mruxkkyw_295ls",
+              "t_mruxkkyw_95fpm"
             ]
           },
           {
             "name": "Quarter-Finals",
             "matchIds": [
-              "t_mruxd36m_66quf",
-              "t_mruxd36m_sx6z5",
-              "t_mruxd36m_6p6pl",
-              "t_mruxd36m_z8tn3"
+              "t_mruxkkyw_1pqjp",
+              "t_mruxkkyw_65m07",
+              "t_mruxkkyw_491uy",
+              "t_mruxkkyw_41ih4"
             ]
           },
           {
             "name": "Semi-Finals",
             "matchIds": [
-              "t_mruxd36m_nlxm9",
-              "t_mruxd36m_ospsa"
+              "t_mruxkkyw_4ee1q",
+              "t_mruxkkyw_najmg"
             ]
           },
           {
             "name": "Finals",
             "matchIds": [
-              "t_mruxd36m_1c7s3"
+              "t_mruxkkyw_gm3j0"
             ]
           }
         ]
@@ -229,16 +229,16 @@
       ],
       "matches": [
         {
-          "id": "t_mruxd36m_e97kz",
+          "id": "t_mruxkkyw_ylwi7",
           "round": 0,
           "matchNumber": 1,
           "bracketSide": "winners",
-          "team1Id": "t_mrteuykb_465ls",
-          "team2Id": "t_mrtf9dcl_xxhn0",
+          "team1Id": "t_mrte6uy2_o0m1q",
+          "team2Id": null,
           "score1": 0,
           "score2": 0,
-          "winnerId": null,
-          "status": "scheduled",
+          "winnerId": "t_mrte6uy2_o0m1q",
+          "status": "bye",
           "scheduledAt": null,
           "completedAt": null,
           "arena": "",
@@ -248,49 +248,11 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruxd36m_r324n",
+          "id": "t_mruxkkyw_qgsi1",
           "round": 0,
           "matchNumber": 2,
           "bracketSide": "winners",
-          "team1Id": "t_mrtfa1tv_640tn",
-          "team2Id": "t_mrte71as_7p5ti",
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "scheduled",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruxd36m_fdj09",
-          "round": 0,
-          "matchNumber": 3,
-          "bracketSide": "winners",
-          "team1Id": "t_mrteuf95_454c9",
-          "team2Id": "t_mrtfanvh_tvwog",
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "scheduled",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruxd36m_lchid",
-          "round": 0,
-          "matchNumber": 4,
-          "bracketSide": "winners",
-          "team1Id": "t_mrte6uy2_o0m1q",
+          "team1Id": "t_mrte71as_7p5ti",
           "team2Id": "t_mrterzy5_4ifyz",
           "score1": 0,
           "score2": 0,
@@ -305,9 +267,104 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruxd36m_tjym9",
+          "id": "t_mruxkkyw_w0c4j",
+          "round": 0,
+          "matchNumber": 3,
+          "bracketSide": "winners",
+          "team1Id": "t_mrtfa1tv_640tn",
+          "team2Id": null,
+          "score1": 0,
+          "score2": 0,
+          "winnerId": "t_mrtfa1tv_640tn",
+          "status": "bye",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        },
+        {
+          "id": "t_mruxkkyw_a315h",
+          "round": 0,
+          "matchNumber": 4,
+          "bracketSide": "winners",
+          "team1Id": "t_mrteuykb_465ls",
+          "team2Id": null,
+          "score1": 0,
+          "score2": 0,
+          "winnerId": "t_mrteuykb_465ls",
+          "status": "bye",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        },
+        {
+          "id": "t_mruxkkyw_rj92t",
           "round": 0,
           "matchNumber": 5,
+          "bracketSide": "winners",
+          "team1Id": "t_mrtf9dcl_xxhn0",
+          "team2Id": null,
+          "score1": 0,
+          "score2": 0,
+          "winnerId": "t_mrtf9dcl_xxhn0",
+          "status": "bye",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        },
+        {
+          "id": "t_mruxkkyw_6t5oa",
+          "round": 0,
+          "matchNumber": 6,
+          "bracketSide": "winners",
+          "team1Id": "t_mrtfanvh_tvwog",
+          "team2Id": null,
+          "score1": 0,
+          "score2": 0,
+          "winnerId": "t_mrtfanvh_tvwog",
+          "status": "bye",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        },
+        {
+          "id": "t_mruxkkyw_295ls",
+          "round": 0,
+          "matchNumber": 7,
+          "bracketSide": "winners",
+          "team1Id": "t_mrteuf95_454c9",
+          "team2Id": null,
+          "score1": 0,
+          "score2": 0,
+          "winnerId": "t_mrteuf95_454c9",
+          "status": "bye",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        },
+        {
+          "id": "t_mruxkkyw_95fpm",
+          "round": 0,
+          "matchNumber": 8,
           "bracketSide": "winners",
           "team1Id": "t_mrteunfr_0urqa",
           "team2Id": null,
@@ -324,64 +381,7 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruxd36m_lbb4r",
-          "round": 0,
-          "matchNumber": 6,
-          "bracketSide": "winners",
-          "team1Id": null,
-          "team2Id": null,
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "bye",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruxd36m_ss3fe",
-          "round": 0,
-          "matchNumber": 7,
-          "bracketSide": "winners",
-          "team1Id": null,
-          "team2Id": null,
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "bye",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruxd36m_tzic9",
-          "round": 0,
-          "matchNumber": 8,
-          "bracketSide": "winners",
-          "team1Id": null,
-          "team2Id": null,
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "bye",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruxd36m_66quf",
+          "id": "t_mruxkkyw_1pqjp",
           "round": 1,
           "matchNumber": 9,
           "bracketSide": "winners",
@@ -400,7 +400,7 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruxd36m_sx6z5",
+          "id": "t_mruxkkyw_65m07",
           "round": 1,
           "matchNumber": 10,
           "bracketSide": "winners",
@@ -419,7 +419,7 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruxd36m_6p6pl",
+          "id": "t_mruxkkyw_491uy",
           "round": 1,
           "matchNumber": 11,
           "bracketSide": "winners",
@@ -438,7 +438,7 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruxd36m_z8tn3",
+          "id": "t_mruxkkyw_41ih4",
           "round": 1,
           "matchNumber": 12,
           "bracketSide": "winners",
@@ -457,7 +457,7 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruxd36m_nlxm9",
+          "id": "t_mruxkkyw_4ee1q",
           "round": 2,
           "matchNumber": 13,
           "bracketSide": "winners",
@@ -476,7 +476,7 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruxd36m_ospsa",
+          "id": "t_mruxkkyw_najmg",
           "round": 2,
           "matchNumber": 14,
           "bracketSide": "winners",
@@ -495,7 +495,7 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruxd36m_1c7s3",
+          "id": "t_mruxkkyw_gm3j0",
           "round": 3,
           "matchNumber": 15,
           "bracketSide": "finals",
@@ -516,7 +516,7 @@
       ],
       "announcements": [],
       "createdAt": 1784555332592,
-      "updatedAt": 1784654756446,
+      "updatedAt": 1784655106088,
       "bracketDisplay": {
         "theme": "blue",
         "scaleMode": "manual",
