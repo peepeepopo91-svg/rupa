@@ -319,19 +319,22 @@ export const generateBracket = createServerFn({ method: 'POST' })
     if (approved.length < 2) return { success: false, error: 'Need at least 2 approved teams' }
 
     // Shuffle teams if requested
-    const seeded = data.shuffle
+    const teams = data.shuffle
       ? [...approved].sort(() => Math.random() - 0.5)
       : [...approved]
 
     // Pad to next power of 2
-    const n = nextPow2(seeded.length)
-    while (seeded.length < n) seeded.push(null as any)
+    const n = nextPow2(teams.length)
+
+    // Standard bracket slot order — ensures byes are interleaved so that
+    // every bye match is exactly one real team vs one empty slot.
+    const slots = buildBracketSlots(n)                // 1-based seed positions
+    const getTeam = (seed: number) => teams[seed - 1] ?? null   // null = bye
 
     // Generate matches
     const rounds: BracketRound[] = []
     const matches: Match[]       = []
     let matchNumber = 1
-    let currentIds  = seeded.map(() => '')
 
     const roundNames = buildRoundNames(n)
 
@@ -345,11 +348,15 @@ export const generateBracket = createServerFn({ method: 'POST' })
         let team2Id: string | null = null
 
         if (r === 0) {
-          team1Id = seeded[p * 2]?.id ?? null
-          team2Id = seeded[p * 2 + 1]?.id ?? null
+          team1Id = getTeam(slots[p * 2])?.id     ?? null
+          team2Id = getTeam(slots[p * 2 + 1])?.id ?? null
         }
 
-        const isBye = r === 0 && (seeded[p * 2] === null || seeded[p * 2 + 1] === null)
+        // A bye is a first-round match where one slot has a real team and the
+        // other is empty — the real team auto-advances.  With standard bracket
+        // seeding both slots are NEVER simultaneously empty, so winnerId is
+        // always the one real team in a bye match.
+        const isBye = r === 0 && (team1Id === null || team2Id === null)
         const match: Match = {
           id:           matchId,
           round:        r,
@@ -371,7 +378,6 @@ export const generateBracket = createServerFn({ method: 'POST' })
         }
         matches.push(match)
         roundMatchIds.push(matchId)
-        currentIds[p] = matchId
       }
       rounds.push({ name: roundNames[r] || `Round ${r + 1}`, matchIds: roundMatchIds })
     }
@@ -387,6 +393,20 @@ function nextPow2(n: number): number {
   let p = 1
   while (p < n) p *= 2
   return p
+}
+
+// Build the standard bracket slot order for n teams (n must be a power of 2).
+// Returns an array of 1-based seed numbers arranged so that:
+//   - Seed 1 and 2 can only meet in the final
+//   - Each adjacent pair is one first-round match
+//   - Byes (seeds > actual team count) are spread evenly — never two empty
+//     slots in the same first-round match.
+function buildBracketSlots(n: number): number[] {
+  if (n === 2) return [1, 2]
+  const half = buildBracketSlots(n / 2)
+  const result: number[] = []
+  for (const s of half) result.push(s, n + 1 - s)
+  return result
 }
 
 function buildRoundNames(n: number): string[] {
