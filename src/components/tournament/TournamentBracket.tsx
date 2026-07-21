@@ -245,52 +245,6 @@ function MatchCard({ match, teams, onClick, rtl = false, theme, matchNum }: {
 }) {
   const [hover, setHover] = useState(false)
 
-  // Bye match — advancing team card
-  if (match.status === 'bye') {
-    const advancer = teams.find(t => t.id === match.winnerId)
-    return (
-      <div style={{
-        width: CARD_W, height: CARD_H,
-        display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6,
-        padding: '7px 9px',
-        background: `linear-gradient(135deg, ${theme.connColor}18, ${theme.connColor}08)`,
-        border: `1px dashed ${theme.connColor}`,
-        borderRadius: theme.cardRadius,
-        position: 'relative', overflow: 'hidden',
-      }}>
-        {/* BYE badge */}
-        <div style={{ position: 'absolute', top: 5, right: 7,
-          fontSize: 7, fontWeight: 800, letterSpacing: '0.1em',
-          color: theme.connDot, textTransform: 'uppercase', opacity: 0.75 }}>
-          BYE
-        </div>
-        {/* Advancing team */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <img
-            src={`https://mc-heads.net/avatar/${advancer?.captain ?? 'Steve'}/14`}
-            alt=""
-            onError={e => { (e.target as HTMLImageElement).style.opacity = '0.1' }}
-            style={{ width: 14, height: 14, borderRadius: 3, flexShrink: 0,
-              filter: 'drop-shadow(0 0 4px rgba(34,197,94,.5))' }}
-          />
-          <span style={{
-            fontSize: 11, fontWeight: 700,
-            color: theme.winnerColor,
-            fontFamily: "'Space Grotesk',sans-serif",
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
-            {advancer?.name ?? 'TBD'}
-          </span>
-        </div>
-        {/* Advances label */}
-        <span style={{ fontSize: 7.5, fontWeight: 600, color: theme.connDot,
-          letterSpacing: '0.06em', opacity: 0.7 }}>
-          ADVANCES ›
-        </span>
-      </div>
-    )
-  }
-
   const t1   = teams.find(t => t.id === match.team1Id)
   const t2   = teams.find(t => t.id === match.team2Id)
   const live = match.status === 'live'
@@ -570,7 +524,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
 
   const getMs = (ids: string[]) =>
     ids.map(id => matches.find(m => m.id === id))
-      .filter((m): m is Match => !!m && (m.status !== 'bye' || m.winnerId !== null))
+      .filter((m): m is Match => !!m)
 
   const finalsRound   = rounds[rounds.length - 1]
   const bracketRounds = rounds.slice(0, rounds.length - 1)
@@ -744,7 +698,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
                 <div style={{ textAlign: 'center', marginTop: 10 }}>
                   <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
                     AUTO-SCALED TO {Math.round(autoScale * 100)}% · {leftCols.length + 1 + rightCols.length} ROUNDS ·{' '}
-                    {matches.filter(m => m.status !== 'bye').length} MATCHES
+                    {matches.length} MATCHES
                   </span>
                 </div>
               )}
@@ -775,7 +729,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
               <div style={{ textAlign: 'center', marginTop: 10 }}>
                 <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
                   MANUAL SCALE {Math.round(manualScale * 100)}% · {leftCols.length + 1 + rightCols.length} ROUNDS ·{' '}
-                  {matches.filter(m => m.status !== 'bye').length} MATCHES
+                  {matches.length} MATCHES
                   {naturalW * manualScale > 900 && ' · SCROLL →'}
                 </span>
               </div>
