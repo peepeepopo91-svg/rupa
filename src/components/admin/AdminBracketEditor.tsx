@@ -83,9 +83,9 @@ function AdminCard({ match, teams, selected, onClick, rtl = false }: {
           background: 'linear-gradient(90deg,transparent,#ef4444,transparent)',
           animation: 'ab-pbar 2s ease-in-out infinite' }} />
       )}
-      <AdminTeamRow team={t1} score={match.score1} winner={match.winnerId === match.team1Id} rtl={rtl} />
+      <AdminTeamRow team={t1} score={match.score1} winner={match.winnerId !== null && match.winnerId === match.team1Id} rtl={rtl} />
       <div style={{ height: 1, background: 'rgba(255,255,255,.05)', margin: '4px 0' }} />
-      <AdminTeamRow team={t2} score={match.score2} winner={match.winnerId === match.team2Id} rtl={rtl} />
+      <AdminTeamRow team={t2} score={match.score2} winner={match.winnerId !== null && match.winnerId === match.team2Id} rtl={rtl} />
       <div style={{ marginTop: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.07em',
           color: live ? '#ef4444' : done ? 'rgba(34,197,94,.7)' : 'rgba(255,255,255,.2)' }}>
