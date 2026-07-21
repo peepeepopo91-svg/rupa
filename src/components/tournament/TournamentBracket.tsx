@@ -245,27 +245,48 @@ function MatchCard({ match, teams, onClick, rtl = false, theme, matchNum }: {
 }) {
   const [hover, setHover] = useState(false)
 
-  // Bye match — slim auto-advance card
+  // Bye match — advancing team card
   if (match.status === 'bye') {
     const advancer = teams.find(t => t.id === match.winnerId)
     return (
       <div style={{
         width: CARD_W, height: CARD_H,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
-        background: 'rgba(255,255,255,.02)',
+        display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6,
+        padding: '7px 9px',
+        background: `linear-gradient(135deg, ${theme.connColor}18, ${theme.connColor}08)`,
         border: `1px dashed ${theme.connColor}`,
         borderRadius: theme.cardRadius,
+        position: 'relative', overflow: 'hidden',
       }}>
-        <span style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: '0.1em', color: theme.connDot, textTransform: 'uppercase' }}>
-          Auto Bye →
-        </span>
-        {advancer && (
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: theme.winnerColor,
+        {/* BYE badge */}
+        <div style={{ position: 'absolute', top: 5, right: 7,
+          fontSize: 7, fontWeight: 800, letterSpacing: '0.1em',
+          color: theme.connDot, textTransform: 'uppercase', opacity: 0.75 }}>
+          BYE
+        </div>
+        {/* Advancing team */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <img
+            src={`https://mc-heads.net/avatar/${advancer?.captain ?? 'Steve'}/14`}
+            alt=""
+            onError={e => { (e.target as HTMLImageElement).style.opacity = '0.1' }}
+            style={{ width: 14, height: 14, borderRadius: 3, flexShrink: 0,
+              filter: 'drop-shadow(0 0 4px rgba(34,197,94,.5))' }}
+          />
+          <span style={{
+            fontSize: 11, fontWeight: 700,
+            color: theme.winnerColor,
             fontFamily: "'Space Grotesk',sans-serif",
-            maxWidth: CARD_W - 20, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {advancer.name}
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {advancer?.name ?? 'TBD'}
           </span>
-        )}
+        </div>
+        {/* Advances label */}
+        <span style={{ fontSize: 7.5, fontWeight: 600, color: theme.connDot,
+          letterSpacing: '0.06em', opacity: 0.7 }}>
+          ADVANCES ›
+        </span>
       </div>
     )
   }

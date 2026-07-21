@@ -46,26 +46,39 @@ const matchTop    = (i: number, total: number, colH: number) => (colH / total) *
 function AdminCard({ match, teams, selected, onClick, rtl = false }: {
   match: Match; teams: Team[]; selected: boolean; onClick: () => void; rtl?: boolean
 }) {
-  // Bye match — slim auto-advance card (not editable)
+  // Bye match — advancing team card (not editable)
   if (match.status === 'bye') {
     const advancer = teams.find(t => t.id === match.winnerId)
     return (
       <div style={{
         width: CARD_W, height: CARD_H,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-        background: 'rgba(255,255,255,.02)',
-        border: '1px dashed rgba(245,158,11,.25)',
-        borderRadius: 9,
+        display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 5,
+        padding: '6px 8px',
+        background: 'linear-gradient(135deg,rgba(245,158,11,.06),rgba(245,158,11,.02))',
+        border: '1px dashed rgba(245,158,11,.22)',
+        borderRadius: 9, position: 'relative', overflow: 'hidden',
       }}>
-        <span style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: '0.1em',
-          color: 'rgba(245,158,11,.5)', textTransform: 'uppercase' }}>Auto Bye →</span>
-        {advancer && (
-          <span style={{ fontSize: 10, fontWeight: 700, color: '#86efac',
+        <div style={{ position: 'absolute', top: 5, right: 7,
+          fontSize: 7, fontWeight: 800, letterSpacing: '0.1em',
+          color: 'rgba(245,158,11,.5)', textTransform: 'uppercase' }}>
+          BYE
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <img src={`https://mc-heads.net/avatar/${advancer?.captain ?? 'Steve'}/14`} alt=""
+            onError={e => { (e.target as HTMLImageElement).style.opacity = '0.15' }}
+            style={{ width: 13, height: 13, borderRadius: 3, flexShrink: 0,
+              filter: 'drop-shadow(0 0 3px rgba(34,197,94,.6))' }} />
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: '#86efac',
             fontFamily: "'Space Grotesk',sans-serif",
-            maxWidth: CARD_W - 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {advancer.name}
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            maxWidth: CARD_W - 36 }}>
+            {advancer?.name ?? 'TBD'}
           </span>
-        )}
+        </div>
+        <span style={{ fontSize: 7.5, fontWeight: 600, letterSpacing: '0.06em',
+          color: 'rgba(245,158,11,.45)' }}>
+          ADVANCES ›
+        </span>
       </div>
     )
   }
