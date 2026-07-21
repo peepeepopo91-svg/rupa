@@ -516,11 +516,11 @@
       ],
       "announcements": [],
       "createdAt": 1784555332592,
-      "updatedAt": 1784656216110,
+      "updatedAt": 1784656266454,
       "bracketDisplay": {
         "theme": "esports",
         "scaleMode": "manual",
-        "manualScale": 0.85
+        "manualScale": 0.8
       }
     }
   ],
