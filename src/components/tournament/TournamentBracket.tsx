@@ -547,7 +547,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
   const leftW   = leftCols.length * (CARD_W + CONN_W)
   const rightW  = rightCols.length * (CONN_W + CARD_W)
   const finalsW = CARD_W + 16
-  const naturalW = leftW + finalsW + rightW + OUTER_PAD * 2
+  const naturalW = leftW + finalsW + rightW + 24 // 12px container padding each side
 
   const naturalH = colH + LABEL_H + LABEL_MB + 16 // 16px top/bottom padding in bracket
 
@@ -621,8 +621,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
               transition: 'background .3s, border-color .3s',
             }}
           >
-            <div style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 0,
-              paddingLeft: OUTER_PAD, paddingRight: OUTER_PAD }}>
+            <div style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 0, minWidth: 'max-content' }}>
 
               {/* LEFT SIDE */}
               {leftCols.map((col, ci) => {
