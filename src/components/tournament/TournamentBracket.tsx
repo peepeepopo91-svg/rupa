@@ -292,11 +292,11 @@ function MatchCard({ match, teams, onClick, rtl = false, theme, matchNum }: {
         M{matchNum}
       </div>
 
-      <TeamRow team={t1} score={match.score1} winner={match.winnerId === match.team1Id} rtl={rtl} theme={theme} />
+      <TeamRow team={t1} score={match.score1} winner={match.winnerId !== null && match.winnerId === match.team1Id} rtl={rtl} theme={theme} />
 
       <div style={{ height: 1, background: theme.dividerColor, margin: '5px 0' }} />
 
-      <TeamRow team={t2} score={match.score2} winner={match.winnerId === match.team2Id} rtl={rtl} theme={theme} />
+      <TeamRow team={t2} score={match.score2} winner={match.winnerId !== null && match.winnerId === match.team2Id} rtl={rtl} theme={theme} />
 
       {/* Bottom info row */}
       <div style={{ marginTop: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
@@ -683,8 +683,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
               {autoScale < 0.99 && (
                 <div style={{ textAlign: 'center', marginTop: 10 }}>
                   <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
-                    AUTO-SCALED TO {Math.round(autoScale * 100)}% · {leftCols.length + 1 + rightCols.length} ROUNDS ·{' '}
-                    {matches.length} MATCHES
+                    {leftCols.length + 1 + rightCols.length} ROUNDS
                   </span>
                 </div>
               )}
@@ -714,9 +713,7 @@ function BracketView({ tournament }: { tournament: Tournament }) {
               </div>
               <div style={{ textAlign: 'center', marginTop: 10 }}>
                 <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,.2)', letterSpacing: '0.06em' }}>
-                  MANUAL SCALE {Math.round(manualScale * 100)}% · {leftCols.length + 1 + rightCols.length} ROUNDS ·{' '}
-                  {matches.length} MATCHES
-                  {naturalW * manualScale > 900 && ' · SCROLL →'}
+                  {leftCols.length + 1 + rightCols.length} ROUNDS
                 </span>
               </div>
             </>
