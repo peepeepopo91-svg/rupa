@@ -78,55 +78,30 @@
         "type": "single_elimination",
         "rounds": [
           {
-            "name": "Round of 16",
-            "matchIds": [
-              "t_mruy67mg_6igzu",
-              "t_mruy67mg_yjodc",
-              "t_mruy67mg_7wxjg",
-              "t_mruy67mg_9w360",
-              "t_mruy67mg_6ssxa",
-              "t_mruy67mg_lzk7m",
-              "t_mruy67mg_fbcgv",
-              "t_mruy67mg_22xiq"
-            ]
-          },
-          {
             "name": "Quarter-Finals",
             "matchIds": [
-              "t_mruy67mg_fjxgv",
-              "t_mruy67mg_yjf79",
-              "t_mruy67mg_jt7eq",
-              "t_mruy67mg_l9h6w"
+              "t_mrv0r0i2_oono0",
+              "t_mrv0r0i2_0ca57",
+              "t_mrv0r0i2_bhhwm",
+              "t_mrv0r0i2_1rf2z"
             ]
           },
           {
             "name": "Semi-Finals",
             "matchIds": [
-              "t_mruy67mg_isnf0",
-              "t_mruy67mg_4n3qa"
+              "t_mrv0r0i2_52cdt",
+              "t_mrv0r0i2_53cge"
             ]
           },
           {
             "name": "Finals",
             "matchIds": [
-              "t_mruy67mg_sycui"
+              "t_mrv0r0i3_d8jf1"
             ]
           }
         ]
       },
       "teams": [
-        {
-          "id": "t_mrte6uy2_o0m1q",
-          "name": "fdfd",
-          "captain": "dsfsdfs",
-          "players": [
-            "dsfsdfs",
-            "sdfsdf"
-          ],
-          "status": "approved",
-          "registeredAt": 1784562086954,
-          "notes": ""
-        },
         {
           "id": "t_mrte71as_7p5ti",
           "name": "sdfds",
@@ -229,12 +204,12 @@
       ],
       "matches": [
         {
-          "id": "t_mruy67mg_6igzu",
+          "id": "t_mrv0r0i2_oono0",
           "round": 0,
           "matchNumber": 1,
           "bracketSide": "winners",
-          "team1Id": "t_mrteuf95_454c9",
-          "team2Id": "t_mrtf9dcl_xxhn0",
+          "team1Id": "t_mrtf9dcl_xxhn0",
+          "team2Id": "t_mrtfanvh_tvwog",
           "score1": 0,
           "score2": 0,
           "winnerId": null,
@@ -248,12 +223,12 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruy67mg_yjodc",
+          "id": "t_mrv0r0i2_0ca57",
           "round": 0,
           "matchNumber": 2,
           "bracketSide": "winners",
-          "team1Id": "t_mrtfanvh_tvwog",
-          "team2Id": "t_mrtfa1tv_640tn",
+          "team1Id": "t_mrteunfr_0urqa",
+          "team2Id": "t_mrteuf95_454c9",
           "score1": 0,
           "score2": 0,
           "winnerId": null,
@@ -267,30 +242,11 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruy67mg_7wxjg",
+          "id": "t_mrv0r0i2_bhhwm",
           "round": 0,
           "matchNumber": 3,
           "bracketSide": "winners",
-          "team1Id": "t_mrterzy5_4ifyz",
-          "team2Id": "t_mrteuykb_465ls",
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "scheduled",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruy67mg_9w360",
-          "round": 0,
-          "matchNumber": 4,
-          "bracketSide": "winners",
-          "team1Id": "t_mrteunfr_0urqa",
+          "team1Id": "t_mrteuykb_465ls",
           "team2Id": "t_mrte71as_7p5ti",
           "score1": 0,
           "score2": 0,
@@ -305,12 +261,12 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruy67mg_6ssxa",
+          "id": "t_mrv0r0i2_1rf2z",
           "round": 0,
-          "matchNumber": 5,
+          "matchNumber": 4,
           "bracketSide": "winners",
-          "team1Id": "t_mrte6uy2_o0m1q",
-          "team2Id": null,
+          "team1Id": "t_mrtfa1tv_640tn",
+          "team2Id": "t_mrterzy5_4ifyz",
           "score1": 0,
           "score2": 0,
           "winnerId": null,
@@ -324,8 +280,27 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruy67mg_lzk7m",
-          "round": 0,
+          "id": "t_mrv0r0i2_52cdt",
+          "round": 1,
+          "matchNumber": 5,
+          "bracketSide": "winners",
+          "team1Id": null,
+          "team2Id": null,
+          "score1": 0,
+          "score2": 0,
+          "winnerId": null,
+          "status": "pending",
+          "scheduledAt": null,
+          "completedAt": null,
+          "arena": "",
+          "gamemode": "Cpvp, sword",
+          "referee": "",
+          "notes": "",
+          "replayLink": ""
+        },
+        {
+          "id": "t_mrv0r0i2_53cge",
+          "round": 1,
           "matchNumber": 6,
           "bracketSide": "winners",
           "team1Id": null,
@@ -333,7 +308,7 @@
           "score1": 0,
           "score2": 0,
           "winnerId": null,
-          "status": "scheduled",
+          "status": "pending",
           "scheduledAt": null,
           "completedAt": null,
           "arena": "",
@@ -343,161 +318,9 @@
           "replayLink": ""
         },
         {
-          "id": "t_mruy67mg_fbcgv",
-          "round": 0,
+          "id": "t_mrv0r0i3_d8jf1",
+          "round": 2,
           "matchNumber": 7,
-          "bracketSide": "winners",
-          "team1Id": null,
-          "team2Id": null,
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "scheduled",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruy67mg_22xiq",
-          "round": 0,
-          "matchNumber": 8,
-          "bracketSide": "winners",
-          "team1Id": null,
-          "team2Id": null,
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "scheduled",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruy67mg_fjxgv",
-          "round": 1,
-          "matchNumber": 9,
-          "bracketSide": "winners",
-          "team1Id": null,
-          "team2Id": null,
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "pending",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruy67mg_yjf79",
-          "round": 1,
-          "matchNumber": 10,
-          "bracketSide": "winners",
-          "team1Id": null,
-          "team2Id": null,
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "pending",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruy67mg_jt7eq",
-          "round": 1,
-          "matchNumber": 11,
-          "bracketSide": "winners",
-          "team1Id": null,
-          "team2Id": null,
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "pending",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruy67mg_l9h6w",
-          "round": 1,
-          "matchNumber": 12,
-          "bracketSide": "winners",
-          "team1Id": null,
-          "team2Id": null,
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "pending",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruy67mg_isnf0",
-          "round": 2,
-          "matchNumber": 13,
-          "bracketSide": "winners",
-          "team1Id": null,
-          "team2Id": null,
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "pending",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruy67mg_4n3qa",
-          "round": 2,
-          "matchNumber": 14,
-          "bracketSide": "winners",
-          "team1Id": null,
-          "team2Id": null,
-          "score1": 0,
-          "score2": 0,
-          "winnerId": null,
-          "status": "pending",
-          "scheduledAt": null,
-          "completedAt": null,
-          "arena": "",
-          "gamemode": "Cpvp, sword",
-          "referee": "",
-          "notes": "",
-          "replayLink": ""
-        },
-        {
-          "id": "t_mruy67mg_sycui",
-          "round": 3,
-          "matchNumber": 15,
           "bracketSide": "finals",
           "team1Id": null,
           "team2Id": null,
@@ -516,11 +339,11 @@
       ],
       "announcements": [],
       "createdAt": 1784555332592,
-      "updatedAt": 1784659723795,
+      "updatedAt": 1784660470694,
       "bracketDisplay": {
         "theme": "esports",
         "scaleMode": "manual",
-        "manualScale": 0.8
+        "manualScale": 1.15
       }
     }
   ],
