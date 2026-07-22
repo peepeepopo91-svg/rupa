@@ -145,21 +145,75 @@
   "zolup": {
     "username": "zolup",
     "createdAt": 1784399298355,
-    "lastCheckedAt": 1784552043681,
-    "balance": 1061,
+    "lastCheckedAt": 1784717826785,
+    "balance": 5561,
     "gems": 7361000,
     "rigs": [
       {
         "id": "starter_mrrmcik0_lp20",
         "tierId": "starter",
         "name": "Starter Pack",
-        "durability": 8918.17268518529,
-        "status": "mining",
-        "miningSince": 1784543658727,
+        "durability": 8185.672516835122,
+        "status": "idle",
+        "miningSince": null,
         "purchasedAt": 1784454855408
       }
     ],
     "rewardHistory": [
+      {
+        "blockNumber": 62,
+        "solvedAt": 1784583562607,
+        "amount": 500,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 61,
+        "solvedAt": 1784579962607,
+        "amount": 500,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 60,
+        "solvedAt": 1784576362607,
+        "amount": 500,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 59,
+        "solvedAt": 1784572762607,
+        "amount": 500,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 58,
+        "solvedAt": 1784569162607,
+        "amount": 500,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 57,
+        "solvedAt": 1784565562607,
+        "amount": 500,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 56,
+        "solvedAt": 1784561962607,
+        "amount": 500,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 55,
+        "solvedAt": 1784558362607,
+        "amount": 500,
+        "type": "finder"
+      },
+      {
+        "blockNumber": 54,
+        "solvedAt": 1784554762607,
+        "amount": 500,
+        "type": "finder"
+      },
       {
         "blockNumber": 53,
         "solvedAt": 1784551162607,
@@ -258,8 +312,8 @@
       }
     ],
     "exchangeUsedToday": 0,
-    "exchangeResetAt": 1784574004454,
-    "miningExpiresAt": 1784586852089,
-    "miningRenewedAt": 1784543652089
+    "exchangeResetAt": 1784804149048,
+    "miningExpiresAt": 1784760958182,
+    "miningRenewedAt": 1784717758182
   }
 }
