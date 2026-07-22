@@ -544,10 +544,16 @@ function BracketView({ tournament }: { tournament: Tournament }) {
         pixelRatio: 2,
         style: { transform: 'none' }, // export at natural size
       })
+      const res = await fetch(dataUrl)
+      const blob = await res.blob()
+      const objectUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.download = `bracket-${tournament?.name?.replace(/\s+/g,'_') ?? 'export'}.${fmt}`
-      link.href = dataUrl
+      link.href = objectUrl
+      document.body.appendChild(link)
       link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(objectUrl)
     } catch (e) {
       console.error('Export failed', e)
     } finally {
