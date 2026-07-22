@@ -36,11 +36,11 @@ const NAV_ITEMS: { id: AdminSection; label: string; icon: string; desc: string }
   { id: 'events',      label: 'Events',        icon: '🎉', desc: 'Manage events' },
   { id: 'shop-mgmt',      label: 'Shop',          icon: '🛒', desc: 'Manage purchases'  },
   { id: 'tournament-mgmt', label: 'Tournaments',  icon: '🏆', desc: 'Manage tournaments' },
+  { id: 'earnings',     label: 'Earnings',      icon: '💹', desc: 'Ads & monetisation' },
   { id: 'logs',            label: 'Activity Logs', icon: '📊', desc: 'Audit trail'        },
   { id: 'repo-history', label: 'Repo History',  icon: '🕓', desc: 'Reset history' },
   { id: 'credentials',  label: 'Credentials',   icon: '🔐', desc: 'Manage admin auth' },
   { id: 'github-sync',  label: 'GitHub Sync',   icon: '☁️',  desc: 'Sync Center' },
-  { id: 'earnings',     label: 'Earnings',      icon: '💹', desc: 'Ads & monetisation' },
 ]
 
 const SECTION_TITLES: Record<AdminSection, { title: string; subtitle: string }> = {
