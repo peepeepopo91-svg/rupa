@@ -539,21 +539,55 @@ function BracketView({ tournament }: { tournament: Tournament }) {
     setExporting(true)
     try {
       const fn = fmt === 'png' ? toPng : toJpeg
+
+      // Pre-convert all external images to data URLs so the canvas isn't tainted
+      const toDataUrl = (src: string): Promise<string> =>
+        new Promise((resolve) => {
+          const img = new Image()
+          img.crossOrigin = 'anonymous'
+          img.onload = () => {
+            const c = document.createElement('canvas')
+            c.width = img.naturalWidth || img.width
+            c.height = img.naturalHeight || img.height
+            c.getContext('2d')!.drawImage(img, 0, 0)
+            try { resolve(c.toDataURL()) } catch { resolve(src) }
+          }
+          img.onerror = () => resolve(src)
+          img.src = src + (src.includes('?') ? '&' : '?') + '_cb=' + Date.now()
+        })
+
       const dataUrl = await fn(bracketRef.current, {
         backgroundColor: '#0B0F17',
         pixelRatio: 2,
-        style: { transform: 'none' }, // export at natural size
+        style: { transform: 'none' },
+        onclone: async (_doc, el) => {
+          const imgs = el.querySelectorAll<HTMLImageElement>('img')
+          await Promise.all(Array.from(imgs).map(async (img) => {
+            if (!img.src || img.src.startsWith('data:')) return
+            img.src = await toDataUrl(img.src)
+          }))
+        },
       })
-      const res = await fetch(dataUrl)
-      const blob = await res.blob()
-      const objectUrl = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.download = `bracket-${tournament?.name?.replace(/\s+/g,'_') ?? 'export'}.${fmt}`
-      link.href = objectUrl
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(objectUrl)
+
+      // Open in new tab — works in all environments including iframe embeds.
+      // The user can right-click → Save As, or use the browser's download button.
+      const win = window.open('', '_blank')
+      if (win) {
+        const ext = fmt === 'png' ? 'png' : 'jpeg'
+        const filename = `bracket-${tournament?.name?.replace(/\s+/g,'_') ?? 'export'}.${fmt}`
+        win.document.write(`
+          <html><head><title>${filename}</title><style>
+            body{margin:0;background:#0B0F17;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif}
+            img{max-width:100%;height:auto;display:block}
+            a{margin-top:12px;padding:8px 20px;background:#007CF0;color:#fff;border-radius:6px;text-decoration:none;font-size:13px}
+          </style></head>
+          <body>
+            <img src="${dataUrl}" alt="bracket"/>
+            <a href="${dataUrl}" download="${filename}">⬇ Download ${fmt.toUpperCase()}</a>
+          </body></html>
+        `)
+        win.document.close()
+      }
     } catch (e) {
       console.error('Export failed', e)
     } finally {
