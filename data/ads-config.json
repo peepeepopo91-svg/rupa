@@ -1,5 +1,5 @@
 {
-  "enabled": true,
+  "enabled": false,
   "adProvider": "medianet",
   "adsensePublisherId": "",
   "adsenseSlotId": "",
