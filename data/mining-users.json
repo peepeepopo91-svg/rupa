@@ -145,7 +145,7 @@
   "zolup": {
     "username": "zolup",
     "createdAt": 1784399298355,
-    "lastCheckedAt": 1784719064475,
+    "lastCheckedAt": 1784719105729,
     "balance": 5561,
     "gems": 7361000,
     "rigs": [
@@ -313,7 +313,7 @@
     ],
     "exchangeUsedToday": 0,
     "exchangeResetAt": 1784804149048,
-    "miningExpiresAt": 1784762054039,
-    "miningRenewedAt": 1784718854039
+    "miningExpiresAt": 1784762305729,
+    "miningRenewedAt": 1784719105729
   }
 }
