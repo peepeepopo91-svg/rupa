@@ -31,6 +31,10 @@ export interface SiteContent {
   seoDescription?: string
   seoKeywords?: string
   ogImageUrl?: string
+  // ── Publish / Google ──────────────────────────────────────────────────────
+  canonicalUrl?: string
+  ga4Id?: string
+  gscVerificationTag?: string
   // ── Footer ────────────────────────────────────────────────────────────────
   footerCopyright?: string
   footerTagline?: string
@@ -77,6 +81,10 @@ export const CONTENT_DEFAULTS: Required<SiteContent> = {
   seoDescription:         'The definitive tier list for all types of Minecraft PvP players. Rankings, mining, shop, and more.',
   seoKeywords:            'minecraft, pvp, tier list, blue tiers, rankings',
   ogImageUrl:             '',
+  // Publish / Google
+  canonicalUrl:           '',
+  ga4Id:                  '',
+  gscVerificationTag:     '',
   // Footer
   footerCopyright:        '© 2026 Blue Tiers. All rights reserved.',
   footerTagline:          'Not affiliated with Mojang or Microsoft.',

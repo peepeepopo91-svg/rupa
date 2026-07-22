@@ -35,6 +35,7 @@ export type AdminSection =
   | 'repo-history'
   | 'credentials'
   | 'earnings'
+  | 'publish'
 
 function AdminPage() {
   const [session, setSession] = useState<AdminSession | null>(null)
