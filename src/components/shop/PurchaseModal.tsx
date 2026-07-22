@@ -24,7 +24,7 @@ export function PurchaseModal({ item, userGems, onConfirm, onClose }: Props) {
     if (!canAfford || loading) return
     setLoading(true)
     try {
-      await onConfirm(item, quantity)
+      await onConfirm(item!, quantity)
     } finally {
       setLoading(false)
       setQuantity(1)

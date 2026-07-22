@@ -238,7 +238,7 @@ function ItemEditor({ item, onSave, onDelete }: { item: ShopItem; onSave: () => 
       const result = await adminUpdateShopItem({ data: {
         id: form.id, name: form.name, description: form.description,
         price: form.price, icon: form.icon, enabled: form.enabled,
-        featured: form.featured, rarity: form.rarity,
+        featured: form.featured,
         purchaseLimit: form.purchaseLimit, stock: form.stock,
       }})
       if (result.success) { setMsg('✅ Saved'); onSave() }

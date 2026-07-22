@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, type CSSProperties } from 'react'
 import { getEventConfig, saveEventConfig, resetEventConfig } from '../../store/contentStore'
 import type { EventConfig } from '../../data/event'
 import { addLog } from '../../store/adminStore'
@@ -242,7 +242,7 @@ export function EventManager({ admin }: Props) {
   const endDate = form.registrationEnds ? new Date(form.registrationEnds) : null
   const startDate = form.eventStartDate ? new Date(form.eventStartDate) : null
   const isExpired = endDate ? endDate <= new Date() : false
-  const isStarted = startDate ? startDate <= new Date() : false
+  const _isStarted = startDate ? startDate <= new Date() : false; void _isStarted
 
   let phase = 'Pending'
   let phaseColor = 'text-gray-400 bg-white/5 border-white/10'
@@ -544,7 +544,7 @@ export function EventManager({ admin }: Props) {
                         ? 'ring-2 ring-offset-1 ring-offset-[#0B0F17]'
                         : 'opacity-60 hover:opacity-90'
                     }`}
-                    style={form.bannerStyle === s.value ? { ringColor: s.accent } : {}}>
+                    style={form.bannerStyle === s.value ? { '--tw-ring-color': s.accent } as CSSProperties : {}}>
                     <div className="w-4 h-4 rounded-full mx-auto mb-1.5" style={{ background: s.accent }} />
                     <span style={{ color: s.accent }}>{s.label}</span>
                   </button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { EVENT } from '../data/event'
 
 interface TimeLeft {

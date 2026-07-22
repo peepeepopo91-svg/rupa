@@ -443,36 +443,6 @@ function FinalsColumn({ match, teams, onSelect, colH, theme }: {
   )
 }
 
-// ─── Theme selector ───────────────────────────────────────────────────────────
-function ThemeSelector({ current, onChange }: { current: ThemeId; onChange: (t: ThemeId) => void }) {
-  return (
-    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-      {THEMES.map(t => {
-        const active = t.id === current
-        return (
-          <button
-            key={t.id}
-            onClick={() => onChange(t.id)}
-            title={t.name}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px',
-              borderRadius: 20, fontSize: 10, fontWeight: active ? 700 : 500,
-              cursor: 'pointer', transition: 'all .15s',
-              background: active ? getTheme(t.id).pillActive : 'rgba(255,255,255,.04)',
-              border: `1px solid ${active ? getTheme(t.id).pillText + '55' : 'rgba(255,255,255,.08)'}`,
-              color: active ? getTheme(t.id).pillText : 'rgba(255,255,255,.4)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <span style={{ fontSize: 11 }}>{t.icon}</span>
-            {t.name}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
 // ─── Main bracket (guard layer) ───────────────────────────────────────────────
 export function TournamentBracket({ tournament }: Props) {
   if (!tournament)         return <EmptyState msg="No active tournament." />

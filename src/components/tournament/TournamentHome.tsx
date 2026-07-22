@@ -32,7 +32,7 @@ function Countdown({ target }: { target: number }) {
   )
 }
 
-export function TournamentHome({ active, onRegisterClick }: Props) {
+export function TournamentHome({ active, onRegisterClick: _onRegisterClick }: Props) {
   if (!active) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-center">

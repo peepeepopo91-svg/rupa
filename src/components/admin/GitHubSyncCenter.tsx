@@ -17,9 +17,7 @@ import {
   fetchCommitHistory,
   restoreToCommit,
   fetchSyncHistory,
-  addSyncHistoryEntry,
   flushStoresToDisk,
-  validateAllData,
   compareLocalToRemote,
   pullRemoteFiles,
   getGitDiagnostics,
@@ -2042,20 +2040,6 @@ export function GitHubSyncCenter({ admin: _admin }: { admin: string }) {
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
-function StatusCard({ label, icon, value, valueClass }: {
-  label: string; icon: string; value: string; valueClass: string
-}) {
-  return (
-    <div className="bg-[#070B12] px-5 py-4">
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <span className="text-sm leading-none">{icon}</span>
-        <p className="text-[9px] uppercase tracking-widest text-gray-600">{label}</p>
-      </div>
-      <p className={`text-sm font-bold truncate ${valueClass}`}>{value}</p>
-    </div>
-  )
-}
 
 function SyncStatCell({ label, value, valueClass, icon, iconBg, statusDot, pulse }: {
   label: string

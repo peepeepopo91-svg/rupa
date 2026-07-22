@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import type { Tournament, Team, Match, Prize, Reward, TournamentsFile, TournamentStatus } from '../../data/tournament'
 import { STATUS_LABEL, MATCH_STATUS_LABEL, DEFAULT_PRIZES, DEFAULT_RULES } from '../../data/tournament'
 import {
   getTournamentData, createTournament, updateTournament, deleteTournament,
   setActiveTournament, archiveTournament, duplicateTournament,
   updateTeamStatus, removeTeam, addTeamManually, bulkUpdateTeamStatus,
-  generateBracket, updateMatch, updateBracketSlot,
+  updateMatch,
   updatePrizes, updateRules,
   addAnnouncement, deleteAnnouncement,
 } from '../../server/tournamentServer'
@@ -1066,7 +1066,7 @@ function TMatches({ active, flash, reload }: { active: Tournament | null; flash:
   async function save(m: Match) {
     setSaving(true)
     try {
-      const res = await updateMatch({ data: { tournamentId: active!.id, matchId: m.id, score1: m.score1, score2: m.score2, winnerId: m.winnerId, status: m.status, scheduledAt: m.scheduledAt, arena: m.arena, gamemode: m.gamemode, referee: m.referee, notes: m.notes, replayLink: m.replayLink } })
+      const res = await updateMatch({ data: { tournamentId: active!.id, matchId: m.id, score1: m.score1, score2: m.score2, winnerId: m.winnerId, status: m.status as 'live' | 'completed' | 'pending' | 'scheduled', scheduledAt: m.scheduledAt, arena: m.arena, gamemode: m.gamemode, referee: m.referee, notes: m.notes, replayLink: m.replayLink } })
       if (res.success) { flash('Match updated ✓'); setEditing(null); reload() }
       else flash(res.error ?? 'Error', false)
     } finally { setSaving(false) }

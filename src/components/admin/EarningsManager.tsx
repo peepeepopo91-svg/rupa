@@ -1,9 +1,9 @@
 // ─── Earnings Manager ─────────────────────────────────────────────────────────
 // Full-featured monetisation admin: 22 tabs covering every earnings feature.
 
-import { useState, useEffect, useCallback, useId } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type {
-  AdsConfig, SponsorSlot, Milestone, WaterfallProvider,
+  AdsConfig, SponsorSlot,
   RevenueShareRecipient, AffiliateLink,
 } from '../../server/earningsServer'
 import {
@@ -1022,9 +1022,9 @@ export function EarningsManager({ admin }: Props) {
         <div className="flex flex-col gap-5">
           <SectionBox title="🎯 Revenue Goals">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Field label="Daily Goal ($)"><Input type="number" step="0.01" value={draft.goalDaily} onChange={v => patch('goalDaily', parseFloat(v) || 0)} placeholder="0.00" /></Field>
-              <Field label="Weekly Goal ($)"><Input type="number" step="0.01" value={draft.goalWeekly} onChange={v => patch('goalWeekly', parseFloat(v) || 0)} placeholder="0.00" /></Field>
-              <Field label="Monthly Goal ($)"><Input type="number" step="0.01" value={draft.goalMonthly} onChange={v => patch('goalMonthly', parseFloat(v) || 0)} placeholder="0.00" /></Field>
+              <Field label="Daily Goal ($)"><Input type="number" step={0.01} value={draft.goalDaily} onChange={v => patch('goalDaily', parseFloat(v) || 0)} placeholder="0.00" /></Field>
+              <Field label="Weekly Goal ($)"><Input type="number" step={0.01} value={draft.goalWeekly} onChange={v => patch('goalWeekly', parseFloat(v) || 0)} placeholder="0.00" /></Field>
+              <Field label="Monthly Goal ($)"><Input type="number" step={0.01} value={draft.goalMonthly} onChange={v => patch('goalMonthly', parseFloat(v) || 0)} placeholder="0.00" /></Field>
             </div>
             <div className="flex flex-col gap-3 mt-2">
               {cfg.goalDaily   > 0 && <div className="flex flex-col gap-1.5"><div className="flex justify-between text-xs"><span className="text-gray-500">Daily</span><span className="text-white">${projDay.toFixed(4)} / ${cfg.goalDaily.toFixed(2)}</span></div><ProgressBar value={projDay} max={cfg.goalDaily} color="#22c55e" /></div>}
@@ -1048,7 +1048,7 @@ export function EarningsManager({ admin }: Props) {
               ))}
             </div>
             <div className="flex gap-3 items-end">
-              <Field label="Target ($)"><Input type="number" step="0.01" value={newMilestone.amount} onChange={v => setNewMilestone(m => ({ ...m, amount: v }))} placeholder="50.00" /></Field>
+              <Field label="Target ($)"><Input type="number" step={0.01} value={newMilestone.amount} onChange={v => setNewMilestone(m => ({ ...m, amount: v }))} placeholder="50.00" /></Field>
               <Field label="Label"><Input value={newMilestone.label} onChange={v => setNewMilestone(m => ({ ...m, label: v }))} placeholder="First $50!" /></Field>
               <button
                 disabled={!newMilestone.amount}
@@ -1282,7 +1282,7 @@ export function EarningsManager({ admin }: Props) {
                     </Select>
                   </Field>
                   <Field label="Minimum Payout Threshold ($)">
-                    <Input type="number" step="0.01" value={draft.payoutThreshold} onChange={v => patch('payoutThreshold', parseFloat(v) || 0)} />
+                    <Input type="number" step={0.01} value={draft.payoutThreshold} onChange={v => patch('payoutThreshold', parseFloat(v) || 0)} />
                   </Field>
                 </div>
                 <Field label="Payout Email / Address">
@@ -1306,7 +1306,7 @@ export function EarningsManager({ admin }: Props) {
           {draft.payoutEnabled && (
             <SectionBox title="➕ Log Payout">
               <div className="grid grid-cols-2 gap-4">
-                <Field label="Amount ($)"><Input type="number" step="0.01" value={payoutAmount} onChange={v => setPayoutAmount(v)} placeholder="25.00" /></Field>
+                <Field label="Amount ($)"><Input type="number" step={0.01} value={payoutAmount} onChange={v => setPayoutAmount(v)} placeholder="25.00" /></Field>
                 <Field label="Notes"><Input value={payoutNotes} onChange={v => setPayoutNotes(v)} placeholder="Q2 payout" /></Field>
               </div>
               <button
@@ -1514,7 +1514,7 @@ export function EarningsManager({ admin }: Props) {
             <Toggle checked={draft.revenueAlertEnabled} onChange={v => patch('revenueAlertEnabled', v)} label="Alert when revenue crosses a threshold" />
             {draft.revenueAlertEnabled && (
               <Field label="Alert Threshold ($)" desc="Fires once when cumulative revenue exceeds this amount.">
-                <Input type="number" step="0.01" value={draft.revenueAlertThreshold} onChange={v => patch('revenueAlertThreshold', parseFloat(v) || 0)} placeholder="10.00" />
+                <Input type="number" step={0.01} value={draft.revenueAlertThreshold} onChange={v => patch('revenueAlertThreshold', parseFloat(v) || 0)} placeholder="10.00" />
               </Field>
             )}
             <Toggle checked={draft.notifyOnMilestone} onChange={v => patch('notifyOnMilestone', v)} label="Notify when a milestone is reached" />

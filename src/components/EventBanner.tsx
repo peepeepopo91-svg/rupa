@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Badge } from './Badge'
 import { CountdownTimer } from './CountdownTimer'
 import { CTAButton } from './CTAButton'

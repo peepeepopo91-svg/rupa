@@ -126,7 +126,7 @@ function AdminTeamRow({ team, score, winner, rtl }: { team?: Team; score: number
 }
 
 // ─── Round column ─────────────────────────────────────────────────────────────
-function RoundCol({ name, matches, teams, selectedId, onSelect, rtl = false, colH }: {
+function RoundCol({ name: _name, matches, teams, selectedId, onSelect, rtl = false, colH }: {
   name: string; matches: Match[]; teams: Team[]; selectedId: string | null
   onSelect: (m: Match) => void; rtl?: boolean; colH: number
 }) {
@@ -530,7 +530,7 @@ export function AdminBracketEditor({ active, flash, reload }: Props) {
       const res = await updateMatch({ data: {
         tournamentId: active!.id, matchId: draft.id,
         score1: draft.score1, score2: draft.score2,
-        winnerId: draft.winnerId, status: draft.status,
+        winnerId: draft.winnerId, status: draft.status as 'live' | 'completed' | 'pending' | 'scheduled',
         scheduledAt: draft.scheduledAt, arena: draft.arena,
         gamemode: draft.gamemode, referee: draft.referee,
         notes: draft.notes, replayLink: draft.replayLink,

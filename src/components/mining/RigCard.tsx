@@ -30,7 +30,7 @@ export function RigCard({ rig }: Props) {
   const [err, setErr] = useState('')
 
   const tier = RIG_TIERS.find(t => t.id === rig.tierId)!
-  const durPct = (rig.durability / tier.maxDurability) * 100
+  const _durPct = (rig.durability / tier.maxDurability) * 100; void _durPct
   const damage = tier.maxDurability - rig.durability
   const repairCost = Math.ceil((damage / tier.maxDurability) * tier.cost * MINING_CONSTANTS.REPAIR_COST_PCT)
   const salePrice = Math.floor(tier.cost * MINING_CONSTANTS.SELL_MAX_PCT * (rig.durability / tier.maxDurability))

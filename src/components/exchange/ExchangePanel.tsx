@@ -112,7 +112,7 @@ export function ExchangePanel() {
     [now],
   )
   const prevRate  = wavePoints.length > 1 ? wavePoints[1] : currentRate
-  const trendUp   = currentRate >= prevRate
+  const _trendUp  = currentRate >= prevRate; void _trendUp
   const deviation = currentRate - EXCHANGE_CONSTANTS.BASE_RATE
 
   // Parse input

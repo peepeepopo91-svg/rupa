@@ -1,4 +1,3 @@
-import React from 'react'
 import { EVENT } from '../data/event'
 
 interface CTAButtonProps {

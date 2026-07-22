@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { getSiteContent, saveSiteContent, resetSiteContent, CONTENT_DEFAULTS } from '../../store/contentStore'
+import { getSiteContent, saveSiteContent, resetSiteContent } from '../../store/contentStore'
 import type { SiteContent } from '../../store/contentStore'
 import { addLog } from '../../store/adminStore'
 

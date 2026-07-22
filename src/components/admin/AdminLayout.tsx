@@ -63,7 +63,7 @@ const SECTION_TITLES: Record<AdminSection, { title: string; subtitle: string }> 
 
 function SectionContent({ section, admin, setSection }: { section: AdminSection; admin: string; setSection: (s: AdminSection) => void }) {
   switch (section) {
-    case 'dashboard':   return <Dashboard admin={admin} setSection={setSection} />
+    case 'dashboard':   return <Dashboard admin={admin} setSection={setSection as (s: string) => void} />
     case 'tier-list':   return <TierListManager admin={admin} />
     case 'gamemodes':   return <GamemodeManager admin={admin} />
     case 'mining-mgmt': return <MiningManager admin={admin} />

@@ -96,8 +96,6 @@ export function GamemodeManager({ admin }: Props) {
     showToastMsg('Gamemodes reset to defaults.')
   }
 
-  const unusedKeys = GAMEMODE_KEYS.filter(k => !modes.find(m => m.key === k))
-
   return (
     <div className="space-y-6 max-w-2xl">
       {toast && <AdminToast msg={toast.msg} type={toast.type} />}
