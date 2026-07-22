@@ -339,9 +339,9 @@
       ],
       "announcements": [],
       "createdAt": 1784555332592,
-      "updatedAt": 1784660744622,
+      "updatedAt": 1784716776100,
       "bracketDisplay": {
-        "theme": "esports",
+        "theme": "blue",
         "scaleMode": "manual",
         "manualScale": 1.15
       }
