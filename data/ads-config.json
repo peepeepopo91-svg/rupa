@@ -25,10 +25,10 @@
     "tournament": false
   },
   "stats": {
-    "totalImpressions": 0,
-    "totalCompletions": 0,
+    "totalImpressions": 2,
+    "totalCompletions": 2,
     "totalSkips": 0,
-    "estimatedRevenue": 0,
+    "estimatedRevenue": 0.005,
     "lastReset": null
   }
 }
