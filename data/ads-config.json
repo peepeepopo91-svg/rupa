@@ -1,12 +1,12 @@
 {
   "enabled": true,
-  "adProvider": "placeholder",
+  "adProvider": "adsense",
   "adsensePublisherId": "",
   "adsenseSlotId": "",
   "adDurationSeconds": 5,
   "renewMode": "ad-required",
   "showAdOnExpired": true,
-  "showAdOnEarlyRenew": false,
+  "showAdOnEarlyRenew": true,
   "skipAllowed": false,
   "skipAfterSeconds": 3,
   "customAdHtml": "",
@@ -15,7 +15,7 @@
   "rewardAmount": 100,
   "bannerAdEnabled": false,
   "bannerAdHtml": "",
-  "estimatedRpm": 2.50,
+  "estimatedRpm": 2.5,
   "pageAds": {
     "home": false,
     "rankings": false,
@@ -28,7 +28,7 @@
     "totalImpressions": 0,
     "totalCompletions": 0,
     "totalSkips": 0,
-    "estimatedRevenue": 0.00,
+    "estimatedRevenue": 0,
     "lastReset": null
   }
 }
