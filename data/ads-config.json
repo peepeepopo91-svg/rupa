@@ -1,0 +1,34 @@
+{
+  "enabled": true,
+  "adProvider": "placeholder",
+  "adsensePublisherId": "",
+  "adsenseSlotId": "",
+  "adDurationSeconds": 5,
+  "renewMode": "ad-required",
+  "showAdOnExpired": true,
+  "showAdOnEarlyRenew": false,
+  "skipAllowed": false,
+  "skipAfterSeconds": 3,
+  "customAdHtml": "",
+  "rewardOnComplete": false,
+  "rewardType": "bluecoin",
+  "rewardAmount": 100,
+  "bannerAdEnabled": false,
+  "bannerAdHtml": "",
+  "estimatedRpm": 2.50,
+  "pageAds": {
+    "home": false,
+    "rankings": false,
+    "mining": false,
+    "exchange": false,
+    "shop": false,
+    "tournament": false
+  },
+  "stats": {
+    "totalImpressions": 0,
+    "totalCompletions": 0,
+    "totalSkips": 0,
+    "estimatedRevenue": 0.00,
+    "lastReset": null
+  }
+}
