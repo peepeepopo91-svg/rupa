@@ -108,11 +108,25 @@ export interface AdStats {
 export interface AdsConfig {
   // ── Core ──────────────────────────────────────────────────────────────────
   enabled: boolean
-  adProvider: 'placeholder' | 'adsense' | 'custom' | 'medianet' | 'ezoic'
+  adProvider: 'placeholder' | 'adsense' | 'custom' | 'medianet' | 'ezoic' | 'propellerads' | 'adsterra' | 'infolinks' | 'monetag' | 'amazon-aps' | 'taboola' | 'mgid' | 'buysellads' | 'carbon'
   adsensePublisherId: string
   adsenseSlotId: string
   medianetSiteId: string
   ezoicSiteId: string
+  // New providers
+  propelleradsZoneId: string
+  adsterraPublisherId: string
+  adsterraDirectLink: string
+  infolinksPublisherId: string
+  infolinksWebsiteId: string
+  monetagWebsiteId: string
+  amazonApsPublisherId: string
+  taboolaSiteId: string
+  mgidClientId: string
+  buyselladsPropertyId: string
+  carbonZoneKey: string
+  // Application tracking
+  networkStatus: Record<string, 'not-applied' | 'applied' | 'pending' | 'approved' | 'rejected'>
   adDurationSeconds: number
   renewMode: 'free' | 'ad-required' | 'ad-optional' | 'disabled'
   showAdOnExpired: boolean
@@ -260,6 +274,18 @@ const DEFAULT_CONFIG: AdsConfig = {
   adsenseSlotId: '',
   medianetSiteId: '',
   ezoicSiteId: '',
+  propelleradsZoneId: '',
+  adsterraPublisherId: '',
+  adsterraDirectLink: '',
+  infolinksPublisherId: '',
+  infolinksWebsiteId: '',
+  monetagWebsiteId: '',
+  amazonApsPublisherId: '',
+  taboolaSiteId: '',
+  mgidClientId: '',
+  buyselladsPropertyId: '',
+  carbonZoneKey: '',
+  networkStatus: {},
   adDurationSeconds: 5,
   renewMode: 'ad-required',
   showAdOnExpired: true,

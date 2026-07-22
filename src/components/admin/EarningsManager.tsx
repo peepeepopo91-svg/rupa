@@ -42,13 +42,73 @@ const TABS = [
 ] as const
 type Tab = typeof TABS[number]['id']
 
-const PROVIDER_OPTIONS = [
-  { value: 'placeholder', label: 'Placeholder',    desc: 'Branded placeholder — no real ad served.' },
-  { value: 'adsense',     label: 'Google AdSense', desc: 'Serve real ads via your AdSense account.' },
-  { value: 'medianet',    label: 'Media.net',      desc: 'Yahoo/Bing contextual ads — high RPM.' },
-  { value: 'ezoic',       label: 'Ezoic',          desc: 'AI-optimised placement & revenue.' },
-  { value: 'custom',      label: 'Custom HTML',    desc: 'Paste any ad network code or iframe.' },
-] as const
+// ─── Provider catalogue ───────────────────────────────────────────────────────
+
+type ProviderCat = 'test' | 'day1' | 'growing' | 'established'
+
+interface ProviderInfo {
+  value: AdsConfig['adProvider']
+  icon: string; name: string; tagline: string
+  rpm: string; traffic: string
+  cat: ProviderCat; difficulty: 'none' | 'easy' | 'medium' | 'hard'
+  color: string; applyUrl: string; note?: string
+}
+
+const PROVIDER_CATALOG: ProviderInfo[] = [
+  // ── Test / Custom ──────────────────────────────────────────────────────────
+  { value: 'placeholder', icon: '🧪', name: 'Placeholder / Test',       tagline: 'Simulate the ad experience without a real account',   rpm: '—',        traffic: 'None',     cat: 'test',        difficulty: 'none',   color: '#6b7280', applyUrl: '' },
+  { value: 'custom',      icon: '✏️',  name: 'Custom HTML / Script',    tagline: 'Paste any embed code, iframe, or ad-network tag',     rpm: 'Varies',   traffic: 'None',     cat: 'test',        difficulty: 'none',   color: '#8b5cf6', applyUrl: '' },
+  // ── Day 1 Ready ────────────────────────────────────────────────────────────
+  { value: 'propellerads',icon: '🚀', name: 'PropellerAds',              tagline: 'Push, interstitial & OnClick — instant approval',     rpm: '$0.50–$4', traffic: 'None',     cat: 'day1',        difficulty: 'easy',   color: '#f97316', applyUrl: 'https://publishers.propellerads.com', note: 'Add zone script to __root.tsx' },
+  { value: 'monetag',     icon: '💰', name: 'Monetag',                   tagline: 'Smart pop & push ads, no minimum traffic required',   rpm: '$0.50–$3', traffic: 'None',     cat: 'day1',        difficulty: 'easy',   color: '#10b981', applyUrl: 'https://monetag.com',                 note: 'Add website script to __root.tsx' },
+  { value: 'adsterra',    icon: '⭐', name: 'Adsterra',                  tagline: 'Social bar, banners & popunder — quick sign-up',      rpm: '$0.50–$5', traffic: 'None',     cat: 'day1',        difficulty: 'easy',   color: '#06b6d4', applyUrl: 'https://adsterra.com',                note: 'Copy direct-link for modal, or banner script' },
+  { value: 'infolinks',   icon: '🔗', name: 'Infolinks',                 tagline: 'In-text & in-fold ads — works with very low traffic', rpm: '$0.30–$3', traffic: '500/mo',   cat: 'day1',        difficulty: 'easy',   color: '#ec4899', applyUrl: 'https://infolinks.com' },
+  // ── Growing Sites ──────────────────────────────────────────────────────────
+  { value: 'buysellads',  icon: '💼', name: 'BuySellAds',               tagline: 'Sell your ad slots directly to advertisers',          rpm: 'Custom',   traffic: 'Any',      cat: 'growing',     difficulty: 'easy',   color: '#3b82f6', applyUrl: 'https://buysellads.com' },
+  { value: 'mgid',        icon: '📡', name: 'MGID',                      tagline: 'Native advertising network with global reach',        rpm: '$1–$4',    traffic: '5k/mo',    cat: 'growing',     difficulty: 'medium', color: '#7c3aed', applyUrl: 'https://mgid.com' },
+  { value: 'amazon-aps',  icon: '📦', name: 'Amazon Publisher Services', tagline: 'Header bidding — excellent fill for gaming audiences', rpm: '$1–$6',    traffic: '10k/mo',   cat: 'growing',     difficulty: 'medium', color: '#f59e0b', applyUrl: 'https://aps.amazon.com' },
+  { value: 'carbon',      icon: '⚡', name: 'Carbon Ads',               tagline: 'Premium tech & gaming niche — single tasteful ad',    rpm: '$2–$8',    traffic: '10k/mo',   cat: 'growing',     difficulty: 'medium', color: '#64748b', applyUrl: 'https://carbonads.net',               note: 'Apply at carbonads.net — curated inventory' },
+  // ── Established ────────────────────────────────────────────────────────────
+  { value: 'adsense',     icon: '🟦', name: 'Google AdSense',            tagline: "World's largest network — best long-term option",    rpm: '$1–$10',   traffic: '3 mo old+',cat: 'established', difficulty: 'medium', color: '#4285F4', applyUrl: 'https://adsense.google.com' },
+  { value: 'medianet',    icon: '🟠', name: 'Media.net',                 tagline: 'Yahoo/Bing contextual — consistently high RPM',      rpm: '$2–$8',    traffic: '5k/mo',    cat: 'established', difficulty: 'medium', color: '#f97316', applyUrl: 'https://media.net' },
+  { value: 'ezoic',       icon: '🟢', name: 'Ezoic',                     tagline: 'AI-optimised ad layout & split-testing',             rpm: '$3–$15',   traffic: '10k/mo',   cat: 'established', difficulty: 'medium', color: '#22c55e', applyUrl: 'https://ezoic.com' },
+  { value: 'taboola',     icon: '📰', name: 'Taboola',                   tagline: 'Native content discovery, strong CPMs worldwide',    rpm: '$1–$5',    traffic: '50k/mo',   cat: 'established', difficulty: 'hard',   color: '#1e40af', applyUrl: 'https://taboola.com' },
+]
+
+const CAT_META: Record<ProviderCat, { label: string; badge: string; color: string }> = {
+  test:        { label: 'Development / Testing',                 badge: '🔧 Dev Only',       color: '#6b7280' },
+  day1:        { label: 'Day 1 Ready — No traffic minimum',      badge: '🟢 Instant Signup', color: '#22c55e' },
+  growing:     { label: 'Growing Sites — 1k–10k monthly visits', badge: '🟡 1k–10k/mo',      color: '#f59e0b' },
+  established: { label: 'Established Sites — 5k+ monthly visits',badge: '🔵 5k+ visits',     color: '#4285F4' },
+}
+
+const DIFF_META = {
+  none:   { label: '',       color: '' },
+  easy:   { label: 'Easy signup',   color: '#22c55e' },
+  medium: { label: 'Review needed', color: '#f59e0b' },
+  hard:   { label: 'High bar',      color: '#ef4444' },
+}
+
+const CHECKLIST_ITEMS = [
+  { id: 'ssl',        label: 'Site is on HTTPS (SSL)',                     desc: 'Mandatory for every ad network' },
+  { id: 'privacy',    label: 'Privacy Policy page published',              desc: 'Link it in your footer — required by law & networks' },
+  { id: 'terms',      label: 'Terms of Service page published',            desc: 'Strongly recommended before running ads' },
+  { id: 'original',   label: 'Site has original, human-readable content',  desc: 'No scraped or thin AI content' },
+  { id: 'analytics',  label: 'Google Analytics (or similar) installed',    desc: 'Networks want to verify your traffic' },
+  { id: 'sitemap',    label: 'Sitemap submitted to Google Search Console',  desc: 'Helps discoverability & credibility' },
+  { id: 'age',        label: 'Domain is at least 30 days old',             desc: 'Some networks require 3–6 months for approval' },
+  { id: 'traffic',    label: 'Receiving regular human traffic',            desc: 'Even 100 real sessions/day opens Day-1 networks' },
+  { id: 'ads-txt',    label: 'ads.txt file added to site root',            desc: 'Required by programmatic networks — list your publisher IDs' },
+  { id: 'no-invalid', label: 'No invalid click sources / bots in traffic', desc: 'Fraudulent traffic gets accounts banned immediately' },
+]
+
+const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
+  'not-applied': { label: 'Not Applied', color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
+  'applied':     { label: 'Applied',     color: '#f59e0b', bg: 'rgba(245,158,11,0.1)'  },
+  'pending':     { label: 'Pending',     color: '#00BFFF', bg: 'rgba(0,191,255,0.1)'   },
+  'approved':    { label: 'Approved ✓',  color: '#22c55e', bg: 'rgba(34,197,94,0.1)'   },
+  'rejected':    { label: 'Rejected',    color: '#ef4444', bg: 'rgba(239,68,68,0.1)'   },
+}
 
 const RENEW_MODES = [
   { value: 'ad-required', label: 'Ad Required',  desc: 'Players must watch the full ad to renew.', color: '#f59e0b' },
@@ -201,6 +261,24 @@ function Badge({ color, children }: { color: string; children: React.ReactNode }
 
 function uid() { return Math.random().toString(36).slice(2, 9) }
 
+function SnippetBox({ label, children }: { label: string; children: string }) {
+  const [copied, setCopied] = useState(false)
+  function copy() {
+    navigator.clipboard.writeText(children).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800) })
+  }
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(0,191,255,0.15)' }}>
+      <div className="flex items-center justify-between px-3.5 py-2" style={{ background: 'rgba(0,191,255,0.06)' }}>
+        <span className="text-[11px] font-semibold text-gray-400">{label}</span>
+        <button onClick={copy} className="text-[11px] font-bold transition-colors" style={{ color: copied ? '#22c55e' : '#00BFFF' }}>
+          {copied ? '✓ Copied' : 'Copy'}
+        </button>
+      </div>
+      <pre className="px-3.5 py-3 text-[11px] text-[#00BFFF] overflow-x-auto leading-relaxed whitespace-pre-wrap break-all" style={{ background: 'rgba(0,10,20,0.5)', margin: 0 }}>{children}</pre>
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function EarningsManager({ admin }: Props) {
@@ -220,6 +298,7 @@ export function EarningsManager({ admin }: Props) {
   const [newMilestone, setNewMilestone] = useState({ amount: '', label: '' })
   const [newRecipient, setNewRecipient] = useState<Partial<RevenueShareRecipient>>({})
   const [newCountry, setNewCountry]     = useState('')
+  const [checklist, setChecklist]       = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     getAdsConfig().then(data => { setCfg(data); setDraft(data); setLoading(false) }).catch(() => setLoading(false))
@@ -442,25 +521,93 @@ export function EarningsManager({ admin }: Props) {
       ══════════════════════════════════════════════════════════════════════ */}
       {tab === 'ad-setup' && (
         <div className="flex flex-col gap-5">
-          <SectionBox title="🎯 Ad Provider">
-            <div className="flex flex-col gap-3">
-              {PROVIDER_OPTIONS.map(opt => (
-                <label key={opt.value}
-                  className="flex items-start gap-3 cursor-pointer rounded-xl p-3.5 transition-all"
-                  style={{ background: draft.adProvider === opt.value ? 'rgba(0,191,255,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${draft.adProvider === opt.value ? 'rgba(0,191,255,0.25)' : 'rgba(255,255,255,0.05)'}` }}
-                >
-                  <input type="radio" name="provider" value={opt.value} checked={draft.adProvider === opt.value} onChange={() => patch('adProvider', opt.value as AdsConfig['adProvider'])} className="mt-1 accent-[#00BFFF]" />
-                  <div><p className="text-sm font-semibold text-white">{opt.label}</p><p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p></div>
-                </label>
-              ))}
+
+          {/* ── New Site Roadmap ──────────────────────────────────────────── */}
+          <div className="rounded-2xl p-5 border" style={{ background: 'linear-gradient(135deg,rgba(0,191,255,0.05),rgba(0,102,255,0.03))', borderColor: 'rgba(0,191,255,0.18)' }}>
+            <div className="flex items-start gap-3">
+              <span className="text-2xl shrink-0">🌱</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-white mb-1">New to monetisation? Start here.</p>
+                <p className="text-xs text-gray-400 mb-3">Premium networks (AdSense, Ezoic, Mediavine) require months of traffic history. The green-tagged providers below accept brand-new sites with zero traffic.</p>
+                <div className="flex flex-wrap gap-2 text-[11px]">
+                  <span className="px-2.5 py-1 rounded-full font-semibold" style={{ background:'rgba(34,197,94,0.1)', color:'#4ade80', border:'1px solid rgba(34,197,94,0.18)' }}>✅ Day 1 — PropellerAds, Monetag, Adsterra, Infolinks</span>
+                  <span className="px-2.5 py-1 rounded-full font-semibold" style={{ background:'rgba(245,158,11,0.1)', color:'#fbbf24', border:'1px solid rgba(245,158,11,0.18)' }}>📈 Month 1–3 — BuySellAds, MGID, Amazon APS</span>
+                  <span className="px-2.5 py-1 rounded-full font-semibold" style={{ background:'rgba(0,191,255,0.1)', color:'#00BFFF', border:'1px solid rgba(0,191,255,0.18)' }}>🏆 Month 6+ — AdSense, Media.net, Ezoic, Taboola</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Pre-flight Checklist ──────────────────────────────────────── */}
+          <SectionBox title="📋 Monetisation Pre-flight Checklist">
+            <p className="text-xs text-gray-500 -mt-2">Tick everything off before applying to any network. Incomplete sites get rejected or banned.</p>
+            <div className="flex flex-col gap-2">
+              {CHECKLIST_ITEMS.map(item => {
+                const done = !!checklist[item.id]
+                return (
+                  <label key={item.id} className="flex items-start gap-3 cursor-pointer rounded-xl p-3 transition-all"
+                    style={{ background: done ? 'rgba(34,197,94,0.04)' : 'rgba(255,255,255,0.02)', border: `1px solid ${done ? 'rgba(34,197,94,0.18)' : 'rgba(255,255,255,0.05)'}` }}>
+                    <input type="checkbox" className="mt-0.5 accent-[#22c55e] shrink-0" checked={done}
+                      onChange={e => setChecklist(c => ({ ...c, [item.id]: e.target.checked }))} />
+                    <div>
+                      <p className={`text-sm font-medium ${done ? 'text-gray-400 line-through' : 'text-white'}`}>{item.label}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{item.desc}</p>
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
+            <div className="flex items-center gap-3 pt-1">
+              <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${(Object.values(checklist).filter(Boolean).length / CHECKLIST_ITEMS.length) * 100}%`, background: 'linear-gradient(90deg,#22c55e,#00BFFF)' }} />
+              </div>
+              <span className="text-xs font-bold text-gray-400 tabular-nums">{Object.values(checklist).filter(Boolean).length}/{CHECKLIST_ITEMS.length}</span>
             </div>
           </SectionBox>
 
+          {/* ── Provider Grid ─────────────────────────────────────────────── */}
+          <SectionBox title="🎯 Choose Ad Provider">
+            {(['test','day1','growing','established'] as ProviderCat[]).map(cat => (
+              <div key={cat} className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: CAT_META[cat].color }}>{CAT_META[cat].badge}</span>
+                  <span className="text-[11px] text-gray-600">{CAT_META[cat].label}</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2">
+                  {PROVIDER_CATALOG.filter(p => p.cat === cat).map(p => {
+                    const active = draft.adProvider === p.value
+                    return (
+                      <button key={p.value} onClick={() => patch('adProvider', p.value)}
+                        className="flex items-start gap-3 rounded-xl p-3.5 text-left transition-all"
+                        style={{ background: active ? `${p.color}12` : 'rgba(255,255,255,0.02)', border: `1px solid ${active ? p.color + '50' : 'rgba(255,255,255,0.06)'}`, outline: 'none' }}>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: `${p.color}18`, border: `1px solid ${p.color}30` }}>{p.icon}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-semibold text-white leading-tight">{p.name}</p>
+                            {active && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background:`${p.color}25`, color: p.color }}>Selected</span>}
+                            {p.difficulty !== 'none' && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background:`${DIFF_META[p.difficulty].color}15`, color: DIFF_META[p.difficulty].color }}>{DIFF_META[p.difficulty].label}</span>}
+                          </div>
+                          <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">{p.tagline}</p>
+                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                            <span className="text-[10px] text-gray-600">RPM: <span className="text-gray-400 font-medium">{p.rpm}</span></span>
+                            <span className="text-[10px] text-gray-600">Min: <span className="text-gray-400 font-medium">{p.traffic}</span></span>
+                            {p.applyUrl && <a href={p.applyUrl} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} className="text-[10px] font-semibold hover:underline" style={{ color: p.color }}>Apply ↗</a>}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </SectionBox>
+
+          {/* ── Per-provider Settings ─────────────────────────────────────── */}
+
           {draft.adProvider === 'adsense' && (
-            <SectionBox title="📋 Google AdSense Settings">
-              <InfoBanner icon="⚠️" color="#f59e0b">
-                <span className="font-semibold text-amber-400">Before you start — </span>
-                add the AdSense <code className="text-[#00BFFF]">&lt;script&gt;</code> tag to <code className="text-[#00BFFF]">src/routes/__root.tsx</code>.{' '}
+            <SectionBox title="🟦 Google AdSense Settings">
+              <InfoBanner icon="⚠️" color="#4285F4">
+                <span className="font-semibold text-blue-400">Requires 3–6 months of original content</span> and a real privacy policy before applying.{' '}
                 <a href="https://support.google.com/adsense" target="_blank" rel="noopener" className="text-[#00BFFF] underline">AdSense Help ↗</a>
               </InfoBanner>
               <Field label="Publisher ID" desc="Format: ca-pub-XXXXXXXXXXXXXXXX">
@@ -469,28 +616,151 @@ export function EarningsManager({ admin }: Props) {
               <Field label="Ad Slot ID" desc="The slot ID from your AdSense ad unit">
                 <Input value={draft.adsenseSlotId} onChange={v => patch('adsenseSlotId', v)} placeholder="1234567890" />
               </Field>
-              <div className="text-[11px] text-gray-600 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <p className="font-semibold text-gray-500 mb-1">Paste into <code>src/routes/__root.tsx</code> &lt;head&gt;:</p>
-                <code className="text-[#00BFFF] break-all">{`<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${draft.adsensePublisherId || 'ca-pub-XXXX'}" crossorigin="anonymous"></script>`}</code>
-              </div>
+              <SnippetBox label="Add to <head> in src/routes/__root.tsx">
+                {`<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${draft.adsensePublisherId || 'ca-pub-XXXX'}" crossorigin="anonymous"></script>`}
+              </SnippetBox>
             </SectionBox>
           )}
 
           {draft.adProvider === 'medianet' && (
             <SectionBox title="🟠 Media.net Settings">
-              <InfoBanner icon="ℹ️" color="#f97316">Apply for a Media.net account at <a href="https://www.media.net" target="_blank" rel="noopener" className="text-[#00BFFF] underline">media.net ↗</a>. Once approved you'll receive a Site ID.</InfoBanner>
+              <InfoBanner icon="ℹ️" color="#f97316">Apply at <a href="https://www.media.net" target="_blank" rel="noopener" className="text-[#00BFFF] underline">media.net ↗</a>. Site must have substantial English-language content for approval.</InfoBanner>
               <Field label="Site ID" desc="Your Media.net publisher site ID">
                 <Input value={draft.medianetSiteId} onChange={v => patch('medianetSiteId', v)} placeholder="123456789" />
               </Field>
+              <SnippetBox label="Add to <head> in src/routes/__root.tsx">
+                {`<script src="https://contextual.media.net/dmedianet.js?cid=${draft.medianetSiteId || 'XXXXXXX'}" async></script>`}
+              </SnippetBox>
             </SectionBox>
           )}
 
           {draft.adProvider === 'ezoic' && (
             <SectionBox title="🟢 Ezoic Settings">
-              <InfoBanner icon="ℹ️" color="#22c55e">Ezoic requires DNS integration. Visit <a href="https://www.ezoic.com" target="_blank" rel="noopener" className="text-[#00BFFF] underline">ezoic.com ↗</a> for setup.</InfoBanner>
-              <Field label="Site ID" desc="Your Ezoic site ID">
+              <InfoBanner icon="ℹ️" color="#22c55e">Ezoic uses DNS-level integration — your domain nameservers point to Ezoic's CDN. Visit <a href="https://www.ezoic.com" target="_blank" rel="noopener" className="text-[#00BFFF] underline">ezoic.com ↗</a>.</InfoBanner>
+              <Field label="Site ID" desc="Your numeric Ezoic site ID">
                 <Input value={draft.ezoicSiteId} onChange={v => patch('ezoicSiteId', v)} placeholder="12345" />
               </Field>
+              <SnippetBox label="Add to <head> after DNS switch">
+                {`<script async src="https://go.ezoic.net/ezoic/ezoic-pub-ad-placeholder.js"></script>\n<script src="https://the.gatekeeperconsent.com/cmp.min.js" data-cfasync="false"></script>`}
+              </SnippetBox>
+            </SectionBox>
+          )}
+
+          {draft.adProvider === 'propellerads' && (
+            <SectionBox title="🚀 PropellerAds Settings">
+              <InfoBanner icon="✅" color="#f97316">Instant approval — sign up at <a href="https://publishers.propellerads.com" target="_blank" rel="noopener" className="text-[#00BFFF] underline">publishers.propellerads.com ↗</a>. Zone ID is shown in your publisher dashboard.</InfoBanner>
+              <Field label="Zone ID" desc="Your PropellerAds publisher zone ID">
+                <Input value={draft.propelleradsZoneId} onChange={v => patch('propelleradsZoneId', v)} placeholder="1234567" />
+              </Field>
+              <SnippetBox label="Push / Native script — paste into <body> of __root.tsx">
+                {`<script>(function(s,u,z,p){s.src=u,s.setAttribute('data-zone',z),p.parentNode.insertBefore(s,p);})(document.createElement('script'),'https://noticer.propellerads.com/notificator.js','${draft.propelleradsZoneId || 'ZONE_ID'}',document.currentScript)</script>`}
+              </SnippetBox>
+            </SectionBox>
+          )}
+
+          {draft.adProvider === 'monetag' && (
+            <SectionBox title="💰 Monetag Settings">
+              <InfoBanner icon="✅" color="#10b981">No minimum traffic — create your account at <a href="https://monetag.com" target="_blank" rel="noopener" className="text-[#00BFFF] underline">monetag.com ↗</a> and add your website to get the ID.</InfoBanner>
+              <Field label="Website ID" desc="Your Monetag website/zone ID">
+                <Input value={draft.monetagWebsiteId} onChange={v => patch('monetagWebsiteId', v)} placeholder="1234567" />
+              </Field>
+              <SnippetBox label="Add to <head> in __root.tsx">
+                {`<script src="https://web.push.games/pfe/current/tag.min.js?z=${draft.monetagWebsiteId || 'WEBSITE_ID'}" data-cfasync="false" async></script>`}
+              </SnippetBox>
+            </SectionBox>
+          )}
+
+          {draft.adProvider === 'adsterra' && (
+            <SectionBox title="⭐ Adsterra Settings">
+              <InfoBanner icon="✅" color="#06b6d4">Accepts new sites. Sign up at <a href="https://adsterra.com" target="_blank" rel="noopener" className="text-[#00BFFF] underline">adsterra.com ↗</a>. Use the Social Bar or Direct Link for gaming audiences.</InfoBanner>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Publisher ID" desc="Your Adsterra publisher account ID">
+                  <Input value={draft.adsterraPublisherId} onChange={v => patch('adsterraPublisherId', v)} placeholder="12345678" />
+                </Field>
+                <Field label="Direct Link URL" desc="Optional — use in the renew-button ad modal">
+                  <Input value={draft.adsterraDirectLink} onChange={v => patch('adsterraDirectLink', v)} placeholder="https://www.highcpmgate.com/..." />
+                </Field>
+              </div>
+              <SnippetBox label="Social Bar script — paste before </body> in __root.tsx">
+                {`<!-- Adsterra Social Bar -->\n<script async="async" data-cfasync="false" src="//pl${draft.adsterraPublisherId || 'XXXXXXXX'}.highcpmgate.com/invoke.js"></script>`}
+              </SnippetBox>
+            </SectionBox>
+          )}
+
+          {draft.adProvider === 'infolinks' && (
+            <SectionBox title="🔗 Infolinks Settings">
+              <InfoBanner icon="✅" color="#ec4899">Very low approval bar — apply at <a href="https://www.infolinks.com" target="_blank" rel="noopener" className="text-[#00BFFF] underline">infolinks.com ↗</a>. Displays non-intrusive in-text & in-fold units.</InfoBanner>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Publisher ID (pid)" desc="From your Infolinks dashboard">
+                  <Input value={draft.infolinksPublisherId} onChange={v => patch('infolinksPublisherId', v)} placeholder="1234567" />
+                </Field>
+                <Field label="Website ID (wsid)" desc="From your Infolinks dashboard">
+                  <Input value={draft.infolinksWebsiteId} onChange={v => patch('infolinksWebsiteId', v)} placeholder="0" />
+                </Field>
+              </div>
+              <SnippetBox label="Paste before </body> in __root.tsx">
+                {`<script>\nvar pid = ${draft.infolinksPublisherId || 'YOUR_PID'}, wsid = ${draft.infolinksWebsiteId || 'YOUR_WSID'};\n(function() {\nvar il = document.createElement('script');\nil.type = 'text/javascript';\nil.async = true;\nil.src = '//resources.infolinks.com/js/infolinks_main.js';\nvar script = document.getElementsByTagName('script')[0];\nscript.parentNode.insertBefore(il, script);\n})();\n</script>`}
+              </SnippetBox>
+            </SectionBox>
+          )}
+
+          {draft.adProvider === 'amazon-aps' && (
+            <SectionBox title="📦 Amazon Publisher Services Settings">
+              <InfoBanner icon="ℹ️" color="#f59e0b">Apply at <a href="https://aps.amazon.com" target="_blank" rel="noopener" className="text-[#00BFFF] underline">aps.amazon.com ↗</a>. Requires ~10k monthly sessions. Uses header bidding via their UAM/TAM tags.</InfoBanner>
+              <Field label="Publisher ID" desc="Your Amazon APS publisher/entity ID">
+                <Input value={draft.amazonApsPublisherId} onChange={v => patch('amazonApsPublisherId', v)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+              </Field>
+              <SnippetBox label="Add to <head> in __root.tsx (TAM integration)">
+                {`<script>\nvar apstag = window.apstag || {};\napstag._Q = apstag._Q || [];\napstag.cmd = function() { apstag._Q.push(arguments); };\n</script>\n<script async src="https://c.amazon-adsystem.com/aax2/apstag.js"></script>`}
+              </SnippetBox>
+            </SectionBox>
+          )}
+
+          {draft.adProvider === 'taboola' && (
+            <SectionBox title="📰 Taboola Settings">
+              <InfoBanner icon="ℹ️" color="#1e40af">Requires significant traffic (50k+ monthly pageviews). Apply at <a href="https://www.taboola.com/publishers" target="_blank" rel="noopener" className="text-[#00BFFF] underline">taboola.com ↗</a>. Great for content-discovery sidebar units.</InfoBanner>
+              <Field label="Site ID" desc="Your Taboola publisher site ID">
+                <Input value={draft.taboolaSiteId} onChange={v => patch('taboolaSiteId', v)} placeholder="your-site-name" />
+              </Field>
+              <SnippetBox label="Add to <head> in __root.tsx">
+                {`<script type="text/javascript">\nwindow._taboola = window._taboola || [];\n_taboola.push({article:'auto'});\n!function(e,f,u,i){\nif(!document.getElementById(i)){e.async=1;e.src=u;\ne.id=i;f.parentNode.insertBefore(e,f);\n}}(document.createElement('script'),document.getElementsByTagName('script')[0],\n'//cdn.taboola.com/libtrc/${draft.taboolaSiteId || 'YOUR-SITE-ID'}/loader.js','tb_loader_script');\nif(window.performance&&typeof window.performance.mark=='function')\n{window.performance.mark('tbl_ic');}\n</script>`}
+              </SnippetBox>
+            </SectionBox>
+          )}
+
+          {draft.adProvider === 'mgid' && (
+            <SectionBox title="📡 MGID Settings">
+              <InfoBanner icon="ℹ️" color="#7c3aed">Apply at <a href="https://www.mgid.com" target="_blank" rel="noopener" className="text-[#00BFFF] underline">mgid.com ↗</a>. Good native fill for gaming/entertainment sites. Minimum ~5k monthly visits.</InfoBanner>
+              <Field label="Client ID" desc="Your MGID client / widget ID">
+                <Input value={draft.mgidClientId} onChange={v => patch('mgidClientId', v)} placeholder="123456" />
+              </Field>
+              <SnippetBox label="Widget script — paste in the ad placement location">
+                {`<!-- MGID Native Widget -->\n<div id="M${draft.mgidClientId || 'XXXXXX'}"></div>\n<script src="//jsc.mgid.com/d/e/${draft.mgidClientId || 'XXXXXX'}.js" async></script>`}
+              </SnippetBox>
+            </SectionBox>
+          )}
+
+          {draft.adProvider === 'buysellads' && (
+            <SectionBox title="💼 BuySellAds Settings">
+              <InfoBanner icon="ℹ️" color="#3b82f6">BuySellAds lets you sell ad space directly to brands. Apply at <a href="https://buysellads.com/publishers" target="_blank" rel="noopener" className="text-[#00BFFF] underline">buysellads.com ↗</a>. No traffic minimum to list — but high-traffic sites earn more.</InfoBanner>
+              <Field label="Property / Zone ID" desc="From your BuySellAds publisher dashboard">
+                <Input value={draft.buyselladsPropertyId} onChange={v => patch('buyselladsPropertyId', v)} placeholder="CVYYIKKN" />
+              </Field>
+              <SnippetBox label="Carbon-style async tag — paste in ad placement div">
+                {`<!-- BuySellAds Zone -->\n<script async src="//cdn.buysellads.net/pub/\n${draft.buyselladsPropertyId || 'YOUR_PROPERTY'}.js"></script>`}
+              </SnippetBox>
+            </SectionBox>
+          )}
+
+          {draft.adProvider === 'carbon' && (
+            <SectionBox title="⚡ Carbon Ads Settings">
+              <InfoBanner icon="ℹ️" color="#64748b">Carbon Ads serves one tasteful ad per page — ideal for developer/gaming audiences. Apply at <a href="https://carbonads.net/publishers.html" target="_blank" rel="noopener" className="text-[#00BFFF] underline">carbonads.net ↗</a>. Invite-only — email them with your traffic stats.</InfoBanner>
+              <Field label="Zone Key" desc="Your Carbon Ads zone key">
+                <Input value={draft.carbonZoneKey} onChange={v => patch('carbonZoneKey', v)} placeholder="CKYIEK3W" />
+              </Field>
+              <SnippetBox label="Paste wherever you want the ad to appear">
+                {`<script async type="text/javascript" src="//cdn.carbonads.com/carbon.js?serve=${draft.carbonZoneKey || 'YOUR_ZONE'}&placement=yoursite" id="_carbonads_js"></script>`}
+              </SnippetBox>
             </SectionBox>
           )}
 
@@ -502,6 +772,43 @@ export function EarningsManager({ admin }: Props) {
             </SectionBox>
           )}
 
+          {/* ── Network Application Tracker ───────────────────────────────── */}
+          <SectionBox title="📊 Network Application Tracker">
+            <p className="text-xs text-gray-500 -mt-2">Track the status of your ad network applications. Saved with your config.</p>
+            <div className="flex flex-col gap-2">
+              {PROVIDER_CATALOG.filter(p => p.cat !== 'test').map(p => {
+                const status = (draft.networkStatus?.[p.value] ?? 'not-applied') as keyof typeof STATUS_META
+                const sm = STATUS_META[status]
+                return (
+                  <div key={p.value} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span className="text-base w-6 text-center shrink-0">{p.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{p.name}</p>
+                      <p className="text-[11px] text-gray-600 truncate">{p.applyUrl}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ color: sm.color, background: sm.bg }}>{sm.label}</span>
+                      <select
+                        value={status}
+                        onChange={e => patch('networkStatus', { ...draft.networkStatus, [p.value]: e.target.value as AdsConfig['networkStatus'][string] })}
+                        className="text-[11px] rounded-lg px-2 py-1 outline-none"
+                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af' }}
+                      >
+                        <option value="not-applied">Not Applied</option>
+                        <option value="applied">Applied</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                      {p.applyUrl && <a href={p.applyUrl} target="_blank" rel="noopener" className="text-[11px] font-semibold text-[#00BFFF] hover:underline shrink-0">Apply ↗</a>}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </SectionBox>
+
+          {/* ── Ad Duration & Format ──────────────────────────────────────── */}
           <SectionBox title="⏱️ Ad Duration & Format">
             <Field label="Duration (seconds)" desc="How long the player must watch before they can continue.">
               <Slider min={3} max={60} value={draft.adDurationSeconds} onChange={v => patch('adDurationSeconds', v)} unit="s" />
