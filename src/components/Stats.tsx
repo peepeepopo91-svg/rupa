@@ -1,18 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import players from '../data/players'
-import { computeRankings } from '../data/tiers'
-
-const rankings = computeRankings(players)
-
-const totalRanked = players.filter((p) =>
-  Object.values(p.ranks).some(Boolean)
-).length
-
-const ht1Players = players.filter((p) =>
-  Object.values(p.ranks).some((t) => t === 'HT1')
-).length
-
-const yearsRunning = 2
+import type { Player } from '../data/players'
 
 function useCountUp(target: number, duration = 1600, active: boolean) {
   const [count, setCount] = useState(0)
@@ -80,14 +67,26 @@ function StatCard({
   )
 }
 
-export function Stats() {
+export function Stats({ players }: { players: Player[] }) {
+  // Total players who have at least one ranked gamemode
+  const totalRanked = players.filter((p) =>
+    Object.values(p.ranks).some((t) => t && t !== 'NONE' && t !== 'None')
+  ).length
+
+  // Total individual rank placements (one "test" per player-gamemode pair that has a rank)
+  const testsCompleted = players.reduce((acc, p) =>
+    acc + Object.values(p.ranks).filter((t) => t && t !== 'NONE' && t !== 'None').length
+  , 0)
+
+  const yearsRunning = 2
+
   return (
     <section className="py-16 px-4 relative">
       <div className="max-w-3xl mx-auto">
         <div className="grid grid-cols-3 gap-8 sm:gap-16">
-          <StatCard value={totalRanked} label="Total Testers" />
-          <StatCard value={ht1Players * 200 + 993} label="Tests Completed" accent />
-          <StatCard value={yearsRunning} label="Years Running" suffix="+" />
+          <StatCard value={totalRanked}    label="Total Players" />
+          <StatCard value={testsCompleted} label="Tests Completed" accent />
+          <StatCard value={yearsRunning}   label="Years Running" suffix="+" />
         </div>
       </div>
     </section>
