@@ -78,7 +78,7 @@ export function Stats({ players }: { players: Player[] }) {
     acc + Object.values(p.ranks).filter((t) => t && t !== 'NONE' && t !== 'None').length
   , 0)
 
-  const yearsRunning = 2
+  const yearsRunning = 1
 
   return (
     <section className="py-16 px-4 relative">

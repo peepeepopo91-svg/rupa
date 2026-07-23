@@ -2,6 +2,8 @@ import { Link } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { getSiteContent, CONTENT_DEFAULTS } from '../store/contentStore'
 import { ExternalLink } from 'lucide-react'
+import { LegalModal } from './LegalModal'
+import type { LegalDoc } from './LegalModal'
 
 const DiscordIcon = ({ size = 20 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -29,9 +31,12 @@ const YouTubeIcon = () => (
 
 export function Footer() {
   const [content, setContent] = useState(CONTENT_DEFAULTS)
+  const [legalDoc, setLegalDoc] = useState<LegalDoc | null>(null)
   useEffect(() => { setContent(getSiteContent()) }, [])
 
   return (
+    <>
+    <LegalModal doc={legalDoc} onClose={() => setLegalDoc(null)} />
     <footer className="relative bg-black border-t border-[#111111] overflow-hidden">
       {/* Large watermark logo */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" aria-hidden>
@@ -113,16 +118,18 @@ export function Footer() {
           <div>
             <p className="text-[#444444] text-xs font-medium mb-4 tracking-widest uppercase">legal</p>
             <ul className="space-y-3">
-              {[
-                'Terms of Service',
-                'Privacy Policy',
-                'Refund Policy',
-                'Screenshare Rules',
-              ].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-[#666666] hover:text-white text-sm transition-colors duration-150">
-                    {item}
-                  </a>
+              {([
+                ['Terms of Service', 'terms'],
+                ['Privacy Policy',   'privacy'],
+                ['Screenshare Rules','screenshare'],
+              ] as [string, LegalDoc][]).map(([label, doc]) => (
+                <li key={doc}>
+                  <button
+                    onClick={() => setLegalDoc(doc)}
+                    className="text-[#666666] hover:text-white text-sm transition-colors duration-150 text-left"
+                  >
+                    {label}
+                  </button>
                 </li>
               ))}
               <li>
@@ -166,5 +173,6 @@ export function Footer() {
         </div>
       </div>
     </footer>
+    </>
   )
 }
