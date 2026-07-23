@@ -68,7 +68,7 @@ export function ShopItemCard({ item, userGems, onBuy }: Props) {
         {/* Price + Buy */}
         <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/5">
           <div className="flex items-center gap-1.5">
-            <span className="text-purple-400 text-sm">✨</span>
+            <span className="text-blue-400 text-sm">✨</span>
             <span className={`font-black text-sm ${canAfford ? 'text-white' : 'text-gray-600'}`}>
               {formatGems(item.price)}
             </span>

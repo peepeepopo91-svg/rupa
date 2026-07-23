@@ -105,7 +105,7 @@ export function ShopPage() {
     <div className="min-h-screen">
 
       {/* ── Hero Header ─────────────────────────────────────────────────────── */}
-      <section className="relative pt-64 pb-12 px-4 overflow-hidden">
+      <section className="relative pt-36 pb-12 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0066FF]/5 to-transparent pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-64 bg-[#00BFFF]/12 blur-[120px] pointer-events-none" />
 
@@ -125,7 +125,7 @@ export function ShopPage() {
           {/* Gem balance */}
           {user ? (
             <div className="mt-6 inline-flex items-center gap-3 px-5 py-3 rounded-2xl glass border border-white/8">
-              <span className="text-purple-400">✨</span>
+              <span className="text-blue-400">✨</span>
               <span className="text-white font-black text-lg">{Math.floor(userGems).toLocaleString()}</span>
               <span className="text-gray-500 text-sm">Gems</span>
               <div className="w-px h-5 bg-white/10" />
@@ -155,7 +155,7 @@ export function ShopPage() {
               <span>{icon}</span>
               {label}
               {t === 'history' && purchases.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-[10px] font-bold">
+                <span className="px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-bold">
                   {purchases.length}
                 </span>
               )}

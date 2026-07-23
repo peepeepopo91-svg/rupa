@@ -110,7 +110,7 @@ export function PurchaseModal({ item, userGems, onConfirm, onClose }: Props) {
             </div>
             <div className="border-t border-white/8 pt-2.5 flex justify-between">
               <span className="text-gray-400 font-semibold">Total cost</span>
-              <span className={`font-black text-base ${canAfford ? 'text-purple-400' : 'text-red-400'}`}>
+              <span className={`font-black text-base ${canAfford ? 'text-[#00BFFF]' : 'text-red-400'}`}>
                 ✨ {totalCost.toLocaleString()} Gems
               </span>
             </div>
