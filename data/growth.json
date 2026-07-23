@@ -3,25 +3,25 @@
   "peakConcurrentEver": 2,
   "dailyStats": {
     "2026-07-23": {
-      "pageViews": 10,
+      "pageViews": 12,
       "uniqueSessions": 3,
       "pages": {
         "/": 3,
-        "/mining": 7
+        "/mining": 9
       },
       "referrers": {
-        "Referral": 7,
+        "Referral": 9,
         "Direct": 3
       },
       "devices": {
-        "Desktop": 10
+        "Desktop": 12
       },
       "browsers": {
-        "Firefox": 8,
+        "Firefox": 10,
         "Chrome": 2
       },
       "os": {
-        "Linux": 10
+        "Linux": 12
       },
       "peakConcurrent": 2
     }
