@@ -14,7 +14,7 @@ export const Route = createFileRoute('/shop')({
 
 function ShopLayout() {
   return (
-    <div className="min-h-screen bg-[#0B0F17]">
+    <div className="min-h-screen">
       <Navbar />
       <ShopPage />
       <Footer />

@@ -126,22 +126,21 @@ function RankingsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#0B0F17]">
+    <div className="min-h-screen">
       <Navbar />
 
       {/* Page header */}
-      <section className="relative pt-64 pb-12 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#00BFFF]/5 to-transparent pointer-events-none" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-64 bg-[#0066FF]/10 blur-[100px] pointer-events-none" />
+      <section className="relative pt-36 pb-12 px-4 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/15 to-transparent pointer-events-none" />
         <div className="max-w-6xl mx-auto text-center relative">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#00BFFF]/20 bg-[#00BFFF]/5 text-[#00BFFF] text-xs font-semibold mb-6 tracking-wide uppercase">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/60 text-xs font-semibold mb-5 tracking-wide uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-[#00BFFF] animate-pulse" />
             Live Rankings
           </div>
-          <h1 className="font-['Space_Grotesk'] font-black text-4xl sm:text-5xl text-white mb-4">
+          <h1 className="font-black text-4xl sm:text-5xl text-white mb-3">
             Player <span className="text-gradient">Rankings</span>
           </h1>
-          <p className="text-gray-500 max-w-md mx-auto">
+          <p className="text-white/40 max-w-md mx-auto text-sm">
             Official tier placements for the Blue Tiers network.
           </p>
         </div>

@@ -1,6 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { loadSeoConfig } from '../server/publishServer'
 import { GrowthBeacon }  from '../components/GrowthBeacon'
+import { StarField } from '../components/StarField'
 import '../styles.css'
 
 export const Route = createRootRoute({
@@ -103,8 +104,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="bg-[#0B0F17] text-white font-['Inter'] antialiased">
-        {children}
+      <body className="text-white font-['Inter'] antialiased" style={{ background: '#08000e' }}>
+        {/* Global fixed background: starfield + purple gradient glow */}
+        <div className="fixed inset-0 pointer-events-none z-0" aria-hidden>
+          <StarField />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(ellipse 90% 65% at 55% 0%, rgba(100,20,160,0.40) 0%, transparent 62%), ' +
+                'radial-gradient(ellipse 60% 40% at 20% 30%, rgba(60,0,120,0.20) 0%, transparent 55%)',
+            }}
+          />
+        </div>
+        {/* All page content sits above the background */}
+        <div className="relative z-10">
+          {children}
+        </div>
         <GrowthBeacon />
         <Scripts />
       </body>

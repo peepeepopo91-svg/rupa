@@ -66,25 +66,23 @@ function TournamentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0B0F17] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <span className="w-8 h-8 border-2 border-white/10 border-t-[#00BFFF] rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-white">
+    <div className="min-h-screen text-white">
       <Navbar />
 
-      {/* Page hero — matches rankings/mining style */}
-      <section className="relative pt-64 pb-10 px-4 overflow-hidden">
-        {/* Ambient glow */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#00BFFF]/5 to-transparent pointer-events-none" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-64 bg-[#00BFFF]/10 blur-[110px] pointer-events-none" />
+      {/* Page hero */}
+      <section className="relative pt-36 pb-10 px-4 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/15 to-transparent pointer-events-none" />
 
         <div className="max-w-6xl mx-auto text-center relative">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#00BFFF]/20 bg-[#00BFFF]/5 text-[#00BFFF] text-xs font-semibold mb-6 tracking-wide uppercase">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/60 text-xs font-semibold mb-5 tracking-wide uppercase">
             {active?.status === 'live'
               ? <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
               : <span className="w-1.5 h-1.5 rounded-full bg-[#00BFFF] animate-pulse" />
@@ -92,10 +90,10 @@ function TournamentPage() {
             {active ? `${STATUS_LABEL[active.status]} · ${active.name}` : 'Tournament Hub'}
           </div>
 
-          <h1 className="font-['Space_Grotesk'] font-black text-4xl sm:text-5xl text-white mb-4">
+          <h1 className="font-black text-4xl sm:text-5xl text-white mb-3">
             Blue Network <span className="text-gradient">Tournaments</span>
           </h1>
-          <p className="text-gray-500 max-w-md mx-auto text-sm">
+          <p className="text-white/40 max-w-md mx-auto text-sm">
             Register your team, track live brackets, and compete for glory on the Blue Network.
           </p>
 
