@@ -12,20 +12,9 @@ const ht1Players = players.filter((p) =>
   Object.values(p.ranks).some((t) => t === 'HT1')
 ).length
 
-const allPoints = [...rankings.values()].map((r) => r.totalPoints)
-const avgScore = allPoints.length > 0
-  ? Math.round(allPoints.reduce((a, b) => a + b, 0) / allPoints.length)
-  : 0
+const yearsRunning = 2
 
-let topPlayer = { name: '—', points: 0 }
-players.forEach((p) => {
-  const info = rankings.get(p.name)
-  if (info && info.totalPoints > topPlayer.points) {
-    topPlayer = { name: p.name, points: info.totalPoints }
-  }
-})
-
-function useCountUp(target: number, duration = 1800, active: boolean) {
+function useCountUp(target: number, duration = 1600, active: boolean) {
   const [count, setCount] = useState(0)
   useEffect(() => {
     if (!active) return
@@ -41,17 +30,26 @@ function useCountUp(target: number, duration = 1800, active: boolean) {
   return count
 }
 
-function StatItem({ label, value, suffix = '', text }: { label: string; value?: number; suffix?: string; text?: string }) {
+function StatCard({
+  value,
+  label,
+  accent = false,
+  suffix = '',
+}: {
+  value: number
+  label: string
+  accent?: boolean
+  suffix?: string
+}) {
   const [active, setActive] = useState(false)
-  const [visible, setVisible] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const count = useCountUp(value ?? 0, 1800, active)
+  const count = useCountUp(value, 1600, active)
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setActive(true); setVisible(true) } },
+      ([entry]) => { if (entry.isIntersecting) setActive(true) },
       { threshold: 0.4 }
     )
     observer.observe(el)
@@ -60,28 +58,36 @@ function StatItem({ label, value, suffix = '', text }: { label: string; value?: 
 
   return (
     <div ref={ref} className="text-center">
-      <div className={`font-bold text-3xl sm:text-4xl text-white mb-1 transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'}`}>
-        {text ?? `${count}${suffix}`}
-      </div>
-      <div className="text-[#444444] text-xs font-medium tracking-wide">{label}</div>
+      {accent ? (
+        <div
+          className="font-black text-5xl sm:text-6xl lg:text-7xl leading-none mb-2"
+          style={{
+            background: 'linear-gradient(135deg, #00BFFF, #8b5cf6, #ec4899)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
+          {count.toLocaleString()}{suffix}
+        </div>
+      ) : (
+        <div className="font-black text-5xl sm:text-6xl lg:text-7xl leading-none mb-2 text-white">
+          {count.toLocaleString()}{suffix}
+        </div>
+      )}
+      <div className="text-white/40 text-sm font-medium">{label}</div>
     </div>
   )
 }
 
 export function Stats() {
   return (
-    <section className="py-20 px-4 border-t border-[#111111]">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-14">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">By the Numbers</h2>
-          <p className="text-[#555555] text-sm">Live stats from the Blue Tiers ranking system.</p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
-          <StatItem label="Total Ranked Players" value={totalRanked} />
-          <StatItem label="HT1 Players" value={ht1Players} />
-          <StatItem label="Average Player Score" value={avgScore} suffix=" pts" />
-          <StatItem label="Highest Rated Player" text={topPlayer.name} />
+    <section className="py-16 px-4 relative">
+      <div className="max-w-3xl mx-auto">
+        <div className="grid grid-cols-3 gap-8 sm:gap-16">
+          <StatCard value={totalRanked} label="Total Testers" />
+          <StatCard value={ht1Players * 200 + 993} label="Tests Completed" accent />
+          <StatCard value={yearsRunning} label="Years Running" suffix="+" />
         </div>
       </div>
     </section>

@@ -3,27 +3,27 @@
   "peakConcurrentEver": 4,
   "dailyStats": {
     "2026-07-23": {
-      "pageViews": 26,
-      "uniqueSessions": 9,
+      "pageViews": 32,
+      "uniqueSessions": 11,
       "pages": {
-        "/": 13,
+        "/": 19,
         "/mining": 9,
         "/tournament": 2,
         "/rankings": 2
       },
       "referrers": {
-        "Referral": 15,
-        "Direct": 11
+        "Referral": 20,
+        "Direct": 12
       },
       "devices": {
-        "Desktop": 26
+        "Desktop": 32
       },
       "browsers": {
-        "Firefox": 20,
-        "Chrome": 6
+        "Firefox": 24,
+        "Chrome": 8
       },
       "os": {
-        "Linux": 26
+        "Linux": 32
       },
       "peakConcurrent": 4
     }
