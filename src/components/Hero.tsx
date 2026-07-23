@@ -120,7 +120,7 @@ function CopyIPButton() {
 
 export function Hero() {
   return (
-    <section className="relative flex flex-col items-center justify-center min-h-screen text-center px-4 pt-14 pb-8">
+    <section className="relative flex flex-col items-center justify-center min-h-screen text-center px-4 pt-20 pb-8">
       {/* Live ticker */}
       <LiveTicker />
 
