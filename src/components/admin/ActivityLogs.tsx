@@ -66,52 +66,6 @@ const SEVERITY_DOT = {
   success: 'bg-green-400',
 }
 
-// ─── Demo log seeder ──────────────────────────────────────────────────────────
-
-function seedDemoLogs(admin: string) {
-  const demos: Array<[string, string]> = [
-    ['player:add',        'Added player: Technoblade'],
-    ['player:edit',       'Edited player: Dream'],
-    ['economy:save',      'Saved 3 overrides'],
-    ['player:add',        'Added player: Wilbur'],
-    ['content:save',      'Updated site content settings'],
-    ['user:create',       'Created user "notch" — cred:true player:true mining:false'],
-    ['mining:give',       'Gave 500 gems to PhilzaMinecraft'],
-    ['player:delete',     'Deleted player: BadBoyHalo'],
-    ['publish-config',    'Saved publish / SEO settings'],
-    ['gamemode:add',      'Crystal PvP (crystal)'],
-    ['player:edit',       'Edited player: Skeppy'],
-    ['user:edit',         'Enabled mining account for GeorgeNotFound'],
-    ['event:save',        'Updated event: "PvP World Cup 2025"'],
-    ['credentials:update','Changed: password1'],
-    ['player:import',     'Imported 42 players'],
-    ['economy:reset',     'Reset all economy overrides to defaults'],
-    ['mining:renewal',    'Renewed mining session for xNestorio'],
-    ['player:add',        'Added player: Quig'],
-    ['player:repair',     'Repair complete: fixed 2 missing tiers'],
-    ['earnings:save',     'Saved earnings config — provider: adsense, mode: auto'],
-  ]
-
-  const now = Date.now()
-  const existing = getLogs()
-  if (existing.length > 0) return
-
-  demos.forEach(([action, details], i) => {
-    const hoursBack = i * 2.7 + Math.random() * 1.5
-    const ts = now - hoursBack * 3_600_000
-    const entry: AdminLog = {
-      id: `demo_${ts}_${Math.random().toString(36).slice(2, 6)}`,
-      timestamp: ts,
-      admin,
-      action,
-      details,
-    }
-    // Bypass addLog so we can backdate timestamps
-    const logs = getLogs()
-    const updated = [...logs, entry].sort((a, b) => b.timestamp - a.timestamp).slice(0, 500)
-    try { localStorage.setItem('bn_admin_logs', JSON.stringify(updated)) } catch { /* ok */ }
-  })
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -932,10 +886,8 @@ export function ActivityLogs({ admin }: Props) {
     setLast(Date.now())
   }, [])
 
-  // Initial load + optional demo seed
+  // Initial load
   useEffect(() => {
-    const existing = getLogs()
-    if (existing.length === 0) seedDemoLogs(admin)
     refresh()
   }, [])
 
