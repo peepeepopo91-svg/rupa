@@ -22,15 +22,15 @@ body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background-color: #08000e;
+  background-color: #00060f;
   color: white;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: #08000e; }
-::-webkit-scrollbar-thumb { background: #2a1040; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #3d1a60; }
+::-webkit-scrollbar-track { background: #00060f; }
+::-webkit-scrollbar-thumb { background: #0a2040; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #0d3060; }
 
 /* Glass effect */
 .glass {
@@ -41,7 +41,7 @@ body {
 
 /* Text gradient */
 .text-gradient {
-  background: linear-gradient(135deg, #00BFFF, #8b5cf6);
+  background: linear-gradient(135deg, #00BFFF, #0066FF);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

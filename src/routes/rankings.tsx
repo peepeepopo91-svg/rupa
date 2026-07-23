@@ -10,6 +10,9 @@ import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-r
 import { loadAllData } from '../server/dataFiles'
 
 export const Route = createFileRoute('/rankings')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === 'string' ? search.q : undefined,
+  }),
   loader: async () => {
     try {
       const data = await loadAllData()
@@ -27,7 +30,8 @@ const PLAYERS_PER_PAGE = 24
 
 function RankingsPage() {
   const { players } = Route.useLoaderData()
-  const [search, setSearch] = useState('')
+  const { q } = Route.useSearch()
+  const [search, setSearch] = useState(q ?? '')
   const [activeFilter, setActiveFilter] = useState<keyof PlayerRanks | 'all'>('all')
   const [sortMode, setSortMode] = useState<SortMode>('points-desc')
   const [minTier, setMinTier] = useState<string>('all')
@@ -39,6 +43,15 @@ function RankingsPage() {
 
   // Ref to the search/filters section so we can smooth scroll to it
   const rankingsSectionRef = useRef<HTMLDivElement>(null)
+
+  // When a ?q= param is passed (e.g. from the global search modal), sync it
+  useEffect(() => {
+    if (q !== undefined) {
+      setSearch(q)
+      // Scroll to results
+      setTimeout(() => rankingsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
+    }
+  }, [q])
 
   // Compute global rankings once — these never change with filter/sort
   const globalRankings = useMemo(() => computeRankings(players), [players])
@@ -131,7 +144,7 @@ function RankingsPage() {
 
       {/* Page header */}
       <section className="relative pt-36 pb-12 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/15 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-900/15 to-transparent pointer-events-none" />
         <div className="max-w-6xl mx-auto text-center relative">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/60 text-xs font-semibold mb-5 tracking-wide uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-[#00BFFF] animate-pulse" />

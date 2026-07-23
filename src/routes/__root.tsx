@@ -104,16 +104,17 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="text-white font-['Inter'] antialiased" style={{ background: '#08000e' }}>
-        {/* Global fixed background: starfield + purple gradient glow */}
+      <body className="text-white font-['Inter'] antialiased" style={{ background: '#00060f' }}>
+        {/* Global fixed background: starfield + blue gradient glow */}
         <div className="fixed inset-0 pointer-events-none z-0" aria-hidden>
           <StarField />
           <div
             className="absolute inset-0"
             style={{
               background:
-                'radial-gradient(ellipse 90% 65% at 55% 0%, rgba(100,20,160,0.40) 0%, transparent 62%), ' +
-                'radial-gradient(ellipse 60% 40% at 20% 30%, rgba(60,0,120,0.20) 0%, transparent 55%)',
+                'radial-gradient(ellipse 100% 70% at 50% -5%, rgba(0,100,255,0.22) 0%, transparent 60%), ' +
+                'radial-gradient(ellipse 70% 50% at 15% 25%, rgba(0,60,180,0.15) 0%, transparent 55%), ' +
+                'radial-gradient(ellipse 60% 40% at 85% 15%, rgba(0,180,255,0.10) 0%, transparent 50%)',
             }}
           />
         </div>

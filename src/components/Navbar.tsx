@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
-import { BarChart2, Trophy, Pickaxe, ArrowLeftRight, ShoppingBag, Search, User } from 'lucide-react'
+import { BarChart2, Trophy, Pickaxe, ArrowLeftRight, ShoppingBag, Search } from 'lucide-react'
+import { PlayerSearchModal } from './PlayerSearchModal'
 
 const DiscordIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -23,6 +24,7 @@ const SwordsLogo = () => (
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const location = useLocation()
 
   const navLinks = [
@@ -35,114 +37,137 @@ export function Navbar() {
 
   const isActive = (to: string) => location.pathname === to
 
+  // Global Ctrl+K shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-black border-b border-white/[0.06]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
+    <>
+      <PlayerSearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity flex-shrink-0">
-            <SwordsLogo />
-            <span className="font-bold text-[15px] tracking-tight">
-              <span className="text-[#00BFFF]">Blue</span>
-              <span className="text-white">Tiers</span>
-            </span>
-          </Link>
+      <header className="fixed top-0 left-0 right-0 z-50 w-full bg-black/80 backdrop-blur-md border-b border-white/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14">
 
-          {/* Center nav */}
-          <nav className="hidden md:flex items-center bg-[#111111] border border-[#222222] rounded-xl px-1 py-1 gap-0.5">
-            {navLinks.map((link) => {
-              const Icon = link.icon
-              const active = isActive(link.to)
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150 ${
-                    active
-                      ? 'bg-[#222222] text-white'
-                      : 'text-[#888888] hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Icon size={13} strokeWidth={2} />
-                  {link.label}
-                </Link>
-              )
-            })}
-            <a
-              href="https://discord.gg/DmEPAb3NFU"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[13px] font-medium text-[#888888] hover:text-white hover:bg-white/5 transition-all duration-150"
-            >
-              <DiscordIcon />
-              Discord
-            </a>
-          </nav>
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity flex-shrink-0">
+              <SwordsLogo />
+              <span className="font-bold text-[15px] tracking-tight">
+                <span className="text-[#00BFFF]">Blue</span>
+                <span className="text-white">Tiers</span>
+              </span>
+            </Link>
 
-          {/* Right: search + user */}
-          <div className="hidden md:flex items-center gap-2">
-            {/* Search */}
-            <div className="flex items-center gap-2 bg-[#111111] border border-[#222222] rounded-xl px-3 py-1.5 min-w-[190px] cursor-pointer hover:border-[#333333] transition-colors group">
-              <Search size={13} className="text-[#555555] group-hover:text-[#777777] transition-colors flex-shrink-0" />
-              <span className="text-[13px] text-[#555555] flex-1">Search Player</span>
-              <div className="flex items-center gap-0.5">
-                <kbd className="text-[10px] text-[#444444] bg-[#1a1a1a] border border-[#2a2a2a] rounded px-1 py-0.5 font-mono leading-none">Ctrl</kbd>
-                <kbd className="text-[10px] text-[#444444] bg-[#1a1a1a] border border-[#2a2a2a] rounded px-1 py-0.5 font-mono leading-none">K</kbd>
-              </div>
+            {/* Center nav */}
+            <nav className="hidden md:flex items-center bg-[#111111] border border-[#222222] rounded-xl px-1 py-1 gap-0.5">
+              {navLinks.map((link) => {
+                const Icon = link.icon
+                const active = isActive(link.to)
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150 ${
+                      active
+                        ? 'bg-[#222222] text-white'
+                        : 'text-[#888888] hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Icon size={13} strokeWidth={2} />
+                    {link.label}
+                  </Link>
+                )
+              })}
+              <a
+                href="https://discord.gg/DmEPAb3NFU"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[13px] font-medium text-[#888888] hover:text-white hover:bg-white/5 transition-all duration-150"
+              >
+                <DiscordIcon />
+                Discord
+              </a>
+            </nav>
+
+            {/* Right: search only */}
+            <div className="hidden md:flex items-center gap-2">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center gap-2 bg-[#0a0f1a] border border-[#1a2540] rounded-xl px-3 py-1.5 min-w-[190px] cursor-pointer hover:border-[#00BFFF]/30 hover:bg-[#0d1525] transition-all duration-200 group"
+                style={{ boxShadow: 'none' }}
+              >
+                <Search size={13} className="text-[#00BFFF]/50 group-hover:text-[#00BFFF]/80 transition-colors flex-shrink-0" />
+                <span className="text-[13px] text-[#555] flex-1 text-left group-hover:text-[#777] transition-colors">Search Player</span>
+                <div className="flex items-center gap-0.5">
+                  <kbd className="text-[10px] text-[#444] bg-[#1a1a1a] border border-[#2a2a2a] rounded px-1 py-0.5 font-mono leading-none">Ctrl</kbd>
+                  <kbd className="text-[10px] text-[#444] bg-[#1a1a1a] border border-[#2a2a2a] rounded px-1 py-0.5 font-mono leading-none">K</kbd>
+                </div>
+              </button>
             </div>
-            {/* User icon */}
-            <button className="w-8 h-8 rounded-full bg-[#111111] border border-[#222222] flex items-center justify-center text-[#666666] hover:text-white hover:border-[#333333] transition-all">
-              <User size={14} />
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2 rounded-lg text-[#666666] hover:text-white hover:bg-white/5 transition-colors"
+            >
+              <div className="w-5 h-3.5 flex flex-col justify-between">
+                <span className={`block h-0.5 bg-current transition-all duration-300 ${mobileOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
+                <span className={`block h-0.5 bg-current transition-all duration-300 ${mobileOpen ? 'opacity-0' : ''}`} />
+                <span className={`block h-0.5 bg-current transition-all duration-300 ${mobileOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+              </div>
             </button>
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg text-[#666666] hover:text-white hover:bg-white/5 transition-colors"
-          >
-            <div className="w-5 h-3.5 flex flex-col justify-between">
-              <span className={`block h-0.5 bg-current transition-all duration-300 ${mobileOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
-              <span className={`block h-0.5 bg-current transition-all duration-300 ${mobileOpen ? 'opacity-0' : ''}`} />
-              <span className={`block h-0.5 bg-current transition-all duration-300 ${mobileOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+          {/* Mobile menu */}
+          {mobileOpen && (
+            <div className="md:hidden pb-4 border-t border-[#1a1a1a] mt-1 pt-3 space-y-0.5">
+              {/* Mobile search */}
+              <button
+                onClick={() => { setMobileOpen(false); setSearchOpen(true) }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[#888888] hover:text-white hover:bg-white/5 transition-all"
+              >
+                <Search size={14} />
+                Search Player
+              </button>
+              {navLinks.map((link) => {
+                const Icon = link.icon
+                const active = isActive(link.to)
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      active ? 'text-white bg-[#1a1a1a]' : 'text-[#888888] hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Icon size={14} />
+                    {link.label}
+                  </Link>
+                )
+              })}
+              <a
+                href="https://discord.gg/DmEPAb3NFU"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[#888888] hover:text-white hover:bg-white/5 transition-all"
+              >
+                <DiscordIcon />
+                Discord
+              </a>
             </div>
-          </button>
+          )}
         </div>
-
-        {/* Mobile menu */}
-        {mobileOpen && (
-          <div className="md:hidden pb-4 border-t border-[#1a1a1a] mt-1 pt-3 space-y-0.5">
-            {navLinks.map((link) => {
-              const Icon = link.icon
-              const active = isActive(link.to)
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    active ? 'text-white bg-[#1a1a1a]' : 'text-[#888888] hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Icon size={14} />
-                  {link.label}
-                </Link>
-              )
-            })}
-            <a
-              href="https://discord.gg/DmEPAb3NFU"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[#888888] hover:text-white hover:bg-white/5 transition-all"
-            >
-              <DiscordIcon />
-              Discord
-            </a>
-          </div>
-        )}
-      </div>
-    </header>
+      </header>
+    </>
   )
 }

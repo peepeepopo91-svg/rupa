@@ -78,7 +78,7 @@ function TournamentPage() {
 
       {/* Page hero */}
       <section className="relative pt-36 pb-10 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/15 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-900/15 to-transparent pointer-events-none" />
 
         <div className="max-w-6xl mx-auto text-center relative">
           {/* Badge */}

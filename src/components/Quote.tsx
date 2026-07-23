@@ -10,7 +10,7 @@ export function Quote() {
               <span
                 className="relative z-10"
                 style={{
-                  background: 'linear-gradient(90deg, #00BFFF, #8b5cf6, #ec4899)',
+                  background: 'linear-gradient(90deg, #00BFFF, #0088FF, #0055DD)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -18,7 +18,7 @@ export function Quote() {
               >
                 accurate and fair
               </span>
-              <span className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-[#00BFFF] via-[#8b5cf6] to-[#ec4899]" />
+              <span className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-[#00BFFF] via-[#0088FF] to-[#0055DD]" />
             </span>
             {' '}to follow
           </p>

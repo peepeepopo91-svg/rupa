@@ -32,7 +32,7 @@ function MiningPage() {
 
       {/* Page header */}
       <section className="relative pt-36 pb-12 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/15 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-900/15 to-transparent pointer-events-none" />
         <div className="max-w-6xl mx-auto text-center relative">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-white/60 text-xs font-semibold mb-5 tracking-wide uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-[#00BFFF] animate-pulse" />

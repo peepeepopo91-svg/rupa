@@ -77,7 +77,7 @@ function LiveTicker() {
         {' '}got{' '}
         <span
           style={{
-            background: 'linear-gradient(90deg, #00BFFF, #8b5cf6)',
+            background: 'linear-gradient(90deg, #00BFFF, #0066FF)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -132,7 +132,7 @@ export function Hero() {
         <span
           className="block text-[64px] sm:text-[96px] lg:text-[128px]"
           style={{
-            background: 'linear-gradient(135deg, #00BFFF 0%, #8b5cf6 50%, #ec4899 100%)',
+            background: 'linear-gradient(135deg, #00BFFF 0%, #0088FF 50%, #0044DD 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
