@@ -17,6 +17,7 @@ import { CredentialsManager }  from './CredentialsManager'
 import { TournamentManager }   from './TournamentManager'
 import { EarningsManager }     from './EarningsManager'
 import { PublishManager }      from './PublishManager'
+import { SiteGrowth }          from './SiteGrowth'
 import { useSyncState }    from '../../store/syncStore'
 
 interface Props {
@@ -37,6 +38,7 @@ const NAV_ITEMS: { id: AdminSection; label: string; icon: string; desc: string }
   { id: 'events',      label: 'Events',        icon: '🎉', desc: 'Manage events' },
   { id: 'shop-mgmt',      label: 'Shop',          icon: '🛒', desc: 'Manage purchases'  },
   { id: 'tournament-mgmt', label: 'Tournaments',  icon: '🏆', desc: 'Manage tournaments' },
+  { id: 'site-growth',  label: 'Site Growth',   icon: '📈', desc: 'Analytics dashboard' },
   { id: 'earnings',     label: 'Earnings',      icon: '💹', desc: 'Ads & monetisation' },
   { id: 'publish',      label: 'Publish',       icon: '🚀', desc: 'SEO & Google' },
   { id: 'logs',            label: 'Activity Logs', icon: '📊', desc: 'Audit trail'        },
@@ -59,6 +61,7 @@ const SECTION_TITLES: Record<AdminSection, { title: string; subtitle: string }> 
   'logs':            { title: 'Activity Logs',         subtitle: 'Full audit trail of all admin actions' },
   'github-sync':  { title: 'GitHub Sync Center',         subtitle: 'Professional synchronization dashboard — push, validate, rollback' },
   'repo-history': { title: 'Repository History Management', subtitle: 'Reset commit history while preserving all project files' },
+  'site-growth':  { title: 'Site Growth',              subtitle: 'Real-time analytics — visitors, users, mining, shop, and growth trends' },
   'earnings':     { title: 'Earnings & Monetisation', subtitle: 'Configure ads, renew-button behaviour, and track revenue' },
   'credentials':  { title: 'Credentials Manager',        subtitle: 'Manage admin username and dual-password authentication' },
   'publish':      { title: 'Publish & SEO',              subtitle: 'Google ranking, meta tags, sitemap, analytics, and social previews' },
@@ -80,6 +83,7 @@ function SectionContent({ section, admin, setSection }: { section: AdminSection;
     case 'github-sync':  return <GitHubSyncCenter admin={admin} />
     case 'repo-history': return <RepoHistoryManager admin={admin} />
     case 'credentials':  return <CredentialsManager admin={admin} />
+    case 'site-growth':  return <SiteGrowth admin={admin} />
     case 'earnings':     return <EarningsManager admin={admin} />
     case 'publish':      return <PublishManager admin={admin} />
   }

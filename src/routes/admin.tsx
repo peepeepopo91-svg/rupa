@@ -30,6 +30,7 @@ export type AdminSection =
   | 'events'
   | 'shop-mgmt'
   | 'tournament-mgmt'
+  | 'site-growth'
   | 'logs'
   | 'github-sync'
   | 'repo-history'

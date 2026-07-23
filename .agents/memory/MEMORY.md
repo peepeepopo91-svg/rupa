@@ -1,3 +1,4 @@
+- [Site Growth Analytics Architecture](site-growth-analytics.md) — beacon in RootDocument, in-memory session tracking, debounced JSON flush, admin section wired to SiteGrowth.tsx
 - [Admin Auth Security Architecture](admin-auth-security.md) — scrypt hashing, per-IP rate limiting, HMAC-signed sessions, server-side token verification on every load
 - [TanStack Start server function API](tanstack-start-server-fn.md) — this version uses `.inputValidator()` not `.validator()` in the createServerFn chain
 - [Shop System Architecture](shop-system.md) — server fns, SSE via window event forwarding, data files, admin section integration

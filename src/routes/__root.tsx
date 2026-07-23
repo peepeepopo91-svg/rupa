@@ -1,5 +1,6 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { loadSeoConfig } from '../server/publishServer'
+import { GrowthBeacon }  from '../components/GrowthBeacon'
 import '../styles.css'
 
 export const Route = createRootRoute({
@@ -104,6 +105,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="bg-[#0B0F17] text-white font-['Inter'] antialiased">
         {children}
+        <GrowthBeacon />
         <Scripts />
       </body>
     </html>

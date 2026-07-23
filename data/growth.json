@@ -1,0 +1,29 @@
+{
+  "startedAt": 1753266000000,
+  "peakConcurrentEver": 2,
+  "dailyStats": {
+    "2026-07-23": {
+      "pageViews": 5,
+      "uniqueSessions": 2,
+      "pages": {
+        "/": 3,
+        "/mining": 2
+      },
+      "referrers": {
+        "Referral": 3,
+        "Direct": 2
+      },
+      "devices": {
+        "Desktop": 5
+      },
+      "browsers": {
+        "Firefox": 4,
+        "Chrome": 1
+      },
+      "os": {
+        "Linux": 5
+      },
+      "peakConcurrent": 2
+    }
+  }
+}
