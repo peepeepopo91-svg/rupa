@@ -25,64 +25,34 @@ players.forEach((p) => {
   }
 })
 
-function useCountUp(target: number, duration = 2000, active: boolean) {
+function useCountUp(target: number, duration = 1800, active: boolean) {
   const [count, setCount] = useState(0)
-
   useEffect(() => {
     if (!active) return
     let start = 0
     const step = target / (duration / 16)
     const timer = setInterval(() => {
       start += step
-      if (start >= target) {
-        setCount(target)
-        clearInterval(timer)
-      } else {
-        setCount(Math.floor(start))
-      }
+      if (start >= target) { setCount(target); clearInterval(timer) }
+      else setCount(Math.floor(start))
     }, 16)
     return () => clearInterval(timer)
   }, [target, duration, active])
-
   return count
 }
 
-function NumberStat({ label, value, suffix = '' }: { label: string; value: number; suffix?: string }) {
+function StatItem({ label, value, suffix = '', text }: { label: string; value?: number; suffix?: string; text?: string }) {
   const [active, setActive] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  const count = useCountUp(value, 1800, active)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setActive(true) },
-      { threshold: 0.5 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
-  return (
-    <div ref={ref} className="text-center">
-      <div className="font-['Space_Grotesk'] font-black text-4xl sm:text-5xl text-gradient mb-2">
-        {count}{suffix}
-      </div>
-      <div className="text-gray-500 text-sm font-medium">{label}</div>
-    </div>
-  )
-}
-
-function TextStat({ label, value, sub }: { label: string; value: string; sub: string }) {
   const [visible, setVisible] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const count = useCountUp(value ?? 0, 1800, active)
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true) },
-      { threshold: 0.5 }
+      ([entry]) => { if (entry.isIntersecting) { setActive(true); setVisible(true) } },
+      { threshold: 0.4 }
     )
     observer.observe(el)
     return () => observer.disconnect()
@@ -90,39 +60,28 @@ function TextStat({ label, value, sub }: { label: string; value: string; sub: st
 
   return (
     <div ref={ref} className="text-center">
-      <div
-        className={`font-['Space_Grotesk'] font-black text-3xl sm:text-4xl text-gradient mb-1 transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'}`}
-      >
-        {value}
+      <div className={`font-bold text-3xl sm:text-4xl text-white mb-1 transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'}`}>
+        {text ?? `${count}${suffix}`}
       </div>
-      <div className="text-[#00BFFF] text-xs font-semibold mb-1">{sub}</div>
-      <div className="text-gray-500 text-sm font-medium">{label}</div>
+      <div className="text-[#444444] text-xs font-medium tracking-wide">{label}</div>
     </div>
   )
 }
 
 export function Stats() {
   return (
-    <section className="py-24 px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0066FF]/5 via-[#00BFFF]/8 to-[#0066FF]/5 pointer-events-none" />
-      <div className="absolute inset-0 border-y border-[#00BFFF]/10 pointer-events-none" />
-
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="font-['Space_Grotesk'] font-bold text-3xl sm:text-4xl text-white mb-4">
-            By the <span className="text-gradient">Numbers</span>
-          </h2>
+    <section className="py-20 px-4 border-t border-[#111111]">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-14">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">By the Numbers</h2>
+          <p className="text-[#555555] text-sm">Live stats from the Blue Tiers ranking system.</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
-          <NumberStat label="Total Ranked Players" value={totalRanked} />
-          <NumberStat label="HT1 Players" value={ht1Players} />
-          <NumberStat label="Average Player Score" value={avgScore} suffix=" pts" />
-          <TextStat
-            label="Highest Rated Player"
-            value={topPlayer.name}
-            sub={`${topPlayer.points} pts`}
-          />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
+          <StatItem label="Total Ranked Players" value={totalRanked} />
+          <StatItem label="HT1 Players" value={ht1Players} />
+          <StatItem label="Average Player Score" value={avgScore} suffix=" pts" />
+          <StatItem label="Highest Rated Player" text={topPlayer.name} />
         </div>
       </div>
     </section>

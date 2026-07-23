@@ -22,15 +22,15 @@ body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background-color: #0B0F17;
+  background-color: #0a0a0a;
   color: white;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0B0F17; }
-::-webkit-scrollbar-thumb { background: #00BFFF33; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #00BFFF66; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb { background: #222222; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #333333; }
 
 /* Glass effect */
 .glass {

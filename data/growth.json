@@ -1,29 +1,29 @@
 {
   "startedAt": 1753266000000,
-  "peakConcurrentEver": 2,
+  "peakConcurrentEver": 4,
   "dailyStats": {
     "2026-07-23": {
-      "pageViews": 15,
-      "uniqueSessions": 5,
+      "pageViews": 19,
+      "uniqueSessions": 8,
       "pages": {
-        "/": 6,
+        "/": 10,
         "/mining": 9
       },
       "referrers": {
-        "Referral": 12,
-        "Direct": 3
+        "Referral": 13,
+        "Direct": 6
       },
       "devices": {
-        "Desktop": 15
+        "Desktop": 19
       },
       "browsers": {
-        "Firefox": 12,
-        "Chrome": 3
+        "Firefox": 13,
+        "Chrome": 6
       },
       "os": {
-        "Linux": 15
+        "Linux": 19
       },
-      "peakConcurrent": 2
+      "peakConcurrent": 4
     }
   }
 }
