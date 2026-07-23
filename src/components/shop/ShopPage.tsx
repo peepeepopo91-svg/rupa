@@ -114,7 +114,7 @@ export function ShopPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#00BFFF] animate-pulse" />
             Gem Store
           </div>
-          <h1 className="font-['Space_Grotesk'] font-black text-4xl sm:text-5xl text-white mb-4">
+          <h1 className="font-black text-4xl sm:text-5xl text-white mb-4">
             Blue Tiers <span className="text-gradient">Shop</span>
           </h1>
           <p className="text-gray-500 max-w-md mx-auto text-sm">
