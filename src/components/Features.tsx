@@ -1,12 +1,12 @@
 // Real gamemodes from src/data/gamemodes.ts
 const MODES = [
-  { label: 'Sword',    icon: '⚔️',  featured: false },
-  { label: 'Crystal',  icon: '💎',  featured: true  },
-  { label: 'Axe',      icon: '🪓',  featured: false },
-  { label: 'Mace',     icon: '🔨',  featured: true  },
-  { label: 'UHC',      icon: '🏆',  featured: false },
-  { label: 'Nethpot',  icon: '🧪',  featured: false },
-  { label: 'Diapot',   icon: '⚗️',  featured: false },
+  { label: 'Sword',   icon: '⚔️' },
+  { label: 'Crystal', icon: '💎' },
+  { label: 'Axe',     icon: '🪓' },
+  { label: 'Mace',    icon: '🔨' },
+  { label: 'UHC',     icon: '🏆' },
+  { label: 'Nethpot', icon: '🧪' },
+  { label: 'Diapot',  icon: '⚗️' },
 ]
 
 export function Features() {
@@ -20,34 +20,24 @@ export function Features() {
           <p className="text-white/40 text-sm mt-3">7 competitive PvP modes, each with its own ranked tier list.</p>
         </div>
 
-        {/* Staggered grid — tiertests-style */}
-        <div className="flex flex-wrap justify-center items-end gap-4">
-          {MODES.map((mode, i) => {
-            const big = mode.featured
-            return (
-              <div
-                key={mode.label}
-                className={`
-                  group relative flex flex-col items-center justify-end
-                  rounded-2xl bg-white/4 border border-white/8
-                  hover:border-white/15 hover:bg-white/6
-                  transition-all duration-200 cursor-pointer
-                  ${big
-                    ? 'w-32 h-36 sm:w-36 sm:h-40 -translate-y-4'
-                    : 'w-28 h-28 sm:w-32 sm:h-32'
-                  }
-                  ${i % 3 === 1 ? '-translate-y-2' : ''}
-                `}
-              >
-                <span className={`select-none ${big ? 'text-5xl mb-4' : 'text-4xl mb-3'}`}>
-                  {mode.icon}
-                </span>
-                <span className="text-white/60 text-xs font-medium pb-3 group-hover:text-white transition-colors">
-                  {mode.label}
-                </span>
-              </div>
-            )
-          })}
+        <div className="flex flex-wrap justify-center gap-4">
+          {MODES.map((mode) => (
+            <div
+              key={mode.label}
+              className="
+                group flex flex-col items-center justify-center gap-3
+                w-32 h-32 sm:w-36 sm:h-36
+                rounded-2xl bg-white/4 border border-white/8
+                hover:border-white/20 hover:bg-white/8
+                transition-all duration-200 cursor-pointer
+              "
+            >
+              <span className="text-4xl select-none">{mode.icon}</span>
+              <span className="text-white/60 text-xs font-medium group-hover:text-white transition-colors">
+                {mode.label}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </section>

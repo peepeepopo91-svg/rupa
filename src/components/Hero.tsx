@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Copy, Check } from 'lucide-react'
+import playersData from '../../data/players.json'
 
 const DiscordIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -8,28 +9,70 @@ const DiscordIcon = () => (
   </svg>
 )
 
-// Simulated live activity feed
-const LIVE_ACTIVITY = [
-  { player: 'xCrystalKing', tier: 'HT1', mode: 'Crystal PvP', ago: '2 minutes ago' },
-  { player: 'SwiftBlade99', tier: 'S', mode: 'Sword', ago: '4 minutes ago' },
-  { player: 'AxeMaster_EU', tier: 'A+', mode: 'Axe', ago: '7 minutes ago' },
-  { player: 'UHCLegend_',  tier: 'HT2', mode: 'UHC', ago: '11 minutes ago' },
-]
+const MODE_LABELS: Record<string, string> = {
+  sword: 'Sword',
+  crystal: 'Crystal',
+  axe: 'Axe',
+  mace: 'Mace',
+  uhc: 'UHC',
+  nethpot: 'Nethpot',
+  diapot: 'Diapot',
+}
+
+// Build a flat list of real player+tier+mode entries (exclude NONE ranks)
+type Entry = { player: string; tier: string; mode: string }
+
+function buildEntries(): Entry[] {
+  const entries: Entry[] = []
+  for (const p of playersData as Array<{ name: string; ranks: Record<string, string> }>) {
+    for (const [mode, tier] of Object.entries(p.ranks)) {
+      if (tier && tier !== 'NONE') {
+        entries.push({ player: p.name, tier, mode: MODE_LABELS[mode] ?? mode })
+      }
+    }
+  }
+  // Shuffle so order is random on every page load
+  for (let i = entries.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[entries[i], entries[j]] = [entries[j], entries[i]]
+  }
+  return entries
+}
 
 function LiveTicker() {
-  const [idx] = useState(0)
-  const activity = LIVE_ACTIVITY[idx % LIVE_ACTIVITY.length]
+  const entries = useMemo(() => buildEntries(), [])
+  const [idx, setIdx] = useState(0)
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    if (entries.length === 0) return
+    const timer = setInterval(() => {
+      // Fade out, swap, fade in
+      setVisible(false)
+      setTimeout(() => {
+        setIdx((i) => (i + 1) % entries.length)
+        setVisible(true)
+      }, 300)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [entries])
+
+  if (entries.length === 0) return null
+  const activity = entries[idx]
 
   return (
     <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm mb-8 backdrop-blur-sm">
-      <span className="flex items-center gap-1.5">
+      <span className="flex items-center gap-1.5 shrink-0">
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
         </span>
         <span className="text-red-400 font-bold text-[11px] tracking-wider">LIVE</span>
       </span>
-      <span className="text-white/60 text-[12px]">
+      <span
+        className="text-white/60 text-[12px] transition-opacity duration-300"
+        style={{ opacity: visible ? 1 : 0 }}
+      >
         <span className="text-white font-semibold">{activity.player}</span>
         {' '}got{' '}
         <span
@@ -43,7 +86,7 @@ function LiveTicker() {
         >
           {activity.tier}
         </span>
-        {' '}in {activity.mode} · {activity.ago}
+        {' '}in {activity.mode}
       </span>
     </div>
   )
