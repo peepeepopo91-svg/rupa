@@ -7,12 +7,259 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { AdminPaginator } from './AdminPaginator'
 
 const PAGE_SIZE = 10
-import { getAllMiningUsers, adminUpdateMiningUser, adminRenewMining, adminAdjustRenewal, adminResetRenewal } from '../../server/miningServer'
+import { getAllMiningUsers, adminUpdateMiningUser, adminRenewMining, adminAdjustRenewal, adminResetRenewal, getMiningAccessConfig, saveMiningAccessConfig } from '../../server/miningServer'
 import { RIG_TIERS } from '../../data/mining'
 import type { User, UserRig, RigStatus } from '../../data/mining'
+import type { MiningAccessConfig } from '../../server/miningServer'
 import { addLog } from '../../store/adminStore'
 
 interface Props { admin: string }
+
+// ─── Access Info Editor ───────────────────────────────────────────────────────
+
+const DEFAULT_ACCESS_CONFIG: MiningAccessConfig = {
+  buttonLabel:        'New player? How to get access',
+  sectionTitle:       'How to get your mining credentials',
+  steps: [
+    'Join the Blue Network Discord using the button below.',
+    'Head to the #mining section of the server.',
+    'Open a request-credential ticket — a staff member will create your account.',
+  ],
+  discordUrl:         'https://discord.gg/DmEPAb3NFU',
+  discordButtonLabel: 'Join Discord to Request Access',
+}
+
+function AccessInfoEditor({ admin }: { admin: string }) {
+  const [cfg, setCfg]       = useState<MiningAccessConfig>(DEFAULT_ACCESS_CONFIG)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [toast, setToast]   = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  const [open, setOpen]     = useState(false)
+
+  function showMsg(msg: string, type: 'success' | 'error' = 'success') {
+    setToast({ msg, type })
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  useEffect(() => {
+    getMiningAccessConfig()
+      .then(c => setCfg(c))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  async function handleSave() {
+    // Validate: remove blank steps
+    const clean = { ...cfg, steps: cfg.steps.filter(s => s.trim() !== '') }
+    if (clean.steps.length === 0) { showMsg('Add at least one step.', 'error'); return }
+    setSaving(true)
+    try {
+      await saveMiningAccessConfig({ data: clean })
+      setCfg(clean)
+      addLog(admin, 'mining:access', 'Updated mining login access info')
+      showMsg('Access info saved')
+    } catch {
+      showMsg('Save failed — server error', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function updateStep(i: number, val: string) {
+    setCfg(c => ({ ...c, steps: c.steps.map((s, j) => j === i ? val : s) }))
+  }
+
+  function addStep() {
+    setCfg(c => ({ ...c, steps: [...c.steps, ''] }))
+  }
+
+  function removeStep(i: number) {
+    setCfg(c => ({ ...c, steps: c.steps.filter((_, j) => j !== i) }))
+  }
+
+  function moveStep(i: number, dir: -1 | 1) {
+    const steps = [...cfg.steps]
+    const j = i + dir
+    if (j < 0 || j >= steps.length) return
+    ;[steps[i], steps[j]] = [steps[j], steps[i]]
+    setCfg(c => ({ ...c, steps }))
+  }
+
+  return (
+    <div className="glass rounded-2xl border border-white/8 overflow-hidden">
+      {toast && <Toast msg={toast.msg} type={toast.type} />}
+
+      {/* Collapsible header */}
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full px-5 py-4 flex items-center gap-3 hover:bg-white/2 transition-colors text-left"
+      >
+        <span className="text-base">🆕</span>
+        <div className="flex-1">
+          <p className="font-['Space_Grotesk'] font-bold text-white text-sm">New Player Access Info</p>
+          <p className="text-gray-600 text-[10px] mt-0.5">Edit the "How to get access" section shown on the Mining login page</p>
+        </div>
+        <span className="text-gray-600 text-xs">{open ? '▲ Collapse' : '▼ Expand'}</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-white/5 px-5 py-5 space-y-5">
+          {loading ? (
+            <div className="text-center py-6 text-gray-600 text-sm animate-pulse">Loading…</div>
+          ) : (
+            <>
+              {/* Button label */}
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-gray-600 font-semibold mb-2">
+                  Toggle Button Label
+                </label>
+                <input
+                  type="text"
+                  value={cfg.buttonLabel}
+                  onChange={e => setCfg(c => ({ ...c, buttonLabel: e.target.value }))}
+                  placeholder="New player? How to get access"
+                  className="w-full bg-white/3 border border-white/10 hover:border-white/18 focus:border-[#00BFFF]/40 rounded-xl px-4 py-2.5 text-white placeholder-gray-700 outline-none text-sm transition-all"
+                />
+                <p className="text-gray-700 text-[10px] mt-1">The label shown on the collapsible button in the login panel.</p>
+              </div>
+
+              {/* Section title */}
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-gray-600 font-semibold mb-2">
+                  Section Title
+                </label>
+                <input
+                  type="text"
+                  value={cfg.sectionTitle}
+                  onChange={e => setCfg(c => ({ ...c, sectionTitle: e.target.value }))}
+                  placeholder="How to get your mining credentials"
+                  className="w-full bg-white/3 border border-white/10 hover:border-white/18 focus:border-[#00BFFF]/40 rounded-xl px-4 py-2.5 text-white placeholder-gray-700 outline-none text-sm transition-all"
+                />
+                <p className="text-gray-700 text-[10px] mt-1">Heading shown inside the expanded panel.</p>
+              </div>
+
+              {/* Steps */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-[10px] uppercase tracking-widest text-gray-600 font-semibold">
+                    Steps ({cfg.steps.length})
+                  </label>
+                  <button
+                    onClick={addStep}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold text-[#00BFFF] border border-[#00BFFF]/25 bg-[#00BFFF]/5 hover:bg-[#00BFFF]/10 transition-all"
+                  >
+                    + Add Step
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {cfg.steps.map((step, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="mt-2.5 text-[#5865F2] text-xs font-bold w-5 shrink-0 text-center">{i + 1}.</span>
+                      <input
+                        type="text"
+                        value={step}
+                        onChange={e => updateStep(i, e.target.value)}
+                        placeholder={`Step ${i + 1}…`}
+                        className="flex-1 bg-white/3 border border-white/10 hover:border-white/18 focus:border-[#00BFFF]/40 rounded-xl px-3 py-2 text-white placeholder-gray-700 outline-none text-xs transition-all"
+                      />
+                      <div className="flex flex-col gap-0.5 shrink-0">
+                        <button
+                          onClick={() => moveStep(i, -1)}
+                          disabled={i === 0}
+                          className="px-2 py-1 rounded-lg text-[10px] text-gray-600 hover:text-gray-300 border border-white/8 hover:border-white/15 disabled:opacity-30 transition-all"
+                          title="Move up"
+                        >▲</button>
+                        <button
+                          onClick={() => moveStep(i, 1)}
+                          disabled={i === cfg.steps.length - 1}
+                          className="px-2 py-1 rounded-lg text-[10px] text-gray-600 hover:text-gray-300 border border-white/8 hover:border-white/15 disabled:opacity-30 transition-all"
+                          title="Move down"
+                        >▼</button>
+                      </div>
+                      <button
+                        onClick={() => removeStep(i)}
+                        disabled={cfg.steps.length <= 1}
+                        className="mt-1.5 px-2 py-1.5 rounded-lg text-[10px] text-red-500/60 hover:text-red-400 border border-white/5 hover:border-red-500/20 hover:bg-red-500/5 disabled:opacity-30 transition-all"
+                        title="Remove step"
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-gray-700 text-[10px] mt-2">HTML is supported in step text (e.g. &lt;strong&gt;, &lt;span&gt;).</p>
+              </div>
+
+              {/* Discord URL */}
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-gray-600 font-semibold mb-2">
+                  Discord Invite URL
+                </label>
+                <input
+                  type="url"
+                  value={cfg.discordUrl}
+                  onChange={e => setCfg(c => ({ ...c, discordUrl: e.target.value }))}
+                  placeholder="https://discord.gg/…"
+                  className="w-full bg-white/3 border border-white/10 hover:border-white/18 focus:border-[#00BFFF]/40 rounded-xl px-4 py-2.5 text-white placeholder-gray-700 outline-none text-sm font-mono transition-all"
+                />
+                <p className="text-gray-700 text-[10px] mt-1">Leave blank to hide the Discord button entirely.</p>
+              </div>
+
+              {/* Discord button label */}
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-gray-600 font-semibold mb-2">
+                  Discord Button Label
+                </label>
+                <input
+                  type="text"
+                  value={cfg.discordButtonLabel}
+                  onChange={e => setCfg(c => ({ ...c, discordButtonLabel: e.target.value }))}
+                  placeholder="Join Discord to Request Access"
+                  className="w-full bg-white/3 border border-white/10 hover:border-white/18 focus:border-[#00BFFF]/40 rounded-xl px-4 py-2.5 text-white placeholder-gray-700 outline-none text-sm transition-all"
+                />
+              </div>
+
+              {/* Preview */}
+              <div className="rounded-xl border border-[#5865F2]/20 bg-[#5865F2]/5 p-4 space-y-3">
+                <p className="text-[10px] uppercase tracking-widest text-gray-600 font-semibold mb-1">Live Preview</p>
+                <p className="text-gray-300 text-xs font-semibold flex items-center gap-1.5">
+                  <span>💬</span> {cfg.sectionTitle || '—'}
+                </p>
+                <ol className="space-y-1.5 text-gray-500 text-xs">
+                  {cfg.steps.filter(s => s.trim()).map((step, i) => (
+                    <li key={i} className="flex gap-2 leading-relaxed">
+                      <span className="text-[#5865F2] font-bold shrink-0">{i + 1}.</span>
+                      <span dangerouslySetInnerHTML={{ __html: step }} />
+                    </li>
+                  ))}
+                </ol>
+                {cfg.discordUrl && (
+                  <div className="flex items-center gap-2 w-full py-2 rounded-xl bg-[#5865F2]/20 justify-center text-xs text-white font-semibold">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                    {cfg.discordButtonLabel}
+                  </div>
+                )}
+              </div>
+
+              {/* Save */}
+              <div className="flex justify-end pt-1">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#00BFFF]/15 border border-[#00BFFF]/30 hover:bg-[#00BFFF]/25 disabled:opacity-50 transition-all"
+                >
+                  {saving ? (
+                    <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving…</>
+                  ) : (
+                    '💾 Save Access Info'
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -841,6 +1088,9 @@ export function MiningManager({ admin }: Props) {
           onClose={() => setSelected(null)}
         />
       )}
+
+      {/* ── Access Info Editor ─────────────────────────────────────────────── */}
+      <AccessInfoEditor admin={admin} />
     </div>
   )
 }

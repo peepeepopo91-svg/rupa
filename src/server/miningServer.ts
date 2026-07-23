@@ -368,6 +368,47 @@ export const adminAdjustRenewal = createServerFn({ method: 'POST' })
     return { ok: true }
   })
 
+// ─── Mining Access Config ─────────────────────────────────────────────────────
+
+export interface MiningAccessConfig {
+  buttonLabel:        string
+  sectionTitle:       string
+  steps:              string[]
+  discordUrl:         string
+  discordButtonLabel: string
+}
+
+const DEFAULT_ACCESS_CONFIG: MiningAccessConfig = {
+  buttonLabel:        'New player? How to get access',
+  sectionTitle:       'How to get your mining credentials',
+  steps: [
+    'Join the Blue Network Discord using the button below.',
+    'Head to the #mining section of the server.',
+    'Open a request-credential ticket — a staff member will create your account.',
+  ],
+  discordUrl:         'https://discord.gg/DmEPAb3NFU',
+  discordButtonLabel: 'Join Discord to Request Access',
+}
+
+export const getMiningAccessConfig = createServerFn({ method: 'GET' })
+  .handler((): MiningAccessConfig => {
+    return readJson<MiningAccessConfig>('mining-access.json') ?? DEFAULT_ACCESS_CONFIG
+  })
+
+export const saveMiningAccessConfig = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    buttonLabel:        z.string().min(1).max(120),
+    sectionTitle:       z.string().min(1).max(120),
+    steps:              z.array(z.string().max(400)).min(1).max(20),
+    discordUrl:         z.string().max(300),
+    discordButtonLabel: z.string().min(1).max(100),
+  }))
+  .handler(({ data }): { ok: boolean } => {
+    atomicWrite('mining-access.json', data)
+    scheduleBackup()
+    return { ok: true }
+  })
+
 /**
  * Admin: reset a player's mining session (expire immediately).
  */
