@@ -145,17 +145,17 @@
   "zolup": {
     "username": "zolup",
     "createdAt": 1784399298355,
-    "lastCheckedAt": 1784719166598,
-    "balance": 5561,
-    "gems": 7361000,
+    "lastCheckedAt": 1784826487911,
+    "balance": 4061,
+    "gems": 7453610,
     "rigs": [
       {
         "id": "starter_mrrmcik0_lp20",
         "tierId": "starter",
         "name": "Starter Pack",
-        "durability": 8185.672516835122,
-        "status": "idle",
-        "miningSince": null,
+        "durability": 8183.425000000107,
+        "status": "mining",
+        "miningSince": 1784826388792,
         "purchasedAt": 1784454855408
       }
     ],
@@ -311,9 +311,9 @@
         "type": "equal_split"
       }
     ],
-    "exchangeUsedToday": 0,
-    "exchangeResetAt": 1784804149048,
-    "miningExpiresAt": 1784762305729,
-    "miningRenewedAt": 1784719105729
+    "exchangeUsedToday": 3,
+    "exchangeResetAt": 1784912763090,
+    "miningExpiresAt": 1784869580059,
+    "miningRenewedAt": 1784826380059
   }
 }
