@@ -26,8 +26,6 @@ export type AdminSection =
   | 'mining-mgmt'
   | 'economy'
   | 'users'
-  | 'content'
-  | 'events'
   | 'shop-mgmt'
   | 'tournament-mgmt'
   | 'site-growth'

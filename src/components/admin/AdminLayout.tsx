@@ -7,8 +7,6 @@ import { GamemodeManager } from './GamemodeManager'
 import { MiningManager }   from './MiningManager'
 import { EconomyManager }  from './EconomyManager'
 import { UserManager }     from './UserManager'
-import { ContentManager }  from './ContentManager'
-import { EventManager }    from './EventManager'
 import { ActivityLogs }    from './ActivityLogs'
 import { GitHubSyncCenter } from './GitHubSyncCenter'
 import { RepoHistoryManager } from './RepoHistoryManager'
@@ -34,8 +32,6 @@ const NAV_ITEMS: { id: AdminSection; label: string; icon: string; desc: string }
   { id: 'mining-mgmt', label: 'Mining',        icon: '⛏️', desc: 'Manage miners' },
   { id: 'economy',     label: 'Economy',       icon: '💰', desc: 'Edit constants' },
   { id: 'users',       label: 'Users',         icon: '👥', desc: 'Manage accounts' },
-  { id: 'content',     label: 'Content',       icon: '📝', desc: 'Edit site text' },
-  { id: 'events',      label: 'Events',        icon: '🎉', desc: 'Manage events' },
   { id: 'shop-mgmt',      label: 'Shop',          icon: '🛒', desc: 'Manage purchases'  },
   { id: 'tournament-mgmt', label: 'Tournaments',  icon: '🏆', desc: 'Manage tournaments' },
   { id: 'site-growth',  label: 'Site Growth',   icon: '📈', desc: 'Analytics dashboard' },
@@ -54,8 +50,6 @@ const SECTION_TITLES: Record<AdminSection, { title: string; subtitle: string }> 
   'mining-mgmt': { title: 'Mining Manager',     subtitle: 'Manage user rigs and balances' },
   'economy':     { title: 'Economy Settings',   subtitle: 'Adjust exchange rates and mining rewards' },
   'users':       { title: 'User Manager',       subtitle: 'Full player management — accounts, profiles, and mining data' },
-  'content':     { title: 'Content Manager',    subtitle: 'Edit homepage, footer, and site text' },
-  'events':      { title: 'Event Manager',      subtitle: 'Configure event banners and countdowns' },
   'shop-mgmt':       { title: 'Shop Management',       subtitle: 'Manage purchases, prices, refunds, and delivery' },
   'tournament-mgmt': { title: 'Tournament Management', subtitle: 'Create tournaments, manage teams, brackets, matches, prizes and announcements' },
   'logs':            { title: 'Activity Logs',         subtitle: 'Full audit trail of all admin actions' },
@@ -75,8 +69,6 @@ function SectionContent({ section, admin, setSection }: { section: AdminSection;
     case 'mining-mgmt': return <MiningManager admin={admin} />
     case 'economy':     return <EconomyManager admin={admin} />
     case 'users':       return <UserManager admin={admin} />
-    case 'content':     return <ContentManager admin={admin} />
-    case 'events':      return <EventManager admin={admin} />
     case 'shop-mgmt':       return <ShopManager admin={admin} />
     case 'tournament-mgmt': return <TournamentManager admin={admin} />
     case 'logs':            return <ActivityLogs admin={admin} />
