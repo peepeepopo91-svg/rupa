@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Copy, Check } from 'lucide-react'
 import playersData from '../../data/players.json'
@@ -19,10 +19,11 @@ const MODE_LABELS: Record<string, string> = {
   diapot: 'Diapot',
 }
 
-// Build a flat list of real player+tier+mode entries (exclude NONE ranks)
+// Build a flat list of real player+tier+mode entries (exclude NONE ranks).
+// Deterministic order — no Math.random() here to avoid SSR/client hydration mismatch.
 type Entry = { player: string; tier: string; mode: string }
 
-function buildEntries(): Entry[] {
+const ALL_ENTRIES: Entry[] = (() => {
   const entries: Entry[] = []
   for (const p of playersData as Array<{ name: string; ranks: Record<string, string> }>) {
     for (const [mode, tier] of Object.entries(p.ranks)) {
@@ -31,34 +32,33 @@ function buildEntries(): Entry[] {
       }
     }
   }
-  // Shuffle so order is random on every page load
-  for (let i = entries.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[entries[i], entries[j]] = [entries[j], entries[i]]
-  }
   return entries
-}
+})()
 
 function LiveTicker() {
-  const entries = useMemo(() => buildEntries(), [])
+  // Start at 0 on both server and client to avoid hydration mismatch.
+  // After mount, jump to a random index so the first visible entry is random.
   const [idx, setIdx] = useState(0)
   const [visible, setVisible] = useState(true)
 
   useEffect(() => {
-    if (entries.length === 0) return
+    if (ALL_ENTRIES.length === 0) return
+    // Randomize starting position client-side only (after hydration)
+    setIdx(Math.floor(Math.random() * ALL_ENTRIES.length))
+
     const timer = setInterval(() => {
       // Fade out, swap, fade in
       setVisible(false)
       setTimeout(() => {
-        setIdx((i) => (i + 1) % entries.length)
+        setIdx((i) => (i + 1) % ALL_ENTRIES.length)
         setVisible(true)
       }, 300)
     }, 5000)
     return () => clearInterval(timer)
-  }, [entries])
+  }, [])
 
-  if (entries.length === 0) return null
-  const activity = entries[idx]
+  if (ALL_ENTRIES.length === 0) return null
+  const activity = ALL_ENTRIES[idx]
 
   return (
     <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm mb-8 backdrop-blur-sm">
